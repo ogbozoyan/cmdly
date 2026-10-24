@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cmdly Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icons/128.png" alt="" width="40" height="40">
+      <div>
+        <h1>Cmdly</h1>
+        <p class="sub">Command bar settings. Changes are saved automatically.</p>
+      </div>
+      <span id="saved" class="saved" hidden>Saved</span>
+    </header>
+
+    <section>
+      <h2>Keyboard shortcuts</h2>
+      <div class="row">
+        <span><b>Open command bar</b><small>Default ⌘T. With another shortcut, ⌘T opens a regular new tab with the search bar.</small></span>
+        <span class="pair">
+          <button class="shortcut" data-shortcut="openBar"></button>
+          <button class="link" data-shortcut-reset="openBar">Default</button>
+        </span>
+      </div>
+      <div class="row">
+        <span><b>Copy page URL</b><small>Default ⇧⌘C, like in Arc.</small></span>
+        <span class="pair">
+          <button class="shortcut" data-shortcut="copyUrl"></button>
+          <button class="link" data-shortcut-clear="copyUrl">Off</button>
+          <button class="link" data-shortcut-reset="copyUrl">Default</button>
+        </span>
+      </div>
+      <div class="row">
+        <span><b>Reopen closed tab</b><small>Only when no text field is focused, so text undo keeps working.</small></span>
+        <span class="pair">
+          <button class="shortcut" data-shortcut="undoClose"></button>
+          <button class="link" data-shortcut-clear="undoClose">Off</button>
+          <button class="link" data-shortcut-reset="undoClose">Default</button>
+        </span>
+      </div>
+      <div class="row">
+        <span><b>Chrome shortcut</b><small>Works on every page incl. chrome:// and opens the bar without the new tab flash.</small></span>
+        <button id="chrome-shortcuts">Configure…</button>
+      </div>
+      <p class="note">Shortcuts work on regular web pages. Chrome doesn't allow extensions on chrome:// pages and the Web Store.</p>
+    </section>
+
+    <section>
+      <h2>Behavior</h2>
+      <label class="row">
+        <span><b>Open over current page</b><small>The bar appears on top of the page you're on. When off, it opens in a new tab.</small></span>
+        <input type="checkbox" data-path="features.overlay">
+      </label>
+    </section>
+
+    <section>
+      <h2>Features</h2>
+      <label class="row">
+        <span><b>Commands</b><small>Copy URL, Pin Tab, Close Other Tabs, Open Settings and more.</small></span>
+        <input type="checkbox" data-path="features.commands">
+      </label>
+      <label class="row">
+        <span><b>Calculator</b><small><code>2+2</code>, <code>200+15%</code>, <code>sqrt(16)</code>, <code>5!</code></small></span>
+        <input type="checkbox" data-path="features.calculator">
+      </label>
+      <label class="row">
+        <span><b>UUID generator</b><small><code>uuid</code> or <code>uuid 5</code> for several</small></span>
+        <input type="checkbox" data-path="features.uuid">
+      </label>
+      <label class="row">
+        <span><b>Encode / decode</b><small><code>b64 text</code>, <code>unb64 …</code>, <code>url text</code>, <code>unurl …</code></small></span>
+        <input type="checkbox" data-path="features.encode">
+      </label>
+      <label class="row">
+        <span><b>JWT decoder</b><small>Paste a token to see its payload, header and expiry.</small></span>
+        <input type="checkbox" data-path="features.jwt">
+      </label>
+    </section>
+
+    <section>
+      <h2>Search sources</h2>
+      <div class="row">
+        <span><b>Open tabs</b><small>Max results</small></span>
+        <span class="pair">
+          <input type="number" min="1" max="20" data-path="limits.tabs">
+          <input type="checkbox" data-path="sources.tabs">
+        </span>
+      </div>
+      <div class="row">
+        <span><b>Bookmarks</b><small>Max results</small></span>
+        <span class="pair">
+          <input type="number" min="1" max="20" data-path="limits.bookmarks">
+          <input type="checkbox" data-path="sources.bookmarks">
+        </span>
+      </div>
+      <div class="row">
+        <span><b>History</b><small>Max results</small></span>
+        <span class="pair">
+          <input type="number" min="1" max="20" data-path="limits.history">
+          <input type="checkbox" data-path="sources.history">
+        </span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Appearance</h2>
+      <label class="row">
+        <span><b>Theme</b></span>
+        <select data-path="appearance.theme">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="system">System</option>
+        </select>
+      </label>
+      <label class="row">
+        <span><b>Position</b></span>
+        <select data-path="appearance.position">
+          <option value="center">Center</option>
+          <option value="top">Top</option>
+        </select>
+      </label>
+      <label class="row">
+        <span><b>Width</b><small id="width-value"></small></span>
+        <input type="range" min="520" max="1000" step="20" data-path="appearance.width">
+      </label>
+      <label class="row">
+        <span><b>Accent color</b><small>Cursor and text selection</small></span>
+        <input type="color" data-path="appearance.accent">
+      </label>
+    </section>
+
+    <section>
+      <h2>Backup</h2>
+      <div class="row">
+        <span><b>Export / import settings</b><small>Save settings to a JSON file or load them on another computer.</small></span>
+        <span class="pair">
+          <button id="export">Export…</button>
+          <button id="import">Import…</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+        </span>
+      </div>
+      <div class="row">
+        <span><b>Reset</b><small>Restore all settings to defaults.</small></span>
+        <button id="reset" class="danger">Reset…</button>
+      </div>
+    </section>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>
