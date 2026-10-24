@@ -1,0 +1,216 @@
+import type { ResultItem } from "../shared/model.ts";
+import { send } from "../shared/messages.ts";
+import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
+import { settingsRepository } from "../shared/settings-repository.ts";
+import { localResults } from "../tools/local-results.ts";
+import { copyText } from "./clipboard.ts";
+import { ARROW_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
+
+export interface CommandBarOptions {
+  /** true = drawn over a web page (shadow DOM), false = standalone palette page. */
+  overlay: boolean;
+  /** Removes the bar (overlay) or closes the palette tab. */
+  close: () => void;
+}
+
+const TOAST_MS = 1100;
+
+/**
+ * The command bar UI: input + result list + toast.
+ * Results come from two places: localResults() (instant, in this file's process)
+ * and the background "search" request (tabs, bookmarks, history, commands).
+ */
+export class CommandBar {
+  readonly input: HTMLInputElement;
+
+  private readonly root: HTMLElement;
+  private readonly panel: HTMLElement;
+  private readonly list: HTMLUListElement;
+  private readonly toast: HTMLElement;
+  private readonly options: CommandBarOptions;
+
+  private settings: Settings = DEFAULT_SETTINGS;
+  private items: ResultItem[] = [];
+  private active = 0;
+  /** Drops responses of outdated searches when the user types fast. */
+  private requestId = 0;
+
+  constructor(container: Node, options: CommandBarOptions) {
+    this.options = options;
+    this.root = document.createElement("div");
+    this.root.className = options.overlay ? "wrap overlay" : "wrap";
+    this.root.innerHTML = `
+      <div class="bar">
+        <div class="input-row">
+          <span class="loupe">${SEARCH_ICON}</span>
+          <input type="text" placeholder="Search, Enter URL or Command…" autocomplete="off" spellcheck="false">
+        </div>
+        <ul class="results"></ul>
+      </div>
+      <div class="toast" hidden></div>`;
+    container.appendChild(this.root);
+
+    this.panel = this.root.querySelector(".bar")!;
+    this.input = this.root.querySelector("input")!;
+    this.list = this.root.querySelector(".results")!;
+    this.toast = this.root.querySelector(".toast")!;
+
+    this.bindEvents();
+    this.applyAppearance();
+    settingsRepository.get().then((settings) => {
+      this.settings = settings;
+      this.applyAppearance();
+      this.render();
+    });
+    this.input.focus();
+  }
+
+  // ---------- rendering ----------
+
+  private async render(): Promise<void> {
+    const id = ++this.requestId;
+    const query = this.input.value;
+    const remote = (await send({ type: "search", query: query.trim(), overlay: this.options.overlay })) ?? [];
+    if (id !== this.requestId) return;
+
+    this.items = [...localResults(query, this.settings.features), ...remote];
+    this.list.replaceChildren(...this.items.map((item, i) => this.renderRow(item, i)));
+    this.setActive(0);
+  }
+
+  private renderRow(item: ResultItem, index: number): HTMLLIElement {
+    const li = document.createElement("li");
+    li.append(this.renderIcon(item), this.renderTitle(item));
+
+    if (item.action) {
+      const action = document.createElement("span");
+      action.className = "action";
+      action.textContent = item.action;
+      const arrow = document.createElement("span");
+      arrow.className = "arrow";
+      arrow.innerHTML = ARROW_ICON;
+      action.append(arrow);
+      li.append(action);
+    }
+
+    li.addEventListener("mousemove", () => this.active !== index && this.setActive(index));
+    li.addEventListener("click", (e) => this.choose(item, e.metaKey));
+    return li;
+  }
+
+  private renderIcon(item: ResultItem): HTMLElement {
+    const icon = document.createElement("span");
+    icon.className = "icon";
+    if (item.kind === "search") {
+      icon.innerHTML = SEARCH_ICON;
+    } else if (item.glyph) {
+      icon.classList.add("glyph");
+      icon.innerHTML = GLYPHS[item.glyph];
+    } else if (item.icon) {
+      const img = document.createElement("img");
+      img.src = item.icon;
+      img.onerror = () => img.remove();
+      icon.append(img);
+    }
+    return icon;
+  }
+
+  private renderTitle(item: ResultItem): HTMLElement {
+    const title = document.createElement("span");
+    title.className = "title";
+    title.textContent = item.title;
+    if (item.meta) {
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = "— " + item.meta;
+      title.append(meta);
+    }
+    return title;
+  }
+
+  private setActive(index: number): void {
+    if (!this.items.length) return;
+    this.active = (index + this.items.length) % this.items.length;
+    [...this.list.children].forEach((li, i) => li.classList.toggle("active", i === this.active));
+    this.list.children[this.active]?.scrollIntoView({ block: "nearest" });
+  }
+
+  private applyAppearance(): void {
+    const a = this.settings.appearance;
+    const dark = a.theme === "dark" || (a.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+    this.root.classList.toggle("light", !dark);
+    this.root.classList.toggle("top", a.position === "top");
+    this.root.style.setProperty("--accent", a.accent);
+    this.root.style.setProperty("--width", `${a.width}px`);
+  }
+
+  private showToast(text: string): void {
+    this.panel.hidden = true;
+    this.toast.textContent = text;
+    this.toast.hidden = false;
+    setTimeout(this.options.close, TOAST_MS);
+  }
+
+  // ---------- actions ----------
+
+  private async choose(item: ResultItem | undefined, inBackground: boolean): Promise<void> {
+    const text = this.input.value.trim();
+    if (!item && !text) return;
+
+    if (item?.kind === "command") return this.runCommand(item);
+
+    if (item?.copy != null) {
+      await copyText(item.copy, this.root);
+      const preview = item.copy.length > 40 ? item.copy.slice(0, 40) + "…" : item.copy;
+      return this.showToast("Copied " + preview.replace(/\s+/g, " "));
+    }
+
+    if (this.options.overlay) this.options.close();
+    await send({ type: "open", item, text, inBackground, overlay: this.options.overlay });
+  }
+
+  private async runCommand(item: ResultItem): Promise<void> {
+    const result = (await send({ type: "command", id: item.commandId!, overlay: this.options.overlay })) ?? {};
+    if (result.copy) await copyText(result.copy, this.root);
+    if (result.toast) this.showToast(result.toast);
+    else if (this.options.overlay || result.closePalette) this.options.close();
+  }
+
+  // ---------- events ----------
+
+  private bindEvents(): void {
+    this.input.addEventListener("input", () => this.render());
+
+    this.input.addEventListener("keydown", (e) => {
+      if (e.isComposing) return;
+      const key = e.key;
+      if (key === "ArrowDown" || (e.ctrlKey && key === "n")) {
+        e.preventDefault();
+        this.setActive(this.active + 1);
+      } else if (key === "ArrowUp" || (e.ctrlKey && key === "p")) {
+        e.preventDefault();
+        this.setActive(this.active - 1);
+      } else if (key === "Enter") {
+        e.preventDefault();
+        this.choose(this.items[this.active], e.metaKey);
+      } else if (key === "Escape") {
+        e.preventDefault();
+        // First Esc clears the input, second one closes the bar.
+        if (this.input.value) {
+          this.input.value = "";
+          this.render();
+        } else {
+          this.options.close();
+        }
+      }
+    });
+
+    // Click outside the panel closes the overlay.
+    this.root.addEventListener("mousedown", (e) => {
+      if (this.options.overlay && !this.panel.contains(e.target as Node)) {
+        e.preventDefault();
+        this.options.close();
+      }
+    });
+  }
+}

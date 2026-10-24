@@ -1,0 +1,213 @@
+:host, .wrap {
+  --panel: #1e1e1e;
+  --border: rgba(255, 255, 255, 0.12);
+  --divider: rgba(255, 255, 255, 0.08);
+  --text: #ececec;
+  --muted: #8a8a8a;
+  --row-active: #2f2f2f;
+  --chip: #ffffff;
+  --chip-text: #1e1e1e;
+  --accent: #6c8cff;
+  --width: 760px;
+}
+
+.wrap.light {
+  --panel: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --divider: rgba(0, 0, 0, 0.07);
+  --text: #1d1d1f;
+  --muted: #86868b;
+  --row-active: #f0f0f2;
+  --chip: #1d1d1f;
+  --chip-text: #ffffff;
+}
+
+.wrap.light .bar { box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08); }
+.wrap.light.overlay .bar { box-shadow: 0 30px 120px 40px rgba(0, 0, 0, 0.12), 0 8px 30px rgba(0, 0, 0, 0.15); }
+.wrap.light li.active .icon:not(.glyph) { background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); }
+
+.wrap.top .bar { top: 12vh; }
+
+::selection { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+
+* { box-sizing: border-box; }
+
+.wrap {
+  position: fixed;
+  inset: 0;
+  font: 15px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-align: left;
+  line-height: normal;
+}
+
+.bar {
+  position: absolute;
+  left: 50%;
+  top: 30vh;
+  transform: translateX(-50%);
+  width: min(var(--width), 92vw);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.wrap.overlay .bar {
+  box-shadow: 0 30px 120px 40px rgba(0, 0, 0, 0.28), 0 8px 30px rgba(0, 0, 0, 0.35);
+  animation: pop 0.12s ease-out;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.loupe, .icon svg {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  color: var(--text);
+  flex: none;
+}
+
+.icon svg { color: var(--muted); }
+
+input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  caret-color: var(--accent);
+  box-shadow: none;
+}
+
+input::placeholder { color: var(--muted); opacity: 1; }
+
+.results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.results:not(:empty) {
+  border-top: 1px solid var(--divider);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 10px;
+  margin: 0;
+  border-radius: 8px;
+  cursor: default;
+}
+
+li.active { background: var(--row-active); }
+
+.icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+li.active .icon { background: var(--chip); }
+li.active .icon:not(.glyph) { background: #fff; }
+
+.icon img {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.meta {
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 8px;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  flex: none;
+}
+
+li.active .action { color: var(--text); font-weight: 600; }
+
+.arrow {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+
+.arrow svg { width: 14px; height: 14px; }
+
+li.active .arrow {
+  background: var(--chip);
+  color: var(--chip-text);
+}
+
+.icon.glyph svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text);
+}
+
+li.active .icon.glyph svg { color: var(--chip-text); }
+
+.bar[hidden] { display: none; }
+
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 48px;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  font-size: 14px;
+  font-weight: 500;
+  animation: rise 0.15s ease-out;
+}
+
+.toast[hidden] { display: none; }
+
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 6px); } }
+
+@keyframes pop { from { opacity: 0; transform: translateX(-50%) scale(0.98); } }
