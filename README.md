@@ -61,7 +61,7 @@ you actually navigate somewhere.
 | **Commands**          | Copy URL, Copy as Markdown, Pin/Unpin, Mute, Duplicate, Close other tabs, Move to new window, Reopen closed tab, Bookmark, open History/Downloads/Settings… |
 | **Calculator**        | `2+2`, `200+15%`, `sqrt(16)`, `5!`, `2^10`, `3x4`. Enter copies the result.                                                                                 |
 | **JSON / YAML**       | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results.                              |
-| **Dev tools**         | `uuid` / `uuid 5`, `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates.                       |
+| **Dev tools**         | `uuid` / `uuid 5` (v4, v7, v1), `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates.                       |
 | **Shortcuts**         | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable.                                                                |
 | **Settings**          | Turn every feature on/off, rebind shortcuts, pick theme, accent color, position and width. Export / import as JSON.                                         |
 | **Private**           | No network requests, no analytics. Everything stays in your browser.                                                                                        |
@@ -161,7 +161,7 @@ Press <kbd>⌘</kbd> <kbd>T</kbd> and start typing.
 | `how to ...`                   | Search with your default search engine                                         |
 | `copy`, `pin`, `close`, `mute` | Commands for the current tab                                                   |
 | `200+15%`                      | `= 230` — Enter copies it                                                      |
-| `uuid`, `uuid 5`               | Fresh UUID v4                                                                  |
+| `uuid`, `uuid 5` | Fresh UUID — <kbd>Tab</kbd> switches v4 / v7 / v1 and remembers it; `uuid v7` for a one-off |
 | `b64 hello` / `unb64 aGVsbG8=` | Base64 encode / decode                                                         |
 | `url a b&c` / `unurl a%20b`    | URL encode / decode                                                            |
 | `eyJhbGciOi…`                  | Decoded JWT payload, header and expiry — <kbd>Tab</kbd> to expand              |
