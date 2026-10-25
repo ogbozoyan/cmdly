@@ -29,4 +29,7 @@ export const GLYPHS: Record<GlyphName, string> = {
   trash: stroke("M3 4.5h10M6 4.5V3h4v1.5M4.5 4.5l.7 9h5.6l.7-9"),
   key: stroke("M10 2.5a3.5 3.5 0 11-2.9 5.4L2.5 12.5v1h2v-1.5h1.5v-1.5h1.5l.6-.6A3.5 3.5 0 0110 2.5zM11 5h.01"),
   code: stroke("M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5M9 3l-2 10"),
+  braces: stroke("M5.5 2.5c-1.5 0-2 .7-2 2v1.5c0 1-.5 2-1.5 2 1 0 1.5 1 1.5 2v1.5c0 1.3.5 2 2 2M10.5 2.5c1.5 0 2 .7 2 2v1.5c0 1 .5 2 1.5 2-1 0-1.5 1-1.5 2v1.5c0 1.3-.5 2-2 2"),
 };
+
+export const EXPAND_ICON = stroke("M4 6l4 4 4-4", 1.7);

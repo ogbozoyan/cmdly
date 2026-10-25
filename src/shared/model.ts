@@ -1,7 +1,16 @@
 /** Names of the monochrome icons drawn by the UI (see src/ui/icons.ts). */
 export type GlyphName =
   | "link" | "close" | "duplicate" | "pin" | "sound" | "reload" | "window" | "restore" | "star"
-  | "incognito" | "history" | "download" | "puzzle" | "gear" | "calc" | "trash" | "key" | "code";
+  | "incognito" | "history" | "download" | "puzzle" | "gear" | "calc" | "trash" | "key" | "code" | "braces";
+
+/** Content of the expandable panel under the results (Tab to open). */
+export interface Preview {
+  /** Decides syntax highlighting. */
+  language: "json" | "yaml";
+  content: string;
+  /** Extra lines under the code, e.g. human-readable JWT expiry. */
+  notes?: string[];
+}
 
 /** Where a result row came from — decides what happens on Enter. */
 export type ResultKind =
@@ -32,6 +41,8 @@ export interface ResultItem {
   commandId?: string;
   /** If set, Enter copies this text instead of navigating. */
   copy?: string;
+  /** If set, the row can be expanded into a viewer panel. */
+  preview?: Preview;
 }
 
 /** What the background asks the UI to do after a command. */

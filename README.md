@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/overlay.png" alt="Cmdly command bar over a web page" width="860">
+  <img src="docs/demo/search.gif" alt="Cmdly: press ⌘T, the bar appears over the page, type to find tabs" width="860">
 </p>
 
 ## Why
@@ -36,6 +36,23 @@ Arc is being discontinued, Chrome's address bar is not the same thing. Cmdly bri
 to Chrome — the bar appears **on top of the page you're on**, and a new tab is opened only when
 you actually navigate somewhere.
 
+## How it works
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <b>Commands, calculator, UUID</b><br>
+      <sub>Type what you want to do. Enter runs a command or copies the result.</sub><br><br>
+      <img src="docs/demo/commands.gif" alt="Calculator, UUID and Pin Tab command">
+    </td>
+    <td width="50%" valign="top">
+      <b>JSON, YAML and JWT viewer</b><br>
+      <sub>Paste data, press <kbd>Tab</kbd> to expand the formatted result below.</sub><br><br>
+      <img src="docs/demo/json.gif" alt="Paste JSON, expand the viewer, convert to YAML, decode a JWT">
+    </td>
+  </tr>
+</table>
+
 ## Features
 
 | | |
@@ -43,7 +60,8 @@ you actually navigate somewhere.
 | **Search everything** | Open tabs, bookmarks and history in one list. Pick an open tab to switch to it instead of opening a duplicate. |
 | **Commands** | Copy URL, Copy as Markdown, Pin/Unpin, Mute, Duplicate, Close other tabs, Move to new window, Reopen closed tab, Bookmark, open History/Downloads/Settings… |
 | **Calculator** | `2+2`, `200+15%`, `sqrt(16)`, `5!`, `2^10`, `3x4`. Enter copies the result. |
-| **Dev tools** | `uuid` / `uuid 5`, `b64 text` / `unb64 …`, `url text` / `unurl …`, paste a JWT to decode it. |
+| **JSON / YAML** | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results. |
+| **Dev tools** | `uuid` / `uuid 5`, `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates. |
 | **Shortcuts** | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable. |
 | **Settings** | Turn every feature on/off, rebind shortcuts, pick theme, accent color, position and width. Export / import as JSON. |
 | **Private** | No network requests, no analytics. Everything stays in your browser. |
@@ -54,7 +72,11 @@ you actually navigate somewhere.
     <td width="50%"><img src="docs/screenshots/calculator.png" alt="Calculator"><p align="center"><sub>Calculator — Enter copies the result</sub></p></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/jwt.png" alt="JWT decoder"><p align="center"><sub>Paste a JWT to see payload and expiry</sub></p></td>
+    <td width="50%"><img src="docs/screenshots/json-viewer.png" alt="JSON viewer"><p align="center"><sub>Pasted JSON — format, minify or convert to YAML</sub></p></td>
+    <td width="50%"><img src="docs/screenshots/jwt.png" alt="JWT decoder"><p align="center"><sub>JWT payload with readable dates</sub></p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/overlay.png" alt="Command bar"><p align="center"><sub>The bar over any page — open tabs first</sub></p></td>
     <td width="50%"><img src="docs/screenshots/options.png" alt="Settings"><p align="center"><sub>Settings — features, shortcuts, appearance</sub></p></td>
   </tr>
 </table>
@@ -99,11 +121,12 @@ Press <kbd>⌘</kbd> <kbd>T</kbd> and start typing.
 | `uuid`, `uuid 5` | Fresh UUID v4 |
 | `b64 hello` / `unb64 aGVsbG8=` | Base64 encode / decode |
 | `url a b&c` / `unurl a%20b` | URL encode / decode |
-| `eyJhbGciOi…` | Decoded JWT payload, header and expiry |
+| `eyJhbGciOi…` | Decoded JWT payload, header and expiry — <kbd>Tab</kbd> to expand |
+| paste `{"a": 1}` or YAML | Format JSON · Minify JSON · Convert to YAML (or Format YAML · Convert to JSON) |
 | `settings` | Cmdly Settings, Chrome Settings |
 
-In the bar: <kbd>↑</kbd> <kbd>↓</kbd> select · <kbd>Enter</kbd> open · <kbd>⌘</kbd> <kbd>Enter</kbd> open in background ·
-<kbd>Esc</kbd> clear, then close.
+In the bar: <kbd>↑</kbd> <kbd>↓</kbd> select · <kbd>Enter</kbd> open / copy · <kbd>⌘</kbd> <kbd>Enter</kbd> open in background ·
+<kbd>Tab</kbd> expand the viewer · <kbd>Esc</kbd> collapse, clear, then close.
 
 ## Keyboard shortcuts
 
@@ -134,6 +157,7 @@ npm install
 npm run watch        # rebuild dist/ on every change
 npm run check        # typecheck + unit tests + build
 npm run e2e          # end-to-end test in Chrome for Testing (see scripts/e2e.mjs)
+npm run demo         # re-record the GIFs in docs/demo (needs ffmpeg)
 npm run package      # zip for the Chrome Web Store
 ```
 
@@ -143,7 +167,7 @@ Project layout (details in [AGENTS.md](AGENTS.md)):
 src/
   background/   service worker: router (controller) + services
   shared/       types, message contract, settings model and repository
-  tools/        pure functions: calculator, UUID, Base64, JWT
+  tools/        pure functions: calculator, UUID, Base64, JWT, JSON/YAML
   ui/           the command bar component
   content/      scripts injected into web pages
   pages/        options, palette and new tab pages

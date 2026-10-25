@@ -113,6 +113,40 @@ async function typeInBar(page, text) {
   await sleep(400);
 }
 
+// A ⌘V paste event with line breaks intact. Synthetic paste events don't insert text by themselves,
+// so single-line text (which Cmdly leaves to the browser) is typed instead.
+async function pasteInBar(page, text) {
+  if (!text.includes("\n")) return typeInBar(page, text);
+  await page.evaluate((value) => {
+    const input = document.getElementById("cmdly-overlay").shadowRoot.querySelector("input");
+    input.focus();
+    const data = new DataTransfer();
+    data.setData("text/plain", value);
+    input.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+  }, text);
+  await sleep(400);
+}
+
+/** Visible preview code, or null when the panel is collapsed. */
+const previewText = (page) =>
+  page.evaluate(() => {
+    const panel = document.getElementById("cmdly-overlay").shadowRoot.querySelector(".preview");
+    return panel.hidden ? null : panel.querySelector("pre").textContent;
+  });
+
+const SAMPLE_JSON = JSON.stringify(
+  {
+  service: "checkout",
+  version: "2.4.1",
+  replicas: 3,
+  healthy: true,
+  endpoints: [{ path: "/api/orders", method: "POST", timeoutMs: 1500 }, { path: "/api/orders/{id}", method: "GET", timeoutMs: 500 }],
+  owner: null,
+  },
+  null,
+  2
+);
+
 const rowTitles = (page) =>
   page.evaluate(() =>
     [...document.getElementById("cmdly-overlay").shadowRoot.querySelectorAll("li .title")].map((el) => el.firstChild.textContent)
@@ -120,6 +154,7 @@ const rowTitles = (page) =>
 
 async function shot(page, name) {
   if (!SCREENSHOTS) return;
+  await sleep(300); // let CSS transitions finish
   mkdirSync(SHOTS_DIR, { recursive: true });
   await page.screenshot({ path: `${SHOTS_DIR}/${name}.png` });
 }
@@ -164,7 +199,39 @@ try {
     await typeInBar(page, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MiIsIm5hbWUiOiJBbm4iLCJleHAiOjE3MDAwMDAwMDB9.c2ln");
     const titles = await rowTitles(page);
     expect(titles[0].includes('"sub":"42"'), `first row: ${titles[0]}`);
+  });
+
+  await check("JSON paste keeps structure, Tab expands the viewer", async () => {
+    await typeInBar(page, "");
+    await pasteInBar(page, SAMPLE_JSON);
+    const titles = await rowTitles(page);
+    expect(titles.join() === "Format JSON,Minify JSON,Convert to YAML", `rows: ${JSON.stringify(titles)}`);
+    await page.keyboard.press("Tab");
+    const code = await previewText(page);
+    expect(code?.startsWith('{\n  "service": "checkout"'), `preview: ${code?.slice(0, 60)}`);
+    await shot(page, "json-viewer");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown");
+    expect((await previewText(page))?.startsWith("service: checkout"), "YAML preview follows the selection");
+    await page.keyboard.press("Escape");
+    expect((await previewText(page)) === null, "Esc collapses the viewer first");
+  });
+
+  await check("YAML paste → Convert to JSON", async () => {
+    await typeInBar(page, "");
+    await pasteInBar(page, "server:\n  port: 8080\n  hosts:\n    - a.local\n    - b.local\n");
+    const titles = await rowTitles(page);
+    expect(titles.join() === "Format YAML,Convert to JSON", `rows: ${JSON.stringify(titles)}`);
+  });
+
+  await check("JWT row expands with readable dates", async () => {
+    await typeInBar(page, "");
+    await pasteInBar(page, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MiIsIm5hbWUiOiJBbm4iLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMzYwMH0.c2ln");
+    await page.keyboard.press("Tab");
+    const notes = await page.evaluate(() => document.getElementById("cmdly-overlay").shadowRoot.querySelector(".preview-notes").textContent);
+    expect(/Issued .*Expires .*\(expired\)/.test(notes), `notes: ${notes}`);
     await shot(page, "jwt");
+    await page.keyboard.press("Escape");
   });
 
   await check("UUID and Base64", async () => {

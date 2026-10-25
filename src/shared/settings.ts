@@ -16,6 +16,8 @@ export interface Settings {
     uuid: boolean;
     encode: boolean;
     jwt: boolean;
+    /** JSON / YAML viewer, formatter and converter. */
+    formats: boolean;
   };
   sources: {
     tabs: boolean;
@@ -50,6 +52,7 @@ export const DEFAULT_SETTINGS: Settings = {
     uuid: true,
     encode: true,
     jwt: true,
+    formats: true,
   },
   sources: {
     tabs: true,

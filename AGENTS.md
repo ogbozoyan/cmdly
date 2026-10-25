@@ -7,7 +7,7 @@ Guide for AI coding agents (Claude Code, Codex, OpenCode…) and humans working 
 
 Cmdly is a Chrome extension (Manifest V3): an Arc-style command bar. `Cmd+T` shows a search bar
 over the current page that finds open tabs, bookmarks and history, runs browser commands
-(Copy URL, Pin Tab…), and has small tools (calculator, UUID, Base64/URL, JWT).
+(Copy URL, Pin Tab…), and has small tools (calculator, UUID, Base64/URL, JWT, JSON/YAML viewer).
 It also adds shortcuts: `⇧⌘C` copies the page URL, `⌘Z` reopens a closed tab.
 
 ## Commands
@@ -21,6 +21,7 @@ npm test             # unit tests (node:test, no browser)
 npm run check        # typecheck + test + build — run before every commit
 npm run e2e          # real Chrome smoke test, needs CHROME_PATH (see scripts/e2e.mjs)
 npm run e2e -- --screenshots   # also refreshes docs/screenshots/
+npm run demo         # re-record docs/demo/*.gif (CHROME_PATH + ffmpeg)
 npm run package      # check + zip dist/ for the Chrome Web Store
 ```
 
@@ -61,8 +62,12 @@ content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "op
   forbids scripts (chrome://, Web Store).
 - The UI never calls `chrome.tabs` etc. directly — it sends a typed message (`send()` in
   `src/shared/messages.ts`) and the background does the work.
-- Instant results (calculator, UUID, encoders, JWT) are computed in the UI by
+- Instant results (calculator, UUID, encoders, JWT, JSON/YAML) are computed in the UI by
   `src/tools/local-results.ts`; tabs/bookmarks/history/commands come from `search-service.ts`.
+- A row with `preview` (see `Preview` in `model.ts`) gets an expand button; <kbd>Tab</kbd> opens the
+  viewer panel under the results (`CommandBar.renderPreview`, highlighting in `src/ui/highlight.ts`).
+- The input is single-line and would drop line breaks on paste; `CommandBar` keeps the raw pasted
+  text (`pasted`) so YAML survives. Use `rawQuery()` when analyzing input.
 
 ## How to…
 
@@ -88,6 +93,8 @@ content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "op
 - Privacy: no network requests, no analytics. Everything stays in the browser.
   Keep `PRIVACY.md` true when adding features.
 - Keep the UI copy in English (the Web Store listing is English).
+- Anything inserted with `innerHTML` must go through `escapeHtml` (`src/ui/highlight.ts`): the bar
+  runs inside other people's pages and renders pasted text.
 - Code comments explain *why*, not *what*. Match the existing style.
 
 ## Testing
@@ -98,6 +105,7 @@ content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "op
   command line, hence Chrome for Testing:
   `npx @puppeteer/browsers install chrome@stable` → `export CHROME_PATH=…`.
 - Run `npm run check` before committing; run `npm run e2e` after touching background/content/UI.
+- UI changes: refresh the README media with `npm run e2e -- --screenshots` and `npm run demo`.
 
 ## Known limitations (by Chrome design)
 

@@ -1,11 +1,13 @@
-import type { ResultItem } from "../shared/model.ts";
+import type { Preview, ResultItem } from "../shared/model.ts";
 import type { Features } from "../shared/settings.ts";
 import { evaluate, formatNumber, plainNumber } from "./calculator.ts";
-import { base64Decode, base64Encode, decodeJwt, describeJwt, urlDecode, uuid } from "./dev-tools.ts";
+import { describeData, formatSize, parseData, toMinifiedJson, toPrettyJson, toYaml } from "./data-formats.ts";
+import { base64Decode, base64Encode, decodeJwt, describeJwt, jwtTimeNotes, urlDecode, uuid } from "./dev-tools.ts";
 
 /**
  * Results computed instantly in the UI, without asking the background:
- * calculator, UUID, encoders, JWT. Shown above tabs/history/search.
+ * calculator, UUID, encoders, JWT, JSON/YAML. Shown above tabs/history/search.
+ * `query` is the raw text — for pasted JSON/YAML it keeps its line breaks.
  */
 export function localResults(query: string, features: Features): ResultItem[] {
   const q = query.trim();
@@ -15,11 +17,24 @@ export function localResults(query: string, features: Features): ResultItem[] {
     ...(features.uuid ? uuidResult(q) : []),
     ...(features.encode ? encoderResult(q) : []),
     ...(features.jwt ? jwtResult(q) : []),
+    ...(features.formats ? dataResult(q) : []),
   ];
 }
 
-function copyRow(title: string, meta: string, copy: string, glyph: ResultItem["glyph"], kind: ResultItem["kind"] = "tool"): ResultItem {
-  return { kind, title, meta, copy, glyph, action: "Copy" };
+/** True if the results are a viewer for pasted data — then searching tabs/history makes no sense. */
+export function isDataQuery(items: ResultItem[]): boolean {
+  return items.some((item) => item.preview);
+}
+
+function copyRow(
+  title: string,
+  meta: string,
+  copy: string,
+  glyph: ResultItem["glyph"],
+  kind: ResultItem["kind"] = "tool",
+  preview?: Preview
+): ResultItem {
+  return { kind, title, meta, copy, glyph, action: "Copy", preview };
 }
 
 function calculatorResult(q: string): ResultItem[] {
@@ -54,7 +69,7 @@ function encoderResult(q: string): ResultItem[] {
     const result = encoder.run(m[2]);
     // Unchanged output means it wasn't meant as a tool call: "url shortener", "decode meaning".
     if (!result || result === m[2]) return [];
-    return [copyRow(result, encoder.label, result, "code")];
+    return [copyRow(result, encoder.label, result, "code", "tool", jsonPreview(result))];
   }
   // A bare percent-encoded string: offer the decoded version.
   if (!/\s/.test(q) && /%[0-9a-f]{2}/i.test(q)) {
@@ -67,8 +82,47 @@ function encoderResult(q: string): ResultItem[] {
 function jwtResult(q: string): ResultItem[] {
   const jwt = decodeJwt(q);
   if (!jwt) return [];
+  const payload = toPrettyJson(jwt.payload);
+  const header = toPrettyJson(jwt.header);
   return [
-    copyRow(JSON.stringify(jwt.payload), describeJwt(jwt.payload), JSON.stringify(jwt.payload, null, 2), "key"),
-    copyRow(JSON.stringify(jwt.header), "JWT header", JSON.stringify(jwt.header, null, 2), "key"),
+    copyRow(toMinifiedJson(jwt.payload), describeJwt(jwt.payload), payload, "key", "tool", {
+      language: "json",
+      content: payload,
+      notes: jwtTimeNotes(jwt.payload),
+    }),
+    copyRow(toMinifiedJson(jwt.header), "JWT header", header, "key", "tool", { language: "json", content: header }),
   ];
+}
+
+/**
+ * Pasted JSON → Format / Minify / Convert to YAML.
+ * Pasted YAML → Format / Convert to JSON.
+ * Every row can be expanded (Tab) to view the result.
+ */
+function dataResult(q: string): ResultItem[] {
+  const data = parseData(q);
+  if (!data) return [];
+  const meta = `${describeData(data.value)} · ${formatSize(q)}`;
+  const pretty = toPrettyJson(data.value);
+  const yaml = toYaml(data.value);
+  const json: Preview = { language: "json", content: pretty };
+
+  if (data.format === "json") {
+    const minified = toMinifiedJson(data.value);
+    return [
+      copyRow("Format JSON", meta, pretty, "braces", "tool", json),
+      copyRow("Minify JSON", formatSize(minified), minified, "braces", "tool", { language: "json", content: minified }),
+      copyRow("Convert to YAML", meta, yaml, "code", "tool", { language: "yaml", content: yaml }),
+    ];
+  }
+  return [
+    copyRow("Format YAML", meta, yaml, "code", "tool", { language: "yaml", content: yaml }),
+    copyRow("Convert to JSON", meta, pretty, "braces", "tool", json),
+  ];
+}
+
+/** Decoded text that happens to be JSON (e.g. "unb64 eyJ…") gets a viewer too. */
+function jsonPreview(text: string): Preview | undefined {
+  const data = parseData(text);
+  return data?.format === "json" ? { language: "json", content: toPrettyJson(data.value) } : undefined;
 }

@@ -191,6 +191,83 @@ li.active .icon.glyph svg { color: var(--chip-text); }
 
 .bar[hidden] { display: none; }
 
+/* ---------- expand button & preview panel ---------- */
+
+.expand {
+  all: unset;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.expand svg { width: 14px; height: 14px; transition: transform 0.15s; }
+.expand.open svg { transform: rotate(180deg); }
+.expand:hover, li.active .expand { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
+
+/* With the viewer open the bar moves up so the code gets most of the screen. */
+.wrap.previewing .bar { top: 8vh; }
+.wrap.previewing .results { max-height: 24vh; }
+
+.preview {
+  margin-top: 6px;
+  border-top: 1px solid var(--divider);
+  padding: 8px 6px 4px;
+}
+
+.preview[hidden] { display: none; }
+
+.preview-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 6px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.preview-hint { font-weight: 400; letter-spacing: 0; }
+
+.code {
+  margin: 0;
+  max-height: calc(92vh - 8vh - 24vh - 150px);
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre;
+  tab-size: 2;
+  color: var(--text);
+  user-select: text;
+}
+
+.preview-notes:not(:empty) {
+  padding: 8px 6px 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.tok-key { color: #9cdcfe; }
+.tok-string { color: #ce9178; }
+.tok-number { color: #b5cea8; }
+.tok-bool, .tok-null { color: #569cd6; }
+.tok-comment { color: #6a9955; }
+
+.wrap.light .tok-key { color: #0451a5; }
+.wrap.light .tok-string { color: #a31515; }
+.wrap.light .tok-number { color: #098658; }
+.wrap.light .tok-bool, .wrap.light .tok-null { color: #0000ff; }
+.wrap.light .tok-comment { color: #008000; }
+
 .toast {
   position: absolute;
   left: 50%;

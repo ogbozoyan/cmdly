@@ -70,6 +70,19 @@ export function describeJwt(payload: Record<string, unknown>, now = Date.now()):
   return parts.join(" · ");
 }
 
+const TIME_CLAIMS: Record<string, string> = { iat: "Issued", nbf: "Valid from", exp: "Expires" };
+
+/** Human-readable time claims for the preview panel: "Expires 2023-11-14 22:13 (expired)". */
+export function jwtTimeNotes(payload: Record<string, unknown>, now = Date.now()): string[] {
+  return Object.entries(TIME_CLAIMS)
+    .filter(([claim]) => typeof payload[claim] === "number")
+    .map(([claim, label]) => {
+      const seconds = payload[claim] as number;
+      const suffix = claim === "exp" && seconds * 1000 < now ? " (expired)" : "";
+      return `${label} ${formatDate(seconds)}${suffix}`;
+    });
+}
+
 function formatDate(seconds: number): string {
   const d = new Date(seconds * 1000);
   const pad = (n: number) => String(n).padStart(2, "0");

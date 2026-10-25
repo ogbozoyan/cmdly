@@ -2,9 +2,10 @@ import type { ResultItem } from "../shared/model.ts";
 import { send } from "../shared/messages.ts";
 import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
-import { localResults } from "../tools/local-results.ts";
+import { isDataQuery, localResults } from "../tools/local-results.ts";
 import { copyText } from "./clipboard.ts";
-import { ARROW_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
+import { highlight } from "./highlight.ts";
+import { ARROW_ICON, EXPAND_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
 
 export interface CommandBarOptions {
   /** true = drawn over a web page (shadow DOM), false = standalone palette page. */
@@ -16,9 +17,10 @@ export interface CommandBarOptions {
 const TOAST_MS = 1100;
 
 /**
- * The command bar UI: input + result list + toast.
- * Results come from two places: localResults() (instant, in this file's process)
+ * The command bar UI: input + result list + preview panel + toast.
+ * Results come from two places: localResults() (instant, computed right here)
  * and the background "search" request (tabs, bookmarks, history, commands).
+ * Rows with a `preview` (JSON, YAML, JWT) can be expanded into a viewer with Tab.
  */
 export class CommandBar {
   readonly input: HTMLInputElement;
@@ -26,6 +28,7 @@ export class CommandBar {
   private readonly root: HTMLElement;
   private readonly panel: HTMLElement;
   private readonly list: HTMLUListElement;
+  private readonly previewPanel: HTMLElement;
   private readonly toast: HTMLElement;
   private readonly options: CommandBarOptions;
 
@@ -34,6 +37,12 @@ export class CommandBar {
   private active = 0;
   /** Drops responses of outdated searches when the user types fast. */
   private requestId = 0;
+  private previewOpen = false;
+  /**
+   * The <input> is single-line and drops line breaks on paste, which breaks YAML.
+   * We keep the original pasted text while the input still shows it.
+   */
+  private pasted: { raw: string; shown: string } | null = null;
 
   constructor(container: Node, options: CommandBarOptions) {
     this.options = options;
@@ -46,6 +55,14 @@ export class CommandBar {
           <input type="text" placeholder="Search, Enter URL or Command…" autocomplete="off" spellcheck="false">
         </div>
         <ul class="results"></ul>
+        <div class="preview" hidden>
+          <div class="preview-head">
+            <span class="preview-lang"></span>
+            <span class="preview-hint">Enter copy · Tab collapse</span>
+          </div>
+          <pre class="code"></pre>
+          <div class="preview-notes"></div>
+        </div>
       </div>
       <div class="toast" hidden></div>`;
     container.appendChild(this.root);
@@ -53,6 +70,7 @@ export class CommandBar {
     this.panel = this.root.querySelector(".bar")!;
     this.input = this.root.querySelector("input")!;
     this.list = this.root.querySelector(".results")!;
+    this.previewPanel = this.root.querySelector(".preview")!;
     this.toast = this.root.querySelector(".toast")!;
 
     this.bindEvents();
@@ -67,13 +85,21 @@ export class CommandBar {
 
   // ---------- rendering ----------
 
+  /** Text to analyze: the original paste (with line breaks) if the input still shows it. */
+  private rawQuery(): string {
+    return this.pasted && this.input.value === this.pasted.shown ? this.pasted.raw : this.input.value;
+  }
+
   private async render(): Promise<void> {
     const id = ++this.requestId;
-    const query = this.input.value;
-    const remote = (await send({ type: "search", query: query.trim(), overlay: this.options.overlay })) ?? [];
+    const local = localResults(this.rawQuery(), this.settings.features);
+    // Pasted JSON/YAML/JWT: show the viewer rows only, searching history for it is pointless.
+    const remote = isDataQuery(local)
+      ? []
+      : ((await send({ type: "search", query: this.input.value.trim(), overlay: this.options.overlay })) ?? []);
     if (id !== this.requestId) return;
 
-    this.items = [...localResults(query, this.settings.features), ...remote];
+    this.items = [...local, ...remote];
     this.list.replaceChildren(...this.items.map((item, i) => this.renderRow(item, i)));
     this.setActive(0);
   }
@@ -81,6 +107,19 @@ export class CommandBar {
   private renderRow(item: ResultItem, index: number): HTMLLIElement {
     const li = document.createElement("li");
     li.append(this.renderIcon(item), this.renderTitle(item));
+
+    if (item.preview) {
+      const expand = document.createElement("button");
+      expand.className = "expand";
+      expand.title = "Expand (Tab)";
+      expand.innerHTML = EXPAND_ICON;
+      expand.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.setActive(index);
+        this.togglePreview();
+      });
+      li.append(expand);
+    }
 
     if (item.action) {
       const action = document.createElement("span");
@@ -133,6 +172,35 @@ export class CommandBar {
     this.active = (index + this.items.length) % this.items.length;
     [...this.list.children].forEach((li, i) => li.classList.toggle("active", i === this.active));
     this.list.children[this.active]?.scrollIntoView({ block: "nearest" });
+    this.renderPreview();
+  }
+
+  private togglePreview(): void {
+    this.previewOpen = !this.previewOpen;
+    this.renderPreview();
+  }
+
+  /** Shows the active row's preview while the panel is open; hides it for rows without one. */
+  private renderPreview(): void {
+    const preview = this.items[this.active]?.preview;
+    const visible = this.previewOpen && !!preview;
+    this.previewPanel.hidden = !visible;
+    this.root.classList.toggle("previewing", visible);
+    this.list.querySelectorAll(".expand").forEach((b) => b.classList.toggle("open", this.previewOpen));
+    if (!visible || !preview) return;
+
+    this.previewPanel.querySelector(".preview-lang")!.textContent = preview.language.toUpperCase();
+    const code = this.previewPanel.querySelector("pre")!;
+    code.innerHTML = highlight(preview.content, preview.language);
+    code.scrollTop = 0;
+    const notes = this.previewPanel.querySelector(".preview-notes")!;
+    notes.replaceChildren(
+      ...(preview.notes ?? []).map((text) => {
+        const note = document.createElement("div");
+        note.textContent = text;
+        return note;
+      })
+    );
   }
 
   private applyAppearance(): void {
@@ -179,7 +247,21 @@ export class CommandBar {
   // ---------- events ----------
 
   private bindEvents(): void {
-    this.input.addEventListener("input", () => this.render());
+    this.input.addEventListener("input", () => {
+      if (this.pasted && this.input.value !== this.pasted.shown) this.pasted = null;
+      this.render();
+    });
+
+    this.input.addEventListener("paste", (e) => {
+      const text = e.clipboardData?.getData("text/plain") ?? "";
+      if (!text.includes("\n")) return; // single line — let the input handle it normally
+      e.preventDefault();
+      const shown = text.replace(/\s*\n\s*/g, " ").trim();
+      this.pasted = { raw: text, shown };
+      this.input.value = shown;
+      this.input.setSelectionRange(shown.length, shown.length);
+      this.render();
+    });
 
     this.input.addEventListener("keydown", (e) => {
       if (e.isComposing) return;
@@ -193,10 +275,15 @@ export class CommandBar {
       } else if (key === "Enter") {
         e.preventDefault();
         this.choose(this.items[this.active], e.metaKey);
+      } else if (key === "Tab" && !e.shiftKey) {
+        e.preventDefault();
+        if (this.items[this.active]?.preview) this.togglePreview();
       } else if (key === "Escape") {
         e.preventDefault();
-        // First Esc clears the input, second one closes the bar.
-        if (this.input.value) {
+        // Esc collapses the preview, then clears the input, then closes the bar.
+        if (this.previewOpen && this.items[this.active]?.preview) {
+          this.togglePreview();
+        } else if (this.input.value) {
           this.input.value = "";
           this.render();
         } else {
