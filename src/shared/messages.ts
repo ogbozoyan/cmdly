@@ -1,4 +1,4 @@
-import type { CommandResult, ResultItem } from "./model.ts";
+import type { CommandResult, Draft, ResultItem } from "./model.ts";
 
 /**
  * Message contract between UI / content scripts and the background service worker.
@@ -8,6 +8,9 @@ import type { CommandResult, ResultItem } from "./model.ts";
 export type Request =
   | { type: "search"; query: string; overlay: boolean }
   | { type: "suggest"; query: string }
+  | { type: "draft-save"; draft: Draft | null }
+  | { type: "draft-get" }
+  | { type: "overlay-state"; open: boolean }
   | { type: "open"; item?: ResultItem; text: string; inBackground: boolean; overlay: boolean }
   | { type: "command"; id: string; overlay: boolean }
   | { type: "newtab-opened" }
@@ -20,6 +23,9 @@ export type Request =
 export interface ResponseMap {
   search: ResultItem[];
   suggest: ResultItem[];
+  "draft-save": void;
+  "draft-get": Draft | null;
+  "overlay-state": void;
   open: void;
   command: CommandResult;
   "newtab-opened": void;

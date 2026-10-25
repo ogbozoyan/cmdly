@@ -1,5 +1,6 @@
 import type { Request, ResponseMap } from "../shared/messages.ts";
 import { dismissPalettePage, handleNewTab, openBar } from "./bar-service.ts";
+import { loadDraft, markOverlay, saveDraft } from "./bar-state-service.ts";
 import { runCommand } from "./command-service.ts";
 import { open } from "./navigation-service.ts";
 import { search } from "./search-service.ts";
@@ -17,9 +18,18 @@ export async function route(request: Request, sender: chrome.tabs.Tab): Promise<
       return search(request.query, sender, request.overlay);
     case "suggest":
       return suggest(request.query, sender);
+    case "draft-save":
+      return saveDraft(request.draft);
+    case "draft-get":
+      return loadDraft();
+    case "overlay-state":
+      return markOverlay(sender, request.open);
+    // Running something ends the bar's session: a "Reload tab" must not bring it back.
     case "open":
+      await markOverlay(sender, false);
       return open(request, sender);
     case "command":
+      await markOverlay(sender, false);
       return runCommand(request.id, sender, request.overlay);
     case "newtab-opened":
       return handleNewTab(sender);

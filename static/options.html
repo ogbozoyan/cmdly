@@ -128,21 +128,26 @@
           <input type="checkbox" data-path="sources.history">
         </span>
       </div>
-      <div class="row">
-        <span><b>Search suggestions</b><small>Popular queries from the search engine as you type. What you type is sent to it; pasted JSON, tokens, math and incognito windows never are.</small></span>
-        <span class="pair">
-          <input type="number" min="1" max="10" data-path="limits.suggestions">
-          <input type="checkbox" data-path="sources.suggestions">
-        </span>
-      </div>
+    </section>
+
+    <section>
+      <h2>Search suggestions</h2>
       <label class="row">
-        <span><b>Suggestions from</b><small>Pressing Enter still searches with Chrome's default search engine.</small></span>
+        <span><b>Show search suggestions</b><small>Popular queries from the search engine as you type. What you type is sent to it; incognito windows, pasted JSON, tokens and math never are.</small></span>
+        <input type="checkbox" data-path="sources.suggestions">
+      </label>
+      <label class="row" data-requires="sources.suggestions">
+        <span><b>Suggestions from</b><small>Enter still searches with Chrome's default search engine.</small></span>
         <select data-path="suggest.engine">
           <option value="google">Google</option>
           <option value="bing">Bing</option>
           <option value="duckduckgo">DuckDuckGo</option>
           <option value="yandex">Yandex</option>
         </select>
+      </label>
+      <label class="row" data-requires="sources.suggestions">
+        <span><b>Max suggestions</b></span>
+        <input type="number" min="1" max="10" data-path="limits.suggestions">
       </label>
     </section>
 

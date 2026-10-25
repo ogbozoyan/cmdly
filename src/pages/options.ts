@@ -47,6 +47,12 @@ function fillForm(): void {
   for (const source of ["tabs", "bookmarks", "history"] as const) {
     $<HTMLInputElement>(`[data-path="limits.${source}"]`).disabled = !settings.sources[source];
   }
+  // Rows that only matter while another switch is on (e.g. the suggestion engine).
+  for (const row of document.querySelectorAll<HTMLElement>("[data-requires]")) {
+    const on = getPath(row.dataset.requires!) === true;
+    row.classList.toggle("off", !on);
+    row.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-path]").forEach((el) => (el.disabled = !on));
+  }
   $("#width-value").textContent = `${settings.appearance.width}px`;
   fillShortcuts();
 }

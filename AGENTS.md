@@ -86,6 +86,10 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   `keep-open-service.ts` reads Chrome state, debounces events and applies the actions. The guard is
   Cmdly's own pinned `keep-open.html` — never `chrome://newtab`, which Cmdly itself replaces.
   Helpers that pick "the previous tab" must skip it (`isGuardTab` in `tab-service.ts`).
+- **Bar state** (`bar-state-service.ts`, `chrome.storage.session`): the typed text is a draft that
+  survives closing the bar and reloads until something is run (then `clearDraft`); an overlay that
+  was open when its page reloaded is injected again (same URL only). `open`/`command` messages clear
+  the mark first so "Reload tab" doesn't resurrect the bar.
 - **Search suggestions** are a separate `suggest` message: the UI draws tabs/history first, then
   merges suggestion rows under the web-search row (`withSuggestions`) when the network answers.
 - A row with `variant` (see `Variant` in `model.ts`) shows a chip; <kbd>Tab</kbd> calls

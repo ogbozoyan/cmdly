@@ -298,6 +298,28 @@ try {
     expect((await rowTitles(page))[0] === "aGVsbG8=", "base64 row");
   });
 
+  await check("typed text survives closing the bar and a page reload (Arc behaviour)", async () => {
+    const inputState = () =>
+      page.evaluate(() => {
+        const input = document.getElementById("cmdly-overlay")?.shadowRoot.querySelector("input");
+        return input && { value: input.value, selected: input.selectionStart === 0 && input.selectionEnd === input.value.length };
+      });
+    await typeInBar(page, "half typed query");
+    await page.mouse.click(5, 5); // click outside closes the overlay
+    await page.waitForFunction(() => !document.getElementById("cmdly-overlay"));
+
+    await openOverlay(page);
+    await sleep(300);
+    let state = await inputState();
+    expect(state?.value === "half typed query" && state.selected, `after reopen: ${JSON.stringify(state)}`);
+
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById("cmdly-overlay")?.style.visibility === "visible", { timeout: 5000 });
+    await sleep(300);
+    state = await inputState();
+    expect(state?.value === "half typed query", `after reload: ${JSON.stringify(state)}`);
+  });
+
   await check("Esc closes the overlay", async () => {
     await typeInBar(page, "");
     await page.keyboard.press("Escape");

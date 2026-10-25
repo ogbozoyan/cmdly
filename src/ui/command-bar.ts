@@ -1,4 +1,4 @@
-import type { ResultItem } from "../shared/model.ts";
+import type { Draft, ResultItem } from "../shared/model.ts";
 import { send } from "../shared/messages.ts";
 import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
@@ -40,6 +40,7 @@ export class CommandBar {
   /** Drops responses of outdated searches when the user types fast. */
   private requestId = 0;
   private previewOpen = false;
+  private draftTimer: ReturnType<typeof setTimeout> | undefined;
   /**
    * The <input> is single-line and drops line breaks on paste, which breaks YAML.
    * We keep the original pasted text while the input still shows it.
@@ -77,12 +78,36 @@ export class CommandBar {
 
     this.bindEvents();
     this.applyAppearance();
-    settingsRepository.get().then((settings) => {
+    Promise.all([settingsRepository.get(), send({ type: "draft-get" })]).then(([settings, draft]) => {
       this.settings = settings;
       this.applyAppearance();
+      this.restoreDraft(draft);
       this.render();
     });
     this.input.focus();
+  }
+
+  // ---------- draft (survives close / reload until something is run) ----------
+
+  /** Restored text is selected: typing replaces it, arrows/Enter continue where the user stopped. */
+  private restoreDraft(draft: Draft | null): void {
+    if (!draft || this.input.value) return; // the user already started typing
+    this.input.value = draft.text;
+    if (draft.pasted) this.pasted = { raw: draft.pasted, shown: draft.text };
+    this.input.select();
+  }
+
+  private saveDraftSoon(): void {
+    clearTimeout(this.draftTimer);
+    this.draftTimer = setTimeout(() => {
+      const text = this.input.value;
+      send({ type: "draft-save", draft: text.trim() ? { text, pasted: this.pasted?.raw } : null });
+    }, 150);
+  }
+
+  private clearDraft(): void {
+    clearTimeout(this.draftTimer);
+    send({ type: "draft-save", draft: null });
   }
 
   // ---------- rendering ----------
@@ -271,6 +296,7 @@ export class CommandBar {
     const text = this.input.value.trim();
     if (!item && !text) return;
 
+    this.clearDraft(); // the work is done — next time the bar opens empty
     if (item?.kind === "command") return this.runCommand(item);
 
     if (item?.copy != null) {
@@ -295,6 +321,7 @@ export class CommandBar {
   private bindEvents(): void {
     this.input.addEventListener("input", () => {
       if (this.pasted && this.input.value !== this.pasted.shown) this.pasted = null;
+      this.saveDraftSoon();
       this.render();
     });
 
@@ -306,6 +333,7 @@ export class CommandBar {
       this.pasted = { raw: text, shown };
       this.input.value = shown;
       this.input.setSelectionRange(shown.length, shown.length);
+      this.saveDraftSoon();
       this.render();
     });
 
@@ -333,6 +361,7 @@ export class CommandBar {
           this.togglePreview();
         } else if (this.input.value) {
           this.input.value = "";
+          this.clearDraft();
           this.render();
         } else {
           this.options.close();

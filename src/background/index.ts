@@ -4,11 +4,15 @@
  */
 import type { Request } from "../shared/messages.ts";
 import { openBar } from "./bar-service.ts";
+import { watchBarState } from "./bar-state-service.ts";
 import { watchKeepOpen } from "./keep-open-service.ts";
 import { route } from "./router.ts";
 
 // "Keep window open": closing the last tab doesn't close the window.
 watchKeepOpen();
+
+// The bar survives a page reload and keeps what was typed (Arc behaviour).
+watchBarState();
 
 // Messages from the command bar, content scripts and extension pages.
 chrome.runtime.onMessage.addListener((request: Request, sender, sendResponse) => {

@@ -3,6 +3,7 @@
  * Draws the command bar inside a shadow root, so page styles can't break it and it can't break the page.
  * Running it again while the bar is open closes it (toggle).
  */
+import { send } from "../shared/messages.ts";
 import { CommandBar } from "../ui/command-bar.ts";
 
 const HOST_ID = "cmdly-overlay";
@@ -35,12 +36,14 @@ function toggleOverlay(): void {
 
   const close = () => {
     host.remove();
+    send({ type: "overlay-state", open: false });
     previousFocus?.focus?.();
   };
   host.cmdlyClose = close;
 
   document.documentElement.appendChild(host);
   const bar = new CommandBar(shadow, { overlay: true, close });
+  send({ type: "overlay-state", open: true });
 
   stylesheet.onload = () => {
     host.style.visibility = "visible";

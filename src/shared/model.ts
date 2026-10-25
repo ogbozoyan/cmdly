@@ -49,6 +49,13 @@ export interface ResultItem {
   variant?: Variant;
 }
 
+/** Text typed into the bar and not run yet — restored when the bar opens again. */
+export interface Draft {
+  text: string;
+  /** Original multi-line paste (YAML/JSON) behind a flattened `text`. */
+  pasted?: string;
+}
+
 /** A remembered choice that Tab cycles through. */
 export interface Variant {
   setting: "uuidVersion";

@@ -16,6 +16,10 @@ Only your Cmdly settings (enabled features, shortcuts, appearance). They are sav
 `chrome.storage.sync`, which Chrome may sync between your own devices when Chrome Sync is on.
 You can export, import or reset them on the settings page.
 
+Text you typed into the bar but didn't run is kept in Chrome's in-memory session storage for
+up to 10 minutes, so it is still there if the bar closes or the page reloads. It never touches disk
+and is gone when Chrome quits.
+
 ## Data Cmdly sends
 
 Cmdly has no servers, no analytics, no tracking and no ads. Nothing is ever sent to the developer.
