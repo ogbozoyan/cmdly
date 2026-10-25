@@ -53,9 +53,17 @@ export async function handleNewTab(newTab: chrome.tabs.Tab): Promise<void> {
   if (newTab.id) await chrome.tabs.remove(newTab.id);
 }
 
-/** Esc on the palette page: go back to the previous tab and close the palette. */
+/**
+ * Esc on the palette page: go back to the previous tab and close the palette.
+ * If the palette is the window's only real tab it stays — closing it would close the window.
+ */
 export async function dismissPalettePage(paletteTab: chrome.tabs.Tab): Promise<void> {
   const prev = await previousTab(paletteTab);
-  if (prev?.id) await chrome.tabs.update(prev.id, { active: true });
+  if (!prev?.id) return;
+  await chrome.tabs.update(prev.id, { active: true });
   if (paletteTab.id) await chrome.tabs.remove(paletteTab.id);
+}
+
+export async function openPalettePageIn(windowId: number): Promise<void> {
+  await chrome.tabs.create({ url: PALETTE_URL, windowId, active: true });
 }

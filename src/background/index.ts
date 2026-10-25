@@ -4,7 +4,11 @@
  */
 import type { Request } from "../shared/messages.ts";
 import { openBar } from "./bar-service.ts";
+import { watchKeepOpen } from "./keep-open-service.ts";
 import { route } from "./router.ts";
+
+// "Keep window open": closing the last tab doesn't close the window.
+watchKeepOpen();
 
 // Messages from the command bar, content scripts and extension pages.
 chrome.runtime.onMessage.addListener((request: Request, sender, sendResponse) => {

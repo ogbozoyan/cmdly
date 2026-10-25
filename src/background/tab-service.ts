@@ -2,11 +2,18 @@
 
 export const PALETTE_URL = chrome.runtime.getURL("palette.html");
 
-/** The most recently used tab in the same window, other than `tab`. */
+/** The pinned tab that keeps a window open (see keep-open-plan.ts). */
+export const GUARD_URL = chrome.runtime.getURL("keep-open.html");
+
+export function isGuardTab(tab: chrome.tabs.Tab): boolean {
+  return (tab.url ?? tab.pendingUrl ?? "").startsWith(GUARD_URL);
+}
+
+/** The most recently used real tab in the same window, other than `tab` (the guard doesn't count). */
 export async function previousTab(tab: chrome.tabs.Tab): Promise<chrome.tabs.Tab | undefined> {
   const tabs = await chrome.tabs.query({ windowId: tab.windowId });
   return tabs
-    .filter((t) => t.id !== tab.id)
+    .filter((t) => t.id !== tab.id && !isGuardTab(t))
     .sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))[0];
 }
 

@@ -8,7 +8,8 @@ Guide for AI coding agents (Claude Code, Codex, OpenCode…) and humans working 
 Cmdly is a Chrome extension (Manifest V3): an Arc-style command bar. `Cmd+T` shows a search bar
 over the current page that finds open tabs, bookmarks and history, runs browser commands
 (Copy URL, Pin Tab…), and has small tools (calculator, UUID, Base64/URL, JWT, JSON/YAML viewer).
-It also adds shortcuts: `⇧⌘C` copies the page URL, `⌘Z` reopens a closed tab.
+It also adds shortcuts: `⇧⌘C` copies the page URL, `⌘Z` reopens a closed tab, and can keep a
+window open when its last tab is closed.
 
 ## Commands
 
@@ -55,6 +56,7 @@ Think of it as a small backend + frontend in one package:
                                                   └─ (chrome:// page) ─▶ palette.html tab
 overlay.js / palette.js ─▶ CommandBar (src/ui) ──send()──▶ router ─▶ search / command / navigation service
 content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "open bar" shortcut
+tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add/remove pinned guard, open bar
 ```
 
 - **Overlay** = the bar injected into a web page inside a shadow root (`src/content/overlay.ts`).
@@ -66,6 +68,10 @@ content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "op
   `src/tools/local-results.ts`; tabs/bookmarks/history/commands come from `search-service.ts`.
 - A row with `preview` (see `Preview` in `model.ts`) gets an expand button; <kbd>Tab</kbd> opens the
   viewer panel under the results (`CommandBar.renderPreview`, highlighting in `src/ui/highlight.ts`).
+- **Keep window open**: `keep-open-plan.ts` is a pure planner (windows snapshot → actions), unit-tested;
+  `keep-open-service.ts` reads Chrome state, debounces events and applies the actions. The guard is
+  Cmdly's own pinned `keep-open.html` — never `chrome://newtab`, which Cmdly itself replaces.
+  Helpers that pick "the previous tab" must skip it (`isGuardTab` in `tab-service.ts`).
 - The input is single-line and would drop line breaks on paste; `CommandBar` keeps the raw pasted
   text (`pasted`) so YAML survives. Use `rawQuery()` when analyzing input.
 
@@ -101,7 +107,7 @@ content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "op
 
 - Unit: `tests/**/*.test.ts` mirror `src/` folders. Run `npm test`.
 - E2E: `scripts/e2e.mjs` loads `dist/` into Chrome for Testing via puppeteer-core and checks
-  overlay, ⌘T flow, ⇧⌘C, ⌘Z, options. Branded Chrome can't load unpacked extensions from the
+  overlay, ⌘T flow, ⇧⌘C, ⌘Z, JSON/YAML viewer, keep window open, options. Branded Chrome can't load unpacked extensions from the
   command line, hence Chrome for Testing:
   `npx @puppeteer/browsers install chrome@stable` → `export CHROME_PATH=…`.
 - Run `npm run check` before committing; run `npm run e2e` after touching background/content/UI.

@@ -293,6 +293,54 @@ try {
     expect(urls.some((u) => u.startsWith("https://example.com")), `example.com not restored: ${urls.join(", ")}`);
   });
 
+  await check("keep window open: closing the last tab leaves the window with the command bar", async () => {
+    const result = await inWorker(async (site) => {
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const tabsOf = async (windowId) =>
+        (await chrome.tabs.query({ windowId })).map((t) => ({ id: t.id, pinned: t.pinned, url: t.url || t.pendingUrl }));
+      const isGuard = (t) => t.url.endsWith("/keep-open.html");
+      const isPalette = (t) => t.url.endsWith("/palette.html");
+      const settings = async (keepOpen) => {
+        const { settings = {} } = await chrome.storage.sync.get("settings");
+        await chrome.storage.sync.set({ settings: { ...settings, windows: { keepOpen } } });
+      };
+
+      await settings("every");
+      const win = await chrome.windows.create({ url: site });
+      await wait(1200);
+      const withOneTab = await tabsOf(win.id);
+
+      const page = withOneTab.find((t) => !isGuard(t));
+      await chrome.tabs.remove(page.id);
+      await wait(1200);
+      const windowSurvived = (await chrome.windows.getAll()).some((w) => w.id === win.id);
+      const afterClose = windowSurvived ? await tabsOf(win.id) : [];
+
+      await chrome.tabs.create({ windowId: win.id, url: site });
+      await wait(1200);
+      const withTwoTabs = await tabsOf(win.id);
+
+      // Cmd+T in a one-tab window must not make the guard disappear and reappear.
+      await chrome.tabs.remove(withTwoTabs.find(isPalette).id);
+      await wait(1200);
+      const guardBefore = (await tabsOf(win.id)).find(isGuard)?.id;
+      await chrome.tabs.create({ windowId: win.id });
+      await wait(1500);
+      const guardAfter = (await tabsOf(win.id)).find(isGuard)?.id;
+
+      await settings("off");
+      await chrome.windows.remove(win.id);
+      return { withOneTab, windowSurvived, afterClose, withTwoTabs, guardBefore, guardAfter };
+    }, SITE);
+
+    const guards = (tabs) => tabs.filter((t) => t.url.endsWith("/keep-open.html"));
+    expect(guards(result.withOneTab).length === 1 && guards(result.withOneTab)[0].pinned, `one tab → pinned guard: ${JSON.stringify(result.withOneTab)}`);
+    expect(result.windowSurvived, "window closed together with its last tab");
+    expect(result.afterClose.some((t) => t.url.endsWith("/palette.html")), `bar not opened: ${JSON.stringify(result.afterClose)}`);
+    expect(guards(result.withTwoTabs).length === 0, `guard not removed with 2 tabs: ${JSON.stringify(result.withTwoTabs)}`);
+    expect(result.guardBefore && result.guardBefore === result.guardAfter, `guard flickered on ⌘T: ${result.guardBefore} → ${result.guardAfter}`);
+  });
+
   await check("options page renders shortcuts and saves changes", async () => {
     const options = await openPage(`chrome-extension://${extensionId}/options.html`);
     await options.waitForSelector('[data-shortcut="copyUrl"]');

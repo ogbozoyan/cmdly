@@ -62,6 +62,7 @@ you actually navigate somewhere.
 | **Calculator** | `2+2`, `200+15%`, `sqrt(16)`, `5!`, `2^10`, `3x4`. Enter copies the result. |
 | **JSON / YAML** | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results. |
 | **Dev tools** | `uuid` / `uuid 5`, `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates. |
+| **Keep window open** | Closing the last tab doesn't close the window — the command bar opens instead. Protect the last window or every window. Replaces separate "don't close window with last tab" extensions, which conflict with any new-tab override. |
 | **Shortcuts** | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable. |
 | **Settings** | Turn every feature on/off, rebind shortcuts, pick theme, accent color, position and width. Export / import as JSON. |
 | **Private** | No network requests, no analytics. Everything stays in your browser. |
@@ -138,6 +139,24 @@ In the bar: <kbd>↑</kbd> <kbd>↓</kbd> select · <kbd>Enter</kbd> open / copy
 
 On Windows and Linux use <kbd>Ctrl</kbd> instead of <kbd>⌘</kbd>. Change them in **Cmdly Settings**
 (right-click the toolbar icon → Options, or type `cmdly settings` in the bar).
+
+## Keep window open
+
+Turn it on in **Cmdly Settings → Behavior → Keep window open**.
+
+While a protected window has a single tab, Cmdly adds a small pinned tab to it. Close the last real
+tab — the window stays and the command bar opens as a fresh tab. As soon as the window has two
+or more tabs, the pinned tab disappears again, so the tab bar stays clean.
+
+| Mode | Protects |
+|---|---|
+| Off | Nothing (default) |
+| Last window | Only the last remaining window — other windows close normally |
+| Every window | Every window |
+
+> If you used [Don't Close Window With Last Tab](https://github.com/moneytoo/DontCloseWindowWithLastTab),
+> remove it: both extensions manage new tabs and fight each other. Cmdly's version is an independent
+> implementation of the same idea that knows about its own new tab handling.
 
 ## Limitations
 

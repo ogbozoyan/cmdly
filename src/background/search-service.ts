@@ -3,7 +3,7 @@ import { settingsRepository } from "../shared/settings-repository.ts";
 import { looksLikeUrl, shortUrl, toUrl } from "../shared/url.ts";
 import { commandTarget, matchCommands } from "./command-service.ts";
 import { score } from "./scoring.ts";
-import { PALETTE_URL } from "./tab-service.ts";
+import { isGuardTab, PALETTE_URL } from "./tab-service.ts";
 
 /**
  * Builds the result list for a query, in this order:
@@ -56,7 +56,7 @@ class ResultList {
 async function findTabs(query: string, host: chrome.tabs.Tab, limit: number): Promise<ResultItem[]> {
   const tabs = await chrome.tabs.query({});
   return tabs
-    .filter((t) => t.id !== host.id && t.url && !t.url.startsWith(PALETTE_URL) && !t.url.startsWith("about:"))
+    .filter((t) => t.id !== host.id && t.url && !t.url.startsWith(PALETTE_URL) && !t.url.startsWith("about:") && !isGuardTab(t))
     .map((t) => ({ t, relevance: query ? score(query, t.title, t.url) : 1 }))
     .filter((x) => x.relevance > 0)
     .sort((a, b) => b.relevance - a.relevance || (b.t.lastAccessed ?? 0) - (a.t.lastAccessed ?? 0))

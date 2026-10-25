@@ -1,5 +1,8 @@
 import { MOD } from "./platform.ts";
 
+/** What "keep window open" protects: nothing, the last remaining window, or every window. */
+export type KeepOpenMode = "off" | "last" | "every";
+
 /** User settings. Stored in chrome.storage.sync, so they follow the user across devices. */
 export interface Settings {
   /** Keyboard shortcuts in Shortcut format (see shortcuts.ts). Empty string = disabled. */
@@ -18,6 +21,10 @@ export interface Settings {
     jwt: boolean;
     /** JSON / YAML viewer, formatter and converter. */
     formats: boolean;
+  };
+  windows: {
+    /** Closing the last tab doesn't close the window (see background/keep-open-plan.ts). */
+    keepOpen: KeepOpenMode;
   };
   sources: {
     tabs: boolean;
@@ -53,6 +60,9 @@ export const DEFAULT_SETTINGS: Settings = {
     encode: true,
     jwt: true,
     formats: true,
+  },
+  windows: {
+    keepOpen: "off",
   },
   sources: {
     tabs: true,

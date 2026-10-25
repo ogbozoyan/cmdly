@@ -55,6 +55,14 @@
         <span><b>Open over current page</b><small>The bar appears on top of the page you're on. When off, it opens in a new tab.</small></span>
         <input type="checkbox" data-path="features.overlay">
       </label>
+      <label class="row">
+        <span><b>Keep window open</b><small>Closing the last tab doesn't close the window — the command bar opens instead. A small pinned tab appears only while the window has one tab.</small></span>
+        <select data-path="windows.keepOpen">
+          <option value="off">Off</option>
+          <option value="last">Last window</option>
+          <option value="every">Every window</option>
+        </select>
+      </label>
     </section>
 
     <section>
