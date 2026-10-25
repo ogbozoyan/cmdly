@@ -191,6 +191,21 @@ li.active .icon.glyph svg { color: var(--chip-text); }
 
 .bar[hidden] { display: none; }
 
+/* ---------- variant chip (UUID version) ---------- */
+
+.variant {
+  all: unset;
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  cursor: pointer;
+}
+
+.variant:hover, li.active .variant { color: var(--text); background: color-mix(in srgb, var(--accent) 28%, transparent); }
+
 /* ---------- expand button & preview panel ---------- */
 
 .expand {

@@ -2,19 +2,26 @@ import type { Preview, ResultItem } from "../shared/model.ts";
 import type { Features } from "../shared/settings.ts";
 import { evaluate, formatNumber, plainNumber } from "./calculator.ts";
 import { describeData, formatSize, parseData, toMinifiedJson, toPrettyJson, toYaml } from "./data-formats.ts";
-import { base64Decode, base64Encode, decodeJwt, describeJwt, jwtTimeNotes, urlDecode, uuid } from "./dev-tools.ts";
+import { base64Decode, base64Encode, decodeJwt, describeJwt, jwtTimeNotes, urlDecode } from "./dev-tools.ts";
+import { generateUuids, isUuidVersion, nextUuidVersion, UUID_DESCRIPTIONS, type UuidVersion } from "./uuid.ts";
+
+export interface LocalOptions {
+  /** Saved UUID version (Settings.tools.uuidVersion). */
+  uuidVersion?: string;
+}
 
 /**
  * Results computed instantly in the UI, without asking the background:
  * calculator, UUID, encoders, JWT, JSON/YAML. Shown above tabs/history/search.
  * `query` is the raw text — for pasted JSON/YAML it keeps its line breaks.
  */
-export function localResults(query: string, features: Features): ResultItem[] {
+export function localResults(query: string, features: Features, options: LocalOptions = {}): ResultItem[] {
   const q = query.trim();
   if (!q) return [];
+  const savedUuid = isUuidVersion(options.uuidVersion) ? options.uuidVersion : "v4";
   return [
     ...(features.calculator ? calculatorResult(q) : []),
-    ...(features.uuid ? uuidResult(q) : []),
+    ...(features.uuid ? uuidResult(q, savedUuid) : []),
     ...(features.encode ? encoderResult(q) : []),
     ...(features.jwt ? jwtResult(q) : []),
     ...(features.formats ? dataResult(q) : []),
@@ -38,15 +45,25 @@ function calculatorResult(q: string): ResultItem[] {
   return [copyRow("= " + formatNumber(value), q.replace(/=$/, ""), plainNumber(value), "calc", "calc")];
 }
 
-/** "uuid", "guid", "uuid v4", "uuid 5" (up to 50). */
-function uuidResult(q: string): ResultItem[] {
-  const m = /^(uuid|guid)(?:\s*v?4)?(?:\s+(\d{1,2}))?$/i.exec(q);
+/**
+ * "uuid", "guid", "uuid 5" (up to 50) use the saved version, and Tab on the row switches it.
+ * "uuid v7", "uuid v1 5" pick a version for this query only.
+ */
+function uuidResult(q: string, saved: UuidVersion): ResultItem[] {
+  const m = /^(uuid|guid)(?:\s*v([147]))?(?:\s+(\d{1,2}))?$/i.exec(q);
   if (!m) return [];
-  const count = Math.min(Math.max(parseInt(m[2] || "1", 10), 1), 50);
-  const ids = Array.from({ length: count }, uuid);
-  return count === 1
-    ? [copyRow(ids[0], "UUID v4", ids[0], "key")]
-    : [copyRow(`${count} UUIDs`, ids[0] + "…", ids.join("\n"), "key")];
+  const explicit = m[2] ? (`v${m[2]}` as UuidVersion) : null;
+  const version = explicit ?? saved;
+  const count = Math.min(Math.max(parseInt(m[3] || "1", 10), 1), 50);
+  const ids = generateUuids(version, count);
+  const label = `UUID ${version} · ${UUID_DESCRIPTIONS[version]}`;
+  const row =
+    count === 1
+      ? copyRow(ids[0], label, ids[0], "key")
+      : copyRow(`${count} UUIDs`, `${label} · ${ids[0]}…`, ids.join("\n"), "key");
+  // Explicit "uuid v7" is a one-off; only the plain query cycles and saves the version.
+  if (!explicit) row.variant = { setting: "uuidVersion", value: version, next: nextUuidVersion(version) };
+  return [row];
 }
 
 /** Prefix commands. Each prefix needs a space and some text after it: "b64 hello". */

@@ -43,6 +43,16 @@ export interface ResultItem {
   copy?: string;
   /** If set, the row can be expanded into a viewer panel. */
   preview?: Preview;
+  /** If set, Tab switches this row to the next variant and remembers it (e.g. UUID version). */
+  variant?: Variant;
+}
+
+/** A remembered choice that Tab cycles through. */
+export interface Variant {
+  setting: "uuidVersion";
+  /** Shown on the row's chip, e.g. "v4". */
+  value: string;
+  next: "v4" | "v7" | "v1";
 }
 
 /** What the background asks the UI to do after a command. */

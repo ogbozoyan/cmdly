@@ -1,17 +1,7 @@
-/** Developer utilities: UUID, Base64, URL encoding, JWT decoding. Pure functions, unit-tested. */
+/** Developer utilities: Base64, URL encoding, JWT decoding. Pure functions, unit-tested. */
 
 const utf8 = new TextEncoder();
 const utf8Strict = new TextDecoder("utf-8", { fatal: true });
-
-export function uuid(): string {
-  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
-  // randomUUID is missing on insecure (http://) pages — build a v4 UUID by hand.
-  const b = crypto.getRandomValues(new Uint8Array(16));
-  b[6] = (b[6] & 0x0f) | 0x40;
-  b[8] = (b[8] & 0x3f) | 0x80;
-  const h = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
-}
 
 /** UTF-8 safe Base64 encoding (btoa alone breaks on non-Latin text). */
 export function base64Encode(text: string): string {

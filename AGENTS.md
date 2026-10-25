@@ -86,6 +86,9 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   `keep-open-service.ts` reads Chrome state, debounces events and applies the actions. The guard is
   Cmdly's own pinned `keep-open.html` — never `chrome://newtab`, which Cmdly itself replaces.
   Helpers that pick "the previous tab" must skip it (`isGuardTab` in `tab-service.ts`).
+- A row with `variant` (see `Variant` in `model.ts`) shows a chip; <kbd>Tab</kbd> calls
+  `CommandBar.cycleVariant`, which stores the next value in `Settings.tools` and re-renders.
+  Used for the UUID version (`src/tools/uuid.ts`: v4, v7, v1).
 - The input is single-line and would drop line breaks on paste; `CommandBar` keeps the raw pasted
   text (`pasted`) so YAML survives. Use `rawQuery()` when analyzing input.
 

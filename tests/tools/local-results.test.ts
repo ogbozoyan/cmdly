@@ -21,18 +21,33 @@ test("calculator row", () => {
   assert.equal(row.copy, "4");
 });
 
-test("uuid", () => {
+test("uuid uses the saved version and offers Tab to switch", () => {
   const [one] = run("uuid");
   assert.match(one.copy!, UUID);
-  assert.equal(one.meta, "UUID v4");
+  assert.equal(one.meta, "UUID v4 · random");
+  assert.deepEqual(one.variant, { setting: "uuidVersion", value: "v4", next: "v7" });
 
+  const [v7] = localResults("uuid", all, { uuidVersion: "v7" });
+  assert.match(v7.copy!, /^[0-9a-f]{8}-[0-9a-f]{4}-7/);
+  assert.deepEqual(v7.variant, { setting: "uuidVersion", value: "v7", next: "v1" });
+
+  // Garbage in settings falls back to v4.
+  assert.equal(localResults("uuid", all, { uuidVersion: "v9" })[0].variant!.value, "v4");
+});
+
+test("uuid count and explicit one-off version", () => {
   const ids = run("uuid 5")[0].copy!.split("\n");
   assert.equal(ids.length, 5);
   assert.equal(new Set(ids).size, 5);
   ids.forEach((id) => assert.match(id, UUID));
-
-  assert.equal(run("guid")[0].meta, "UUID v4");
   assert.equal(run("uuid 99")[0].copy!.split("\n").length, 50);
+
+  const [explicit] = run("uuid v1 3");
+  assert.equal(explicit.copy!.split("\n").length, 3);
+  assert.match(explicit.copy!, /^[0-9a-f]{8}-[0-9a-f]{4}-1/);
+  assert.equal(explicit.variant, undefined); // one-off, not saved
+
+  assert.equal(run("guid")[0].meta, "UUID v4 · random");
   assert.deepEqual(run("uuid generator online"), []);
 });
 

@@ -91,22 +91,36 @@ export class CommandBar {
     return this.pasted && this.input.value === this.pasted.shown ? this.pasted.raw : this.input.value;
   }
 
-  private async render(): Promise<void> {
+  private async render(keepActive = false): Promise<void> {
     const id = ++this.requestId;
     // Tool rows (calculator, JSON/YAML, JWT…) come first; web search, tabs and history always follow.
     const query = this.input.value.trim();
-    const local = localResults(this.rawQuery(), this.settings.features);
+    const local = localResults(this.rawQuery(), this.settings.features, this.settings.tools);
     const remote = (await send({ type: "search", query, overlay: this.options.overlay })) ?? [];
     if (id !== this.requestId) return;
 
+    const previous = this.active;
     this.items = withWebSearch([...local, ...remote], query);
     this.list.replaceChildren(...this.items.map((item, i) => this.renderRow(item, i)));
-    this.setActive(0);
+    this.setActive(keepActive ? Math.min(previous, this.items.length - 1) : 0);
   }
 
   private renderRow(item: ResultItem, index: number): HTMLLIElement {
     const li = document.createElement("li");
     li.append(this.renderIcon(item), this.renderTitle(item));
+
+    if (item.variant) {
+      const chip = document.createElement("button");
+      chip.className = "variant";
+      chip.title = `Tab: switch to ${item.variant.next}`;
+      chip.textContent = `${item.variant.value} ⇥`;
+      chip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.setActive(index);
+        this.cycleVariant();
+      });
+      li.append(chip);
+    }
 
     if (item.preview) {
       const expand = document.createElement("button");
@@ -173,6 +187,15 @@ export class CommandBar {
     [...this.list.children].forEach((li, i) => li.classList.toggle("active", i === this.active));
     this.list.children[this.active]?.scrollIntoView({ block: "nearest" });
     this.renderPreview();
+  }
+
+  /** Tab on a row with a variant (UUID version): switch, remember in settings, regenerate. */
+  private async cycleVariant(): Promise<void> {
+    const variant = this.items[this.active]?.variant;
+    if (!variant) return;
+    this.settings = { ...this.settings, tools: { ...this.settings.tools, [variant.setting]: variant.next } };
+    await this.render(true);
+    await settingsRepository.save(this.settings);
   }
 
   private togglePreview(): void {
@@ -277,7 +300,9 @@ export class CommandBar {
         this.choose(this.items[this.active], e.metaKey);
       } else if (key === "Tab" && !e.shiftKey) {
         e.preventDefault();
-        if (this.items[this.active]?.preview) this.togglePreview();
+        const item = this.items[this.active];
+        if (item?.preview) this.togglePreview();
+        else if (item?.variant) this.cycleVariant();
       } else if (key === "Escape") {
         e.preventDefault();
         // Esc collapses the preview, then clears the input, then closes the bar.

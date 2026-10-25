@@ -80,8 +80,16 @@
         <input type="checkbox" data-path="features.calculator">
       </label>
       <label class="row">
-        <span><b>UUID generator</b><small><code>uuid</code> or <code>uuid 5</code> for several</small></span>
+        <span><b>UUID generator</b><small><code>uuid</code> or <code>uuid 5</code> for several. <code>Tab</code> on the row switches the version.</small></span>
         <input type="checkbox" data-path="features.uuid">
+      </label>
+      <label class="row">
+        <span><b>UUID version</b><small>v4 random · v7 time-ordered (good for database keys) · v1 time-based. <code>uuid v7</code> picks one for a single query.</small></span>
+        <select data-path="tools.uuidVersion">
+          <option value="v4">v4 — random</option>
+          <option value="v7">v7 — time-ordered</option>
+          <option value="v1">v1 — time-based</option>
+        </select>
       </label>
       <label class="row">
         <span><b>Encode / decode</b><small><code>b64 text</code>, <code>unb64 …</code>, <code>url text</code>, <code>unurl …</code></small></span>

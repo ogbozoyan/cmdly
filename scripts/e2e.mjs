@@ -253,6 +253,33 @@ try {
     await page.keyboard.press("Escape");
   });
 
+  await check("UUID: Tab switches the version, remembers it, Enter copies what is shown", async () => {
+    await typeInBar(page, "uuid");
+    const chip = () => page.evaluate(() => document.getElementById("cmdly-overlay").shadowRoot.querySelector("li.active .variant")?.textContent);
+    expect((await chip()) === "v4 ⇥", `chip: ${await chip()}`);
+
+    await page.keyboard.press("Tab");
+    await sleep(400);
+    const [shown] = await rowTitles(page);
+    expect((await chip()) === "v7 ⇥" && /^[0-9a-f]{8}-[0-9a-f]{4}-7/.test(shown), `after Tab: ${await chip()} ${shown}`);
+    const saved = await inWorker(async () => (await chrome.storage.sync.get("settings")).settings?.tools?.uuidVersion);
+    expect(saved === "v7", `saved version: ${saved}`);
+
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(() => document.getElementById("cmdly-overlay")?.shadowRoot.querySelector(".toast:not([hidden])"));
+    const toast = await page.evaluate(() => document.getElementById("cmdly-overlay").shadowRoot.querySelector(".toast").textContent);
+    expect(toast === `Copied ${shown}`, `toast: ${toast} vs ${shown}`);
+    await page.waitForFunction(() => !document.getElementById("cmdly-overlay"));
+
+    // Next time the bar remembers v7; restore the default for the other checks.
+    await openOverlay(page);
+    await typeInBar(page, "uuid");
+    expect((await chip()) === "v7 ⇥", `remembered: ${await chip()}`);
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await sleep(300);
+  });
+
   await check("UUID and Base64", async () => {
     await typeInBar(page, "uuid");
     expect(/^[0-9a-f-]{36}$/.test((await rowTitles(page))[0]), "uuid row");
