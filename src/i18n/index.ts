@@ -2,7 +2,8 @@
  * UI translations. Chrome picks the locale from the browser language (chrome.i18n, _locales/);
  * outside Chrome — unit tests in Node — the English strings are used.
  */
-import { en, type MessageKey } from "./en.ts";
+import { en, type MessageKey, type Messages } from "./en.ts";
+import { LOCALES } from "./locales.ts";
 
 export type { MessageKey } from "./en.ts";
 
@@ -11,7 +12,19 @@ type Substitution = string | number;
 /** Message keys that have plural forms: "toastClosedTabs" for toastClosedTabs_one / _other… */
 export type PluralKey = MessageKey extends infer K ? (K extends `${infer Base}_other` ? Base : never) : never;
 
+/** Language picked in Settings; null = follow Chrome (chrome.i18n). */
+let chosen: Messages | null = null;
+
+/** "auto" or a locale from src/i18n/locales.ts. Call again when the setting changes. */
+export function setLanguage(language: string): void {
+  chosen = language !== "auto" ? (LOCALES[language] ?? null) : null;
+}
+
 function chromeMessage(key: string, substitutions: string[]): string {
+  if (chosen) {
+    const text = chosen[key];
+    return text === undefined ? "" : fill(text, substitutions);
+  }
   try {
     return globalThis.chrome?.i18n?.getMessage(key, substitutions) ?? "";
   } catch {

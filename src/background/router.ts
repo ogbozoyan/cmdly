@@ -1,4 +1,6 @@
+import { setLanguage } from "../i18n/index.ts";
 import type { Request, ResponseMap } from "../shared/messages.ts";
+import { settingsRepository } from "../shared/settings-repository.ts";
 import { dismissPalettePage, handleNewTab, openBar } from "./bar-service.ts";
 import { loadDraft, markOverlay, saveDraft } from "./bar-state-service.ts";
 import { runCommand } from "./command-service.ts";
@@ -13,6 +15,8 @@ import { restoreClosedTab } from "./tab-service.ts";
  * `sender` is the tab the message came from: the page with the overlay or the palette page.
  */
 export async function route(request: Request, sender: chrome.tabs.Tab): Promise<ResponseMap[Request["type"]]> {
+  // The service worker can restart at any time: apply the chosen UI language on every request.
+  setLanguage((await settingsRepository.get()).appearance.language);
   switch (request.type) {
     case "search":
       return search(request.query, sender, request.overlay);

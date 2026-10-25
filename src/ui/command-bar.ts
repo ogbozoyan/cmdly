@@ -1,4 +1,4 @@
-import { t } from "../i18n/index.ts";
+import { setLanguage, t } from "../i18n/index.ts";
 import type { Draft, ResultItem } from "../shared/model.ts";
 import { send } from "../shared/messages.ts";
 import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
@@ -81,11 +81,19 @@ export class CommandBar {
     this.applyAppearance();
     Promise.all([settingsRepository.get(), send({ type: "draft-get" })]).then(([settings, draft]) => {
       this.settings = settings;
+      this.applyLanguage();
       this.applyAppearance();
       this.restoreDraft(draft);
       this.render();
     });
     this.input.focus();
+  }
+
+  /** Texts drawn before settings loaded used Chrome's language; redo them in the chosen one. */
+  private applyLanguage(): void {
+    setLanguage(this.settings.appearance.language);
+    this.input.placeholder = t("barPlaceholder");
+    this.root.querySelector(".preview-hint")!.textContent = t("previewHint");
   }
 
   // ---------- draft (survives close / reload until something is run) ----------

@@ -153,6 +153,8 @@ export const zh_CN: Messages = {
   optSuggestionsMax: "最多建议数",
 
   optAppearance: "外观",
+  optLanguage: "语言",
+  optLanguageAuto: "自动（跟随 Chrome）",
   optTheme: "主题",
   optThemeDark: "深色",
   optThemeLight: "浅色",

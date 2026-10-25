@@ -155,6 +155,8 @@ export const de: Messages = {
   optSuggestionsMax: "Max. Vorschläge",
 
   optAppearance: "Darstellung",
+  optLanguage: "Sprache",
+  optLanguageAuto: "Automatisch (Chrome-Sprache)",
   optTheme: "Design",
   optThemeDark: "Dunkel",
   optThemeLight: "Hell",

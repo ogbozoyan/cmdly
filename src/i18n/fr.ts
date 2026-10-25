@@ -158,6 +158,8 @@ export const fr: Messages = {
   optSuggestionsMax: "Suggestions max.",
 
   optAppearance: "Apparence",
+  optLanguage: "Langue",
+  optLanguageAuto: "Auto (langue de Chrome)",
   optTheme: "Thème",
   optThemeDark: "Sombre",
   optThemeLight: "Clair",

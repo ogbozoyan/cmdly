@@ -161,6 +161,8 @@ export const ru: Messages = {
   optSuggestionsMax: "Максимум подсказок",
 
   optAppearance: "Внешний вид",
+  optLanguage: "Язык",
+  optLanguageAuto: "Авто (язык Chrome)",
   optTheme: "Тема",
   optThemeDark: "Тёмная",
   optThemeLight: "Светлая",

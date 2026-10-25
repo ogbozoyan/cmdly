@@ -170,6 +170,8 @@ export const en = {
   optSuggestionsMax: "Max suggestions",
 
   optAppearance: "Appearance",
+  optLanguage: "Language",
+  optLanguageAuto: "Auto (Chrome language)",
   optTheme: "Theme",
   optThemeDark: "Dark",
   optThemeLight: "Light",

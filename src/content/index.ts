@@ -11,7 +11,7 @@ import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { matchesShortcut } from "../shared/shortcuts.ts";
 import { copyText } from "../ui/clipboard.ts";
-import { t } from "../i18n/index.ts";
+import { setLanguage, t } from "../i18n/index.ts";
 import { showPageToast } from "./toast.ts";
 
 type GuardedWindow = Window & { __cmdlyContent?: boolean };
@@ -23,8 +23,12 @@ function start(): void {
   w.__cmdlyContent = true;
 
   let shortcuts: Settings["shortcuts"] = DEFAULT_SETTINGS.shortcuts;
-  settingsRepository.get().then((s) => (shortcuts = s.shortcuts));
-  settingsRepository.onChange((s) => (shortcuts = s.shortcuts));
+  const apply = (s: Settings) => {
+    shortcuts = s.shortcuts;
+    setLanguage(s.appearance.language);
+  };
+  settingsRepository.get().then(apply);
+  settingsRepository.onChange(apply);
 
   // Capture phase on window = we see the key before any page handler can stop it.
   window.addEventListener("keydown", (e) => {

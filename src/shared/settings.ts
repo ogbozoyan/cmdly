@@ -50,6 +50,8 @@ export interface Settings {
     suggestions: number;
   };
   appearance: {
+    /** UI language: "auto" follows Chrome, otherwise a src/i18n locale (en, ru, zh_CN, de, fr). */
+    language: string;
     theme: "dark" | "light" | "system";
     accent: string;
     position: "center" | "top";
@@ -96,6 +98,7 @@ export const DEFAULT_SETTINGS: Settings = {
     suggestions: 4,
   },
   appearance: {
+    language: "auto",
     theme: "dark",
     accent: "#6c8cff",
     position: "center",

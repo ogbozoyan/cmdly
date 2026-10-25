@@ -2,7 +2,7 @@
  * Options page. Every form control has data-path="section.key" pointing into Settings;
  * changes are saved immediately. Shortcuts are recorded by pressing keys.
  */
-import { localizePage, t } from "../i18n/index.ts";
+import { localizePage, setLanguage, t } from "../i18n/index.ts";
 import { UUID_DESCRIPTIONS, isUuidVersion } from "../tools/uuid.ts";
 import { DEFAULT_SETTINGS, fromImportFile, toExportFile, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
@@ -14,11 +14,19 @@ type ShortcutName = keyof Settings["shortcuts"];
 
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 
-localizePage();
-document.title = t("optTitle");
-document.querySelectorAll<HTMLOptionElement>('[data-path="tools.uuidVersion"] option').forEach((option) => {
-  if (isUuidVersion(option.value)) option.textContent = `${option.value} — ${t(UUID_DESCRIPTIONS[option.value])}`;
-});
+/** Translates the whole page; runs again when the language setting changes. */
+let shownLanguage: string | null = null;
+function applyLanguage(language: string): void {
+  if (language === shownLanguage) return;
+  shownLanguage = language;
+  setLanguage(language);
+  localizePage();
+  document.title = t("optTitle");
+  document.querySelectorAll<HTMLOptionElement>('[data-path="tools.uuidVersion"] option').forEach((option) => {
+    if (isUuidVersion(option.value)) option.textContent = `${option.value} — ${t(UUID_DESCRIPTIONS[option.value])}`;
+  });
+  renderNativeShortcut();
+}
 
 let settings: Settings;
 let recording: { name: ShortcutName; button: HTMLButtonElement } | null = null;
@@ -47,6 +55,7 @@ function readField(el: HTMLInputElement | HTMLSelectElement): unknown {
 }
 
 function fillForm(): void {
+  applyLanguage(settings.appearance.language);
   for (const el of fields) {
     const value = getPath(el.dataset.path!);
     if (el instanceof HTMLInputElement && el.type === "checkbox") el.checked = value as boolean;
@@ -65,10 +74,10 @@ function fillForm(): void {
   fillShortcuts();
 }
 
-async function persist(message = t("optSaved")): Promise<void> {
+async function persist(message?: string): Promise<void> {
   await settingsRepository.save(settings);
   fillForm();
-  flash(message);
+  flash(message ?? t("optSaved")); // after fillForm: a language change applies to the badge too
 }
 
 for (const el of fields) {
