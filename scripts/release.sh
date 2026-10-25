@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# Cuts a release: bumps the version, commits, tags and pushes.
+# Cuts a release from your machine: bumps the version, commits, tags and pushes.
 # The tag triggers .github/workflows/release.yml, which builds the zip and publishes the GitHub release.
+# (You can do the same from GitHub: Actions → Release → Run workflow.)
 #
-#   npm run release -- 1.2.0
+#   npm run release              # patch: 1.2.3 → 1.2.4
+#   npm run release -- minor     # 1.2.3 → 1.3.0
+#   npm run release -- major     # 1.2.3 → 2.0.0
+#   npm run release -- 2.0.0     # explicit version
 set -euo pipefail
 
-VERSION="${1:-}"
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "Usage: npm run release -- <major.minor.patch>   (e.g. 1.2.0)" >&2
-  exit 1
-fi
-
+BUMP="${1:-patch}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
@@ -22,23 +21,15 @@ if [ "$(git branch --show-current)" != "main" ]; then
   echo "Releases are cut from main." >&2
   exit 1
 fi
+
+git pull --ff-only --tags
+
+VERSION="$(node scripts/version.mjs "$BUMP")"
 if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+  git checkout -- static/manifest.json package.json package-lock.json
   echo "Tag v$VERSION already exists." >&2
   exit 1
 fi
-
-git pull --ff-only
-
-# Chrome Web Store requires the manifest version; package.json is kept in sync.
-node -e '
-  const fs = require("fs");
-  for (const file of ["static/manifest.json", "package.json"]) {
-    const json = JSON.parse(fs.readFileSync(file, "utf8"));
-    json.version = process.argv[1];
-    fs.writeFileSync(file, JSON.stringify(json, null, 2) + "\n");
-  }
-' "$VERSION"
-npm install --package-lock-only --silent
 
 npm run check
 

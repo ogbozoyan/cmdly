@@ -24,16 +24,19 @@ npm run e2e          # real Chrome smoke test, needs CHROME_PATH (see scripts/e2
 npm run e2e -- --screenshots   # also refreshes docs/screenshots/
 npm run demo         # re-record docs/demo/*.gif (CHROME_PATH + ffmpeg)
 npm run package      # check + zip dist/ for the Chrome Web Store
-npm run release -- 1.2.0   # bump manifest/package version, commit, tag vX.Y.Z, push
+npm run release      # bump version (patch | -- minor | -- major), commit, tag vX.Y.Z, push
 ```
 
 ### CI / releases (GitHub Actions)
 
 - `.github/workflows/ci.yml` — every push to main and every PR: `npm ci` + `npm run check`
   (typecheck, unit tests, build) + manifest/package version match. `dist/` is uploaded as an artifact.
-- `.github/workflows/release.yml` — on tag `vX.Y.Z`: verifies the tag equals the manifest version,
-  runs `npm run package` and publishes a GitHub release with `cmdly-X.Y.Z.zip` and generated notes.
-- Never create releases by hand: use `npm run release -- X.Y.Z` (clean tree, on main).
+- `.github/workflows/release.yml` — **Run workflow** (patch/minor/major) or a pushed tag `vX.Y.Z`:
+  bumps the version via `scripts/version.mjs` (manual run), verifies tag = manifest = package version,
+  runs `npm run package`, commits/tags as github-actions[bot] and publishes a GitHub release with
+  `cmdly-X.Y.Z.zip` and generated notes.
+- The version only goes up and is never edited by hand: `scripts/version.mjs` is the single place
+  that changes it (manifest.json, package.json, package-lock.json).
 - E2E is not in CI (needs Chrome for Testing, real sites, macOS keys) — run `npm run e2e` locally.
 
 After `npm run build`, reload the extension at `chrome://extensions` (↻) and refresh open tabs.

@@ -237,7 +237,7 @@ npm run check        # typecheck + unit tests + build
 npm run e2e          # end-to-end test in Chrome for Testing (see scripts/e2e.mjs)
 npm run demo         # re-record the GIFs in docs/demo (needs ffmpeg)
 npm run package      # zip for the Chrome Web Store
-npm run release -- 1.2.0   # bump version, tag, push → GitHub Actions publishes the release
+npm run release      # patch bump (or: -- minor / -- major), tag, push → Actions publishes the release
 ```
 
 Project layout (details in [AGENTS.md](AGENTS.md)):

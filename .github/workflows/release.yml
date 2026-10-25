@@ -1,12 +1,26 @@
 name: Release
 
-# Runs when a version tag is pushed: `npm run release -- 1.2.0` creates and pushes it.
+# Two ways to release — the version always goes up automatically:
+#  - GitHub UI: Actions → Release → Run workflow → pick patch / minor / major.
+#    The job bumps the version, commits "Release vX.Y.Z" to main, tags it and publishes.
+#  - Locally: `npm run release [patch|minor|major]` bumps, tags and pushes; the tag triggers this workflow.
 on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
   push:
     tags: ["v*.*.*"]
 
 permissions:
-  contents: write # create the GitHub release
+  contents: write # push the version commit/tag and create the release
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -15,7 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # full history for generated release notes
+          fetch-depth: 0 # tags and history for release notes
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -24,25 +39,50 @@ jobs:
 
       - run: npm ci
 
+      # Manual run: compute the next version and tag it.
+      # A tag pushed with GITHUB_TOKEN doesn't start another workflow run, so this job publishes it too.
+      - name: Bump version (${{ inputs.bump }})
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          version=$(node scripts/version.mjs "${{ inputs.bump }}")
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "::error::Tag v$version already exists"
+            exit 1
+          fi
+          echo "TAG=v$version" >> "$GITHUB_ENV"
+
+      - name: Use pushed tag
+        if: github.event_name == 'push'
+        run: echo "TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+
       - name: Tag matches manifest version
         run: |
-          tag="${GITHUB_REF_NAME#v}"
           manifest=$(node -p "require('./static/manifest.json').version")
           package=$(node -p "require('./package.json').version")
-          echo "tag=$tag manifest=$manifest package=$package"
-          if [ "$tag" != "$manifest" ] || [ "$tag" != "$package" ]; then
-            echo "::error::Tag v$tag doesn't match manifest.json ($manifest) / package.json ($package)"
+          echo "tag=$TAG manifest=$manifest package=$package"
+          if [ "${TAG#v}" != "$manifest" ] || [ "${TAG#v}" != "$package" ]; then
+            echo "::error::Tag $TAG doesn't match manifest.json ($manifest) / package.json ($package)"
             exit 1
           fi
 
       - name: Typecheck, test, build, zip
         run: npm run package
 
+      - name: Commit and tag the new version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add static/manifest.json package.json package-lock.json
+          git commit -m "Release $TAG"
+          git tag -a "$TAG" -m "Cmdly ${TAG#v}"
+          git push origin main "$TAG"
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          zip="cmdly-${GITHUB_REF_NAME#v}.zip"
+          zip="cmdly-${TAG#v}.zip"
           cat > notes.md <<EOF
           ## Install
 
@@ -53,8 +93,8 @@ jobs:
 
           Updating: unzip the new version over the old folder and click ↻ on the Cmdly card.
           EOF
-          gh release create "$GITHUB_REF_NAME" "$zip" \
-            --title "Cmdly ${GITHUB_REF_NAME#v}" \
+          gh release create "$TAG" "$zip" \
+            --title "Cmdly ${TAG#v}" \
             --notes-file notes.md \
             --generate-notes \
             --verify-tag
