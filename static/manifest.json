@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Cmdly — Command Bar",
   "short_name": "Cmdly",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A productivity command bar for Chrome: search tabs, history and bookmarks, run commands, calculate and decode — on Cmd+T.",
   "icons": {
     "16": "icons/16.png",
