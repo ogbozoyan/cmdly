@@ -56,6 +56,7 @@ Think of it as a small backend + frontend in one package:
 | ├ model | `model.ts` | `ResultItem`, `CommandResult` | DTOs |
 | ├ settings | `settings.ts` | `Settings` type, defaults, merge, export/import (pure) | `@ConfigurationProperties` |
 | └ repository | `settings-repository.ts` | The only code touching `chrome.storage` | `@Repository` |
+| i18n | `src/i18n/` | UI strings: `en.ts` is the source of keys, one file per language | `messages.properties` |
 | Tools | `src/tools/` | Pure functions: calculator, dev tools. No `chrome.*` | utility classes |
 | UI | `src/ui/` | The command bar component (`CommandBar` class) | frontend |
 | Content | `src/content/` | Scripts that run inside web pages | — |
@@ -100,6 +101,10 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 
 ## How to…
 
+- **Add a language** → `src/i18n/<chrome_locale>.ts` (copy `de.ts`, set `localeCode`), register it in
+  `src/i18n/locales.ts`. The build writes `dist/_locales/<locale>/messages.json`; Chrome picks the
+  locale from the browser language. Name ≤ 75 and description ≤ 132 chars (tested).
+
 - **Add a browser command** → one entry in `COMMANDS` in `src/background/command-service.ts`.
   Need a new icon? Add it to `GlyphName` (`src/shared/model.ts`) and `GLYPHS` (`src/ui/icons.ts`).
 - **Add a tool** (e.g. a converter) → pure function in `src/tools/`, hook it into
@@ -123,7 +128,10 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   suggestions (`background/suggest-service.ts`, toggle `sources.suggestions`): no cookies, never in
   incognito, and `maySuggest` (`shared/suggestions.ts`) keeps pasted data/tokens local. Never add
   other requests without a setting. Keep `PRIVACY.md` true when adding features.
-- Keep the UI copy in English (the Web Store listing is English).
+- **No hard-coded UI text.** Every user-visible string is a key in `src/i18n/en.ts` used via `t()` /
+  `tp()` (plurals) from `src/i18n/index.ts`, or `data-i18n` in static HTML (`localizePage()`).
+  Add the same key to `ru.ts`, `zh_CN.ts`, `de.ts`, `fr.ts` — TypeScript and `tests/i18n` fail otherwise.
+  Not translated on purpose: command keywords (English search aliases), GitHub issue templates.
 - Anything inserted with `innerHTML` must go through `escapeHtml` (`src/ui/highlight.ts`): the bar
   runs inside other people's pages and renders pasted text.
 - Code comments explain *why*, not *what*. Match the existing style.

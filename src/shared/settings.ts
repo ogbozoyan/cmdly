@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import { MOD } from "./platform.ts";
 import type { SuggestEngine } from "./suggestions.ts";
 
@@ -141,12 +142,12 @@ export function toExportFile(settings: Settings): SettingsFile {
 
 /** Parses an export file (or a bare settings object). Throws a user-readable Error on bad input. */
 export function fromImportFile(data: unknown): Settings {
-  if (!isObject(data)) throw new Error("Not a Cmdly settings file");
-  if (data.app !== undefined && data.app !== "cmdly") throw new Error("This file is from another app");
+  if (!isObject(data)) throw new Error(t("importNotCmdly"));
+  if (data.app !== undefined && data.app !== "cmdly") throw new Error(t("importOtherApp"));
   const settings = data.app === "cmdly" ? data.settings : data;
-  if (!isObject(settings)) throw new Error("Settings are missing");
+  if (!isObject(settings)) throw new Error(t("importNoSettings"));
   if (!Object.keys(DEFAULT_SETTINGS).some((key) => key in settings)) {
-    throw new Error("No Cmdly settings found in the file");
+    throw new Error(t("importNothingFound"));
   }
   return mergeSettings(settings);
 }

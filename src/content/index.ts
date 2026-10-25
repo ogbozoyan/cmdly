@@ -11,6 +11,7 @@ import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { matchesShortcut } from "../shared/shortcuts.ts";
 import { copyText } from "../ui/clipboard.ts";
+import { t } from "../i18n/index.ts";
 import { showPageToast } from "./toast.ts";
 
 type GuardedWindow = Window & { __cmdlyContent?: boolean };
@@ -63,7 +64,7 @@ async function copyPageUrl(): Promise<void> {
   const url = window === window.top ? location.href : await send({ type: "tab-url" });
   if (!url) return;
   await copyText(url);
-  showPageToast("URL copied");
+  showPageToast(t("urlCopied"));
 }
 
 function isTextFieldFocused(): boolean {

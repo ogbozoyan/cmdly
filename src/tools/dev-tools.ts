@@ -1,4 +1,5 @@
 /** Developer utilities: Base64, URL encoding, JWT decoding. Pure functions, unit-tested. */
+import { t, type MessageKey } from "../i18n/index.ts";
 
 const utf8 = new TextEncoder();
 const utf8Strict = new TextDecoder("utf-8", { fatal: true });
@@ -51,16 +52,16 @@ export function decodeJwt(token: string): DecodedJwt | null {
 
 /** "JWT payload · sub 42 · expires 2026-10-25 14:00" */
 export function describeJwt(payload: Record<string, unknown>, now = Date.now()): string {
-  const parts = ["JWT payload"];
+  const parts = [t("jwtPayload")];
   if (payload.sub) parts.push(`sub ${payload.sub}`);
   if (typeof payload.exp === "number") {
     const expired = payload.exp * 1000 < now;
-    parts.push(`${expired ? "expired" : "expires"} ${formatDate(payload.exp)}`);
+    parts.push(t(expired ? "jwtExpiredShort" : "jwtExpiresShort", formatDate(payload.exp)));
   }
   return parts.join(" · ");
 }
 
-const TIME_CLAIMS: Record<string, string> = { iat: "Issued", nbf: "Valid from", exp: "Expires" };
+const TIME_CLAIMS: Record<string, MessageKey> = { iat: "jwtIssued", nbf: "jwtValidFrom", exp: "jwtExpires" };
 
 /** Human-readable time claims for the preview panel: "Expires 2023-11-14 22:13 (expired)". */
 export function jwtTimeNotes(payload: Record<string, unknown>, now = Date.now()): string[] {
@@ -68,8 +69,8 @@ export function jwtTimeNotes(payload: Record<string, unknown>, now = Date.now())
     .filter(([claim]) => typeof payload[claim] === "number")
     .map(([claim, label]) => {
       const seconds = payload[claim] as number;
-      const suffix = claim === "exp" && seconds * 1000 < now ? " (expired)" : "";
-      return `${label} ${formatDate(seconds)}${suffix}`;
+      const suffix = claim === "exp" && seconds * 1000 < now ? " " + t("jwtExpiredNote") : "";
+      return t(label, formatDate(seconds)) + suffix;
     });
 }
 

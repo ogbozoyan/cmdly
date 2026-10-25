@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { ResultItem } from "../shared/model.ts";
 
 /**
@@ -6,7 +7,7 @@ import type { ResultItem } from "../shared/model.ts";
  */
 export function withWebSearch(items: ResultItem[], query: string): ResultItem[] {
   if (!query || items.some((item) => item.kind === "search")) return items;
-  const search: ResultItem = { kind: "search", title: query, action: "Search" };
+  const search: ResultItem = { kind: "search", title: query, action: t("actionSearch") };
   const firstRemote = items.findIndex((item) => !item.copy && item.kind !== "calc" && item.kind !== "tool");
   // Right after the tool rows, before tabs/history.
   const at = firstRemote === -1 ? items.length : firstRemote;

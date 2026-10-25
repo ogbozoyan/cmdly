@@ -1,3 +1,4 @@
+import { t, type MessageKey } from "../i18n/index.ts";
 import type { Preview, ResultItem } from "../shared/model.ts";
 import type { Features } from "../shared/settings.ts";
 import { evaluate, formatNumber, plainNumber } from "./calculator.ts";
@@ -36,7 +37,7 @@ function copyRow(
   kind: ResultItem["kind"] = "tool",
   preview?: Preview
 ): ResultItem {
-  return { kind, title, meta, copy, glyph, action: "Copy", preview };
+  return { kind, title, meta, copy, glyph, action: t("actionCopy"), preview };
 }
 
 function calculatorResult(q: string): ResultItem[] {
@@ -56,22 +57,22 @@ function uuidResult(q: string, saved: UuidVersion): ResultItem[] {
   const version = explicit ?? saved;
   const count = Math.min(Math.max(parseInt(m[3] || "1", 10), 1), 50);
   const ids = generateUuids(version, count);
-  const label = `UUID ${version} · ${UUID_DESCRIPTIONS[version]}`;
+  const label = `UUID ${version} · ${t(UUID_DESCRIPTIONS[version])}`;
   const row =
     count === 1
       ? copyRow(ids[0], label, ids[0], "key")
-      : copyRow(`${count} UUIDs`, `${label} · ${ids[0]}…`, ids.join("\n"), "key");
+      : copyRow(t("uuidCount", count), `${label} · ${ids[0]}…`, ids.join("\n"), "key");
   // Explicit "uuid v7" is a one-off; only the plain query cycles and saves the version.
   if (!explicit) row.variant = { setting: "uuidVersion", value: version, next: nextUuidVersion(version) };
   return [row];
 }
 
 /** Prefix commands. Each prefix needs a space and some text after it: "b64 hello". */
-const ENCODERS: { prefixes: string[]; label: string; run: (text: string) => string | null }[] = [
-  { prefixes: ["b64", "base64"], label: "Base64 encoded", run: base64Encode },
-  { prefixes: ["unb64", "b64d", "debase64"], label: "Base64 decoded", run: base64Decode },
-  { prefixes: ["url", "urlenc", "encode"], label: "URL encoded", run: encodeURIComponent },
-  { prefixes: ["unurl", "urld", "urldec", "decode"], label: "URL decoded", run: urlDecode },
+const ENCODERS: { prefixes: string[]; label: MessageKey; run: (text: string) => string | null }[] = [
+  { prefixes: ["b64", "base64"], label: "base64Encoded", run: base64Encode },
+  { prefixes: ["unb64", "b64d", "debase64"], label: "base64Decoded", run: base64Decode },
+  { prefixes: ["url", "urlenc", "encode"], label: "urlEncoded", run: encodeURIComponent },
+  { prefixes: ["unurl", "urld", "urldec", "decode"], label: "urlDecoded", run: urlDecode },
 ];
 
 function encoderResult(q: string): ResultItem[] {
@@ -81,12 +82,12 @@ function encoderResult(q: string): ResultItem[] {
     const result = encoder.run(m[2]);
     // Unchanged output means it wasn't meant as a tool call: "url shortener", "decode meaning".
     if (!result || result === m[2]) return [];
-    return [copyRow(result, encoder.label, result, "code", "tool", jsonPreview(result))];
+    return [copyRow(result, t(encoder.label), result, "code", "tool", jsonPreview(result))];
   }
   // A bare percent-encoded string: offer the decoded version.
   if (!/\s/.test(q) && /%[0-9a-f]{2}/i.test(q)) {
     const decoded = urlDecode(q);
-    if (decoded && decoded !== q) return [copyRow(decoded, "URL decoded", decoded, "code")];
+    if (decoded && decoded !== q) return [copyRow(decoded, t("urlDecoded"), decoded, "code")];
   }
   return [];
 }
@@ -102,7 +103,7 @@ function jwtResult(q: string): ResultItem[] {
       content: payload,
       notes: jwtTimeNotes(jwt.payload),
     }),
-    copyRow(toMinifiedJson(jwt.header), "JWT header", header, "key", "tool", { language: "json", content: header }),
+    copyRow(toMinifiedJson(jwt.header), t("jwtHeader"), header, "key", "tool", { language: "json", content: header }),
   ];
 }
 
@@ -122,14 +123,14 @@ function dataResult(q: string): ResultItem[] {
   if (data.format === "json") {
     const minified = toMinifiedJson(data.value);
     return [
-      copyRow("Format JSON", meta, pretty, "braces", "tool", json),
-      copyRow("Minify JSON", formatSize(minified), minified, "braces", "tool", { language: "json", content: minified }),
-      copyRow("Convert to YAML", meta, yaml, "code", "tool", { language: "yaml", content: yaml }),
+      copyRow(t("formatJson"), meta, pretty, "braces", "tool", json),
+      copyRow(t("minifyJson"), formatSize(minified), minified, "braces", "tool", { language: "json", content: minified }),
+      copyRow(t("convertToYaml"), meta, yaml, "code", "tool", { language: "yaml", content: yaml }),
     ];
   }
   return [
-    copyRow("Format YAML", meta, yaml, "code", "tool", { language: "yaml", content: yaml }),
-    copyRow("Convert to JSON", meta, pretty, "braces", "tool", json),
+    copyRow(t("formatYaml"), meta, yaml, "code", "tool", { language: "yaml", content: yaml }),
+    copyRow(t("convertToJson"), meta, pretty, "braces", "tool", json),
   ];
 }
 

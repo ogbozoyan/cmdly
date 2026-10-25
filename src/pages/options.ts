@@ -2,6 +2,8 @@
  * Options page. Every form control has data-path="section.key" pointing into Settings;
  * changes are saved immediately. Shortcuts are recorded by pressing keys.
  */
+import { localizePage, t } from "../i18n/index.ts";
+import { UUID_DESCRIPTIONS, isUuidVersion } from "../tools/uuid.ts";
 import { DEFAULT_SETTINGS, fromImportFile, toExportFile, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { bugReportUrl, featureRequestUrl } from "../shared/feedback.ts";
@@ -11,6 +13,12 @@ import { formatShortcut, isValidShortcut, shortcutFromEvent } from "../shared/sh
 type ShortcutName = keyof Settings["shortcuts"];
 
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
+
+localizePage();
+document.title = t("optTitle");
+document.querySelectorAll<HTMLOptionElement>('[data-path="tools.uuidVersion"] option').forEach((option) => {
+  if (isUuidVersion(option.value)) option.textContent = `${option.value} — ${t(UUID_DESCRIPTIONS[option.value])}`;
+});
 
 let settings: Settings;
 let recording: { name: ShortcutName; button: HTMLButtonElement } | null = null;
@@ -57,7 +65,7 @@ function fillForm(): void {
   fillShortcuts();
 }
 
-async function persist(message = "Saved"): Promise<void> {
+async function persist(message = t("optSaved")): Promise<void> {
   await settingsRepository.save(settings);
   fillForm();
   flash(message);
@@ -78,7 +86,7 @@ function fillShortcuts(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-shortcut]").forEach((button) => {
     if (recording?.button === button) return;
     const value = settings.shortcuts[button.dataset.shortcut as ShortcutName];
-    button.textContent = value ? formatShortcut(value) : "Disabled";
+    button.textContent = value ? formatShortcut(value) : t("optDisabled");
     button.classList.toggle("off", !value);
   });
 }
@@ -86,7 +94,7 @@ function fillShortcuts(): void {
 function startRecording(name: ShortcutName, button: HTMLButtonElement): void {
   stopRecording();
   recording = { name, button };
-  button.textContent = "Press keys…";
+  button.textContent = t("optPressKeys");
   button.classList.add("recording");
 }
 
@@ -106,7 +114,7 @@ document.addEventListener(
     const shortcut = shortcutFromEvent(e);
     if (!shortcut) return; // only modifiers held so far
     if (!isValidShortcut(shortcut)) {
-      recording.button.textContent = "Add ⌘, Ctrl or ⌥";
+      recording.button.textContent = t("optAddModifier");
       return;
     }
     settings.shortcuts[recording.name] = shortcut;
@@ -150,13 +158,9 @@ async function renderNativeShortcut(): Promise<void> {
   const banner = $("#native-shortcut");
   banner.hidden = false;
   banner.classList.toggle("ok", !!assigned);
-  $("#chrome-shortcuts").textContent = assigned ? "Change…" : "Open Chrome shortcuts";
-  $(".banner-title").textContent = assigned
-    ? `${assigned} opens Cmdly instantly`
-    : `Make ${key} instant — one-time setup`;
-  $(".banner-text").textContent = assigned
-    ? "The shortcut is handled by Chrome directly: no new tab flash. The + button opens the bar in a new tab."
-    : `Right now ${key} briefly opens a new tab before the bar appears. In Chrome shortcuts find Cmdly → "Open the command bar", click the field and press ${key}.`;
+  $("#chrome-shortcuts").textContent = t(assigned ? "optBannerChange" : "optBannerOpen");
+  $(".banner-title").textContent = assigned ? t("optBannerOkTitle", assigned) : t("optBannerSetupTitle", key);
+  $(".banner-text").textContent = assigned ? t("optBannerOkText") : t("optBannerSetupText", key);
 }
 
 // Re-check when the user comes back from chrome://extensions/shortcuts.
@@ -183,18 +187,18 @@ $<HTMLInputElement>("#import-file").addEventListener("change", async (e) => {
   if (!file) return;
   try {
     settings = fromImportFile(JSON.parse(await file.text()));
-    await persist("Imported");
+    await persist(t("optImported"));
   } catch (error) {
-    alert(`Import failed: ${error instanceof SyntaxError ? "the file is not valid JSON" : (error as Error).message}`);
+    alert(t("optImportFailed", error instanceof SyntaxError ? t("optInvalidJson") : (error as Error).message));
   }
 });
 
 $("#reset").addEventListener("click", async () => {
-  if (!confirm("Reset all Cmdly settings to defaults?")) return;
+  if (!confirm(t("optResetConfirm"))) return;
   await settingsRepository.reset();
   settings = await settingsRepository.get();
   fillForm();
-  flash("Reset");
+  flash(t("optResetDone"));
 });
 
 // ---------- feedback & credits ----------

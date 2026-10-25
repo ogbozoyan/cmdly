@@ -6,11 +6,12 @@
 export const UUID_VERSIONS = ["v4", "v7", "v1"] as const;
 export type UuidVersion = (typeof UUID_VERSIONS)[number];
 
-export const UUID_DESCRIPTIONS: Record<UuidVersion, string> = {
-  v4: "random",
-  v7: "time-ordered",
-  v1: "time-based",
-};
+/** Message keys (src/i18n) describing each version. */
+export const UUID_DESCRIPTIONS = {
+  v4: "uuidRandom",
+  v7: "uuidTimeOrdered",
+  v1: "uuidTimeBased",
+} as const satisfies Record<UuidVersion, string>;
 
 export interface UuidEnv {
   now: () => number;

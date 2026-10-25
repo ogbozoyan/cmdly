@@ -1,5 +1,7 @@
 import type { CommandResult, GlyphName, ResultItem } from "../shared/model.ts";
 import { dismissPalettePage } from "./bar-service.ts";
+import { en } from "../i18n/en.ts";
+import { t, tp, type MessageKey } from "../i18n/index.ts";
 import { score } from "./scoring.ts";
 import { previousTab, restoreClosedTab } from "./tab-service.ts";
 
@@ -22,8 +24,9 @@ interface CommandOutcome extends CommandResult {
 
 interface Command {
   id: string;
-  title: string | ((target: chrome.tabs.Tab | undefined) => string);
-  /** Extra words the command can be found by. */
+  /** Message key of the title (src/i18n); a function for titles that depend on the tab state. */
+  title: MessageKey | ((target: chrome.tabs.Tab | undefined) => MessageKey);
+  /** Extra English words the command can be found by (the English title always matches too). */
   keywords: string;
   glyph: GlyphName;
   /** Needs a target tab (most do; "New Window" doesn't). */
@@ -38,84 +41,84 @@ const openPage = (url: string): Command["run"] => async ({ target }) => {
 
 const COMMANDS: Command[] = [
   {
-    id: "copy-url", title: "Copy URL", keywords: "link address share", glyph: "link", needsTab: true,
-    run: async ({ target }) => ({ copy: target.url, toast: "URL copied" }),
+    id: "copy-url", title: "cmdCopyUrl", keywords: "link address share", glyph: "link", needsTab: true,
+    run: async ({ target }) => ({ copy: target.url, toast: t("urlCopied") }),
   },
   {
-    id: "copy-markdown", title: "Copy URL as Markdown", keywords: "link md title", glyph: "link", needsTab: true,
-    run: async ({ target }) => ({ copy: `[${target.title}](${target.url})`, toast: "Markdown link copied" }),
+    id: "copy-markdown", title: "cmdCopyMarkdown", keywords: "link md title", glyph: "link", needsTab: true,
+    run: async ({ target }) => ({ copy: `[${target.title}](${target.url})`, toast: t("toastMarkdownCopied") }),
   },
   {
-    id: "close-tab", title: "Close Tab", keywords: "kill remove", glyph: "close", needsTab: true,
+    id: "close-tab", title: "cmdCloseTab", keywords: "kill remove", glyph: "close", needsTab: true,
     run: async ({ target }) => { await chrome.tabs.remove(target.id!); },
   },
   {
-    id: "duplicate", title: "Duplicate Tab", keywords: "clone copy tab", glyph: "duplicate", needsTab: true,
+    id: "duplicate", title: "cmdDuplicate", keywords: "clone copy tab", glyph: "duplicate", needsTab: true,
     run: async ({ target }) => { await chrome.tabs.duplicate(target.id!); return { focusMoved: true }; },
   },
   {
-    id: "pin", title: (t) => (t?.pinned ? "Unpin Tab" : "Pin Tab"), keywords: "pin unpin favorite", glyph: "pin", needsTab: true,
+    id: "pin", title: (t) => (t?.pinned ? "cmdUnpin" : "cmdPin"), keywords: "pin unpin favorite", glyph: "pin", needsTab: true,
     run: async ({ target }) => {
       await chrome.tabs.update(target.id!, { pinned: !target.pinned });
-      return { toast: target.pinned ? "Tab unpinned" : "Tab pinned" };
+      return { toast: t(target.pinned ? "toastUnpinned" : "toastPinned") };
     },
   },
   {
-    id: "mute", title: (t) => (t?.mutedInfo?.muted ? "Unmute Tab" : "Mute Tab"), keywords: "sound audio silence volume", glyph: "sound", needsTab: true,
+    id: "mute", title: (t) => (t?.mutedInfo?.muted ? "cmdUnmute" : "cmdMute"), keywords: "sound audio silence volume", glyph: "sound", needsTab: true,
     run: async ({ target }) => {
       const muted = !target.mutedInfo?.muted;
       await chrome.tabs.update(target.id!, { muted });
-      return { toast: muted ? "Tab muted" : "Tab unmuted" };
+      return { toast: t(muted ? "toastMuted" : "toastUnmuted") };
     },
   },
   {
-    id: "reload", title: "Reload Page", keywords: "refresh", glyph: "reload", needsTab: true,
+    id: "reload", title: "cmdReload", keywords: "refresh", glyph: "reload", needsTab: true,
     run: async ({ target }) => { await chrome.tabs.reload(target.id!); },
   },
   {
-    id: "hard-reload", title: "Hard Reload Page", keywords: "refresh cache bypass", glyph: "reload", needsTab: true,
+    id: "hard-reload", title: "cmdHardReload", keywords: "refresh cache bypass", glyph: "reload", needsTab: true,
     run: async ({ target }) => { await chrome.tabs.reload(target.id!, { bypassCache: true }); },
   },
   {
-    id: "move-window", title: "Move Tab to New Window", keywords: "detach pop out", glyph: "window", needsTab: true,
+    id: "move-window", title: "cmdMoveWindow", keywords: "detach pop out", glyph: "window", needsTab: true,
     run: async ({ target }) => { await chrome.windows.create({ tabId: target.id }); return { focusMoved: true }; },
   },
   {
-    id: "close-others", title: "Close Other Tabs", keywords: "kill remove clean", glyph: "close", needsTab: true,
+    id: "close-others", title: "cmdCloseOthers", keywords: "kill remove clean", glyph: "close", needsTab: true,
     run: ({ target, host }) => closeTabs(target, host, () => true),
   },
   {
-    id: "close-right", title: "Close Tabs to the Right", keywords: "kill remove", glyph: "close", needsTab: true,
+    id: "close-right", title: "cmdCloseRight", keywords: "kill remove", glyph: "close", needsTab: true,
     run: ({ target, host }) => closeTabs(target, host, (t) => t.index > target.index),
   },
   {
-    id: "bookmark", title: "Bookmark Page", keywords: "save star favorite", glyph: "star", needsTab: true,
+    id: "bookmark", title: "cmdBookmark", keywords: "save star favorite", glyph: "star", needsTab: true,
     run: async ({ target }) => {
       await chrome.bookmarks.create({ title: target.title, url: target.url });
-      return { toast: "Bookmarked" };
+      return { toast: t("toastBookmarked") };
     },
   },
   {
-    id: "reopen", title: "Reopen Closed Tab", keywords: "undo restore", glyph: "restore",
+    id: "reopen", title: "cmdReopen", keywords: "undo restore", glyph: "restore",
     run: async () => { await restoreClosedTab(); return { focusMoved: true }; },
   },
   {
-    id: "new-window", title: "New Window", keywords: "open", glyph: "window",
+    id: "new-window", title: "cmdNewWindow", keywords: "open", glyph: "window",
     run: async () => { await chrome.windows.create({}); return { focusMoved: true }; },
   },
   {
-    id: "incognito", title: "New Incognito Window", keywords: "private", glyph: "incognito",
+    id: "incognito", title: "cmdIncognito", keywords: "private", glyph: "incognito",
     run: async () => { await chrome.windows.create({ incognito: true }); return { focusMoved: true }; },
   },
-  { id: "history", title: "Open History", keywords: "visited", glyph: "history", run: openPage("chrome://history") },
-  { id: "downloads", title: "Open Downloads", keywords: "files", glyph: "download", run: openPage("chrome://downloads") },
-  { id: "bookmarks", title: "Open Bookmarks", keywords: "favorites", glyph: "star", run: openPage("chrome://bookmarks") },
-  { id: "extensions", title: "Open Extensions", keywords: "addons plugins", glyph: "puzzle", run: openPage("chrome://extensions") },
-  { id: "settings", title: "Open Settings", keywords: "preferences options chrome", glyph: "gear", run: openPage("chrome://settings") },
-  { id: "clear-data", title: "Clear Browsing Data", keywords: "cache cookies history delete", glyph: "trash", run: openPage("chrome://settings/clearBrowserData") },
-  { id: "shortcuts", title: "Keyboard Shortcuts", keywords: "hotkeys keys", glyph: "gear", run: openPage("chrome://extensions/shortcuts") },
+  { id: "history", title: "cmdHistory", keywords: "visited", glyph: "history", run: openPage("chrome://history") },
+  { id: "downloads", title: "cmdDownloads", keywords: "files", glyph: "download", run: openPage("chrome://downloads") },
+  { id: "bookmarks", title: "cmdBookmarks", keywords: "favorites", glyph: "star", run: openPage("chrome://bookmarks") },
+  { id: "extensions", title: "cmdExtensions", keywords: "addons plugins", glyph: "puzzle", run: openPage("chrome://extensions") },
+  { id: "settings", title: "cmdSettings", keywords: "preferences options chrome", glyph: "gear", run: openPage("chrome://settings") },
+  { id: "clear-data", title: "cmdClearData", keywords: "cache cookies history delete", glyph: "trash", run: openPage("chrome://settings/clearBrowserData") },
+  { id: "shortcuts", title: "cmdShortcuts", keywords: "hotkeys keys", glyph: "gear", run: openPage("chrome://extensions/shortcuts") },
   {
-    id: "cmdly-settings", title: "Cmdly Settings", keywords: "preferences options configure cmdly", glyph: "gear",
+    id: "cmdly-settings", title: "cmdCmdlySettings", keywords: "preferences options configure cmdly", glyph: "gear",
     run: async () => { await chrome.runtime.openOptionsPage(); return { focusMoved: true }; },
   },
 ];
@@ -129,7 +132,7 @@ async function closeTabs(
   const tabs = await chrome.tabs.query({ windowId: target.windowId, pinned: false });
   const ids = tabs.filter((t) => t.id !== target.id && t.id !== host.id && filter(t)).map((t) => t.id!);
   if (ids.length) await chrome.tabs.remove(ids);
-  return { toast: `Closed ${ids.length} tab${ids.length === 1 ? "" : "s"}` };
+  return { toast: tp("toastClosedTabs", ids.length) };
 }
 
 // ---------- public API ----------
@@ -142,8 +145,10 @@ export async function commandTarget(host: chrome.tabs.Tab, overlay: boolean): Pr
 /** Up to 3 commands matching the query, as result rows. */
 export function matchCommands(query: string, target: chrome.tabs.Tab | undefined): ResultItem[] {
   return COMMANDS.map((command) => {
-    const title = typeof command.title === "function" ? command.title(target) : command.title;
-    const relevance = Math.max(score(query, title), score(query, command.keywords) - 1);
+    const key = typeof command.title === "function" ? command.title(target) : command.title;
+    const title = t(key);
+    // Localized title, the English one (people often type English commands) and keywords.
+    const relevance = Math.max(score(query, title), score(query, en[key]), score(query, command.keywords) - 1);
     return { command, title, relevance };
   })
     .filter((x) => x.relevance > 0)
@@ -155,7 +160,7 @@ export function matchCommands(query: string, target: chrome.tabs.Tab | undefined
       title,
       glyph: command.glyph,
       url: "cmd:" + command.id,
-      action: "Run",
+      action: t("actionRun"),
     }));
 }
 
@@ -163,7 +168,7 @@ export async function runCommand(id: string, host: chrome.tabs.Tab, overlay: boo
   const command = COMMANDS.find((c) => c.id === id);
   if (!command) return {};
   const target = await commandTarget(host, overlay);
-  if (command.needsTab && !target) return { toast: "No tab to act on", closePalette: !overlay };
+  if (command.needsTab && !target) return { toast: t("toastNoTab"), closePalette: !overlay };
 
   const { focusMoved, ...result } = (await command.run({ target: target!, host })) ?? {};
   if (overlay) return result;

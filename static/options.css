@@ -235,6 +235,7 @@ button.shortcut.recording {
 }
 
 button.link {
+  white-space: nowrap;
   border: 0;
   background: none;
   padding: 6px 4px;

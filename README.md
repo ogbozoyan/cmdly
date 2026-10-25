@@ -64,6 +64,7 @@ you actually navigate somewhere.
 | **Dev tools**         | `uuid` / `uuid 5` (v4, v7, v1), `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates.                       |
 | **Shortcuts**         | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable.                                                                |
 | **Settings**          | Turn every feature on/off, rebind shortcuts, pick theme, accent color, position and width. Export / import as JSON.                                         |
+| **5 languages**        | English, Русский, 简体中文, Deutsch, Français — follows the Chrome language.                                                                                  |
 | **Private**           | No analytics, no servers. Tabs, history and pasted data stay in your browser; only search suggestions go to your search engine (can be turned off).                                                                                        |
 
 # Screenshots

@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Cmdly — Command Bar",
+  "name": "__MSG_extName__",
   "short_name": "Cmdly",
   "version": "2.0.1",
-  "description": "A productivity command bar for Chrome: search tabs, history and bookmarks, run commands, calculate and decode — on Cmd+T.",
+  "default_locale": "en",
+  "description": "__MSG_extDescription__",
   "icons": {
     "16": "icons/16.png",
     "32": "icons/32.png",
@@ -11,7 +12,7 @@
     "128": "icons/128.png"
   },
   "action": {
-    "default_title": "Open Cmdly",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "16": "icons/16.png",
       "32": "icons/32.png"
@@ -65,7 +66,7 @@
   ],
   "commands": {
     "open-bar": {
-      "description": "Open the command bar — assign ⌘T / Ctrl+T here"
+      "description": "__MSG_commandOpenBar__"
     }
   }
 }

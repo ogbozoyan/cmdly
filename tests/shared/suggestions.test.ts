@@ -39,6 +39,18 @@ test("rows skip the query, duplicates, and turn addresses into Open rows", () =>
   assert.ok(rows.every((r) => r.suggestion));
 });
 
+test("suggestions go after the web search row and its commands", () => {
+  const merged = withSuggestions(
+    [
+      { kind: "search", title: "close oth" },
+      { kind: "command", title: "Close Other Tabs" },
+      { kind: "tab", title: "Docs", url: "https://docs.example" },
+    ],
+    [{ kind: "search", title: "close other tabs chrome", suggestion: true }],
+  );
+  assert.deepEqual(merged.map((i) => i.title), ["close oth", "Close Other Tabs", "close other tabs chrome", "Docs"]);
+});
+
 test("suggestions go right under the web search row, without repeats", () => {
   const items: ResultItem[] = [
     { kind: "search", title: "git", action: "Search" },

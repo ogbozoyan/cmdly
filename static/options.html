@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cmdly Settings</title>
+  <title data-i18n="optTitle">Cmdly Settings</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
@@ -12,9 +12,9 @@
       <img src="icons/128.png" alt="" width="40" height="40">
       <div>
         <h1>Cmdly</h1>
-        <p class="sub">Command bar settings. Changes are saved automatically.</p>
+        <p class="sub" data-i18n="optSubtitle">Command bar settings. Changes are saved automatically.</p>
       </div>
-      <span id="saved" class="saved" hidden>Saved</span>
+      <span id="saved" class="saved" hidden data-i18n="optSaved">Saved</span>
     </header>
 
     <div id="native-shortcut" class="banner" hidden>
@@ -22,69 +22,69 @@
         <b class="banner-title"></b>
         <p class="banner-text"></p>
       </div>
-      <button id="chrome-shortcuts">Open Chrome shortcuts</button>
+      <button id="chrome-shortcuts" data-i18n="optBannerOpen">Open Chrome shortcuts</button>
     </div>
 
     <section>
-      <h2>Keyboard shortcuts</h2>
+      <h2 data-i18n="optShortcuts">Keyboard shortcuts</h2>
       <div class="row">
-        <span><b>Open command bar</b><small>Fallback shortcut handled on web pages. For an instant ⌘T use the Chrome setup above.</small></span>
+        <span><b data-i18n="optOpenBar">Open command bar</b><small data-i18n="optOpenBarHint">Fallback shortcut handled on web pages. For an instant ⌘T use the Chrome setup above.</small></span>
         <span class="pair">
           <button class="shortcut" data-shortcut="openBar"></button>
-          <button class="link" data-shortcut-reset="openBar">Default</button>
+          <button class="link" data-shortcut-reset="openBar" data-i18n="optDefault">Default</button>
         </span>
       </div>
       <div class="row">
-        <span><b>Copy page URL</b><small>Default ⇧⌘C, like in Arc.</small></span>
+        <span><b data-i18n="optCopyUrl">Copy page URL</b><small data-i18n="optCopyUrlHint">Default ⇧⌘C, like in Arc.</small></span>
         <span class="pair">
           <button class="shortcut" data-shortcut="copyUrl"></button>
-          <button class="link" data-shortcut-clear="copyUrl">Off</button>
-          <button class="link" data-shortcut-reset="copyUrl">Default</button>
+          <button class="link" data-shortcut-clear="copyUrl" data-i18n="optOff">Off</button>
+          <button class="link" data-shortcut-reset="copyUrl" data-i18n="optDefault">Default</button>
         </span>
       </div>
       <div class="row">
-        <span><b>Reopen closed tab</b><small>Only when no text field is focused, so text undo keeps working.</small></span>
+        <span><b data-i18n="optUndoClose">Reopen closed tab</b><small data-i18n="optUndoCloseHint">Only when no text field is focused, so text undo keeps working.</small></span>
         <span class="pair">
           <button class="shortcut" data-shortcut="undoClose"></button>
-          <button class="link" data-shortcut-clear="undoClose">Off</button>
-          <button class="link" data-shortcut-reset="undoClose">Default</button>
+          <button class="link" data-shortcut-clear="undoClose" data-i18n="optOff">Off</button>
+          <button class="link" data-shortcut-reset="undoClose" data-i18n="optDefault">Default</button>
         </span>
       </div>
-      <p class="note">Shortcuts work on regular web pages. Chrome doesn't allow extensions on chrome:// pages and the Web Store.</p>
+      <p class="note" data-i18n="optShortcutsNote">Shortcuts work on regular web pages. Chrome doesn't allow extensions on chrome:// pages and the Web Store.</p>
     </section>
 
     <section>
-      <h2>Behavior</h2>
+      <h2 data-i18n="optBehavior">Behavior</h2>
       <label class="row">
-        <span><b>Open over current page</b><small>The bar appears on top of the page you're on. When off, it opens in a new tab.</small></span>
+        <span><b data-i18n="optOverlay">Open over current page</b><small data-i18n="optOverlayHint">The bar appears on top of the page you're on. When off, it opens in a new tab.</small></span>
         <input type="checkbox" data-path="features.overlay">
       </label>
       <label class="row">
-        <span><b>Keep window open</b><small>Closing the last tab doesn't close the window — the command bar opens instead. A small pinned tab appears only while the window has one tab.</small></span>
+        <span><b data-i18n="optKeepOpen">Keep window open</b><small data-i18n="optKeepOpenHint">Closing the last tab doesn't close the window — the command bar opens instead. A small pinned tab appears only while the window has one tab.</small></span>
         <select data-path="windows.keepOpen">
-          <option value="off">Off</option>
-          <option value="last">Last window</option>
-          <option value="every">Every window</option>
+          <option value="off" data-i18n="optOff">Off</option>
+          <option value="last" data-i18n="optKeepOpenLast">Last window</option>
+          <option value="every" data-i18n="optKeepOpenEvery">Every window</option>
         </select>
       </label>
     </section>
 
     <section>
-      <h2>Features</h2>
+      <h2 data-i18n="optFeatures">Features</h2>
       <label class="row">
-        <span><b>Commands</b><small>Copy URL, Pin Tab, Close Other Tabs, Open Settings and more.</small></span>
+        <span><b data-i18n="optCommands">Commands</b><small data-i18n="optCommandsHint">Copy URL, Pin Tab, Close Other Tabs, Open Settings and more.</small></span>
         <input type="checkbox" data-path="features.commands">
       </label>
       <label class="row">
-        <span><b>Calculator</b><small><code>2+2</code>, <code>200+15%</code>, <code>sqrt(16)</code>, <code>5!</code></small></span>
+        <span><b data-i18n="optCalculator">Calculator</b><small><code>2+2</code>, <code>200+15%</code>, <code>sqrt(16)</code>, <code>5!</code></small></span>
         <input type="checkbox" data-path="features.calculator">
       </label>
       <label class="row">
-        <span><b>UUID generator</b><small><code>uuid</code> or <code>uuid 5</code> for several. <code>Tab</code> on the row switches the version.</small></span>
+        <span><b data-i18n="optUuid">UUID generator</b><small data-i18n="optUuidHint"><code>uuid</code> or <code>uuid 5</code> for several. <code>Tab</code> on the row switches the version.</small></span>
         <input type="checkbox" data-path="features.uuid">
       </label>
       <label class="row">
-        <span><b>UUID version</b><small>v4 random · v7 time-ordered (good for database keys) · v1 time-based. <code>uuid v7</code> picks one for a single query.</small></span>
+        <span><b data-i18n="optUuidVersion">UUID version</b><small data-i18n="optUuidVersionHint">v4 random · v7 time-ordered (good for database keys) · v1 time-based. <code>uuid v7</code> picks one for a single query.</small></span>
         <select data-path="tools.uuidVersion">
           <option value="v4">v4 — random</option>
           <option value="v7">v7 — time-ordered</option>
@@ -92,37 +92,37 @@
         </select>
       </label>
       <label class="row">
-        <span><b>Encode / decode</b><small><code>b64 text</code>, <code>unb64 …</code>, <code>url text</code>, <code>unurl …</code></small></span>
+        <span><b data-i18n="optEncode">Encode / decode</b><small><code>b64 text</code>, <code>unb64 …</code>, <code>url text</code>, <code>unurl …</code></small></span>
         <input type="checkbox" data-path="features.encode">
       </label>
       <label class="row">
-        <span><b>JWT decoder</b><small>Paste a token to see its payload, header and expiry. <code>Tab</code> expands it.</small></span>
+        <span><b data-i18n="optJwt">JWT decoder</b><small data-i18n="optJwtHint">Paste a token to see its payload, header and expiry. <code>Tab</code> expands it.</small></span>
         <input type="checkbox" data-path="features.jwt">
       </label>
       <label class="row">
-        <span><b>JSON / YAML viewer</b><small>Paste JSON or YAML to format, minify or convert it. <code>Tab</code> expands the result.</small></span>
+        <span><b data-i18n="optFormats">JSON / YAML viewer</b><small data-i18n="optFormatsHint">Paste JSON or YAML to format, minify or convert it. <code>Tab</code> expands the result.</small></span>
         <input type="checkbox" data-path="features.formats">
       </label>
     </section>
 
     <section>
-      <h2>Search sources</h2>
+      <h2 data-i18n="optSources">Search sources</h2>
       <div class="row">
-        <span><b>Open tabs</b><small>Max results</small></span>
+        <span><b data-i18n="optTabs">Open tabs</b><small data-i18n="optMaxResults">Max results</small></span>
         <span class="pair">
           <input type="number" min="1" max="20" data-path="limits.tabs">
           <input type="checkbox" data-path="sources.tabs">
         </span>
       </div>
       <div class="row">
-        <span><b>Bookmarks</b><small>Max results</small></span>
+        <span><b data-i18n="optBookmarks">Bookmarks</b><small data-i18n="optMaxResults">Max results</small></span>
         <span class="pair">
           <input type="number" min="1" max="20" data-path="limits.bookmarks">
           <input type="checkbox" data-path="sources.bookmarks">
         </span>
       </div>
       <div class="row">
-        <span><b>History</b><small>Max results</small></span>
+        <span><b data-i18n="optHistory">History</b><small data-i18n="optMaxResults">Max results</small></span>
         <span class="pair">
           <input type="number" min="1" max="20" data-path="limits.history">
           <input type="checkbox" data-path="sources.history">
@@ -131,13 +131,13 @@
     </section>
 
     <section>
-      <h2>Search suggestions</h2>
+      <h2 data-i18n="optSuggestions">Search suggestions</h2>
       <label class="row">
-        <span><b>Show search suggestions</b><small>Popular queries from the search engine as you type. What you type is sent to it; incognito windows, pasted JSON, tokens and math never are.</small></span>
+        <span><b data-i18n="optSuggestionsShow">Show search suggestions</b><small data-i18n="optSuggestionsHint">Popular queries from the search engine as you type. What you type is sent to it; incognito windows, pasted JSON, tokens and math never are.</small></span>
         <input type="checkbox" data-path="sources.suggestions">
       </label>
       <label class="row" data-requires="sources.suggestions">
-        <span><b>Suggestions from</b><small>Enter still searches with Chrome's default search engine.</small></span>
+        <span><b data-i18n="optSuggestionsFrom">Suggestions from</b><small data-i18n="optSuggestionsFromHint">Enter still searches with Chrome's default search engine.</small></span>
         <select data-path="suggest.engine">
           <option value="google">Google</option>
           <option value="bing">Bing</option>
@@ -146,72 +146,72 @@
         </select>
       </label>
       <label class="row" data-requires="sources.suggestions">
-        <span><b>Max suggestions</b></span>
+        <span><b data-i18n="optSuggestionsMax">Max suggestions</b></span>
         <input type="number" min="1" max="10" data-path="limits.suggestions">
       </label>
     </section>
 
     <section>
-      <h2>Appearance</h2>
+      <h2 data-i18n="optAppearance">Appearance</h2>
       <label class="row">
-        <span><b>Theme</b></span>
+        <span><b data-i18n="optTheme">Theme</b></span>
         <select data-path="appearance.theme">
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
-          <option value="system">System</option>
+          <option value="dark" data-i18n="optThemeDark">Dark</option>
+          <option value="light" data-i18n="optThemeLight">Light</option>
+          <option value="system" data-i18n="optThemeSystem">System</option>
         </select>
       </label>
       <label class="row">
-        <span><b>Position</b></span>
+        <span><b data-i18n="optPosition">Position</b></span>
         <select data-path="appearance.position">
-          <option value="center">Center</option>
-          <option value="top">Top</option>
+          <option value="center" data-i18n="optPositionCenter">Center</option>
+          <option value="top" data-i18n="optPositionTop">Top</option>
         </select>
       </label>
       <label class="row">
-        <span><b>Width</b><small id="width-value"></small></span>
+        <span><b data-i18n="optWidth">Width</b><small id="width-value"></small></span>
         <input type="range" min="520" max="1000" step="20" data-path="appearance.width">
       </label>
       <label class="row">
-        <span><b>Accent color</b><small>Cursor and text selection</small></span>
+        <span><b data-i18n="optAccent">Accent color</b><small data-i18n="optAccentHint">Cursor and text selection</small></span>
         <input type="color" data-path="appearance.accent">
       </label>
     </section>
 
     <section>
-      <h2>Backup</h2>
+      <h2 data-i18n="optBackup">Backup</h2>
       <div class="row">
-        <span><b>Export / import settings</b><small>Save settings to a JSON file or load them on another computer.</small></span>
+        <span><b data-i18n="optExportImport">Export / import settings</b><small data-i18n="optExportImportHint">Save settings to a JSON file or load them on another computer.</small></span>
         <span class="pair">
-          <button id="export">Export…</button>
-          <button id="import">Import…</button>
+          <button id="export" data-i18n="optExport">Export…</button>
+          <button id="import" data-i18n="optImport">Import…</button>
           <input id="import-file" type="file" accept="application/json,.json" hidden>
         </span>
       </div>
       <div class="row">
-        <span><b>Reset</b><small>Restore all settings to defaults.</small></span>
-        <button id="reset" class="danger">Reset…</button>
+        <span><b data-i18n="optReset">Reset</b><small data-i18n="optResetHint">Restore all settings to defaults.</small></span>
+        <button id="reset" class="danger" data-i18n="optResetButton">Reset…</button>
       </div>
     </section>
 
     <section>
-      <h2>Feedback</h2>
+      <h2 data-i18n="optFeedback">Feedback</h2>
       <div class="row">
-        <span><b>Found a bug?</b><small>Leave an issue on GitHub — Cmdly, Chrome and OS versions are filled in for you.</small></span>
-        <a id="report-bug" class="button" target="_blank" rel="noopener">Report a bug…</a>
+        <span><b data-i18n="optBug">Found a bug?</b><small data-i18n="optBugHint">Leave an issue on GitHub — Cmdly, Chrome and OS versions are filled in for you.</small></span>
+        <a id="report-bug" class="button" target="_blank" rel="noopener" data-i18n="optBugButton">Report a bug…</a>
       </div>
       <div class="row">
-        <span><b>Have an idea?</b><small>Suggest a command or a tool you'd like to see in the bar.</small></span>
-        <a id="request-feature" class="button" target="_blank" rel="noopener">Suggest…</a>
+        <span><b data-i18n="optIdea">Have an idea?</b><small data-i18n="optIdeaHint">Suggest a command or a tool you'd like to see in the bar.</small></span>
+        <a id="request-feature" class="button" target="_blank" rel="noopener" data-i18n="optIdeaButton">Suggest…</a>
       </div>
     </section>
 
     <footer class="credits">
-      <span>Cmdly <span id="version"></span> · by <a href="https://github.com/ogbozoyan" target="_blank" rel="noopener">ogbozoyan</a></span>
+      <span>Cmdly <span id="version"></span> · <span data-i18n="optBy">by</span> <a href="https://github.com/ogbozoyan" target="_blank" rel="noopener">ogbozoyan</a></span>
       <span>
         <a href="https://github.com/ogbozoyan/cmdly" target="_blank" rel="noopener">GitHub</a> ·
-        <a href="https://github.com/ogbozoyan/cmdly/issues" target="_blank" rel="noopener">Issues</a> ·
-        <a href="https://github.com/ogbozoyan/cmdly/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy</a>
+        <a href="https://github.com/ogbozoyan/cmdly/issues" target="_blank" rel="noopener" data-i18n="optIssues">Issues</a> ·
+        <a href="https://github.com/ogbozoyan/cmdly/blob/main/PRIVACY.md" target="_blank" rel="noopener" data-i18n="optPrivacy">Privacy</a>
       </span>
     </footer>
   </main>

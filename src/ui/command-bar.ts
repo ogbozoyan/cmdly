@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { Draft, ResultItem } from "../shared/model.ts";
 import { send } from "../shared/messages.ts";
 import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
@@ -5,7 +6,7 @@ import { settingsRepository } from "../shared/settings-repository.ts";
 import { withSuggestions } from "../shared/suggestions.ts";
 import { localResults } from "../tools/local-results.ts";
 import { copyText } from "./clipboard.ts";
-import { highlight } from "./highlight.ts";
+import { escapeHtml, highlight } from "./highlight.ts";
 import { ARROW_ICON, EXPAND_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
 import { withWebSearch } from "./results.ts";
 
@@ -55,13 +56,13 @@ export class CommandBar {
       <div class="bar">
         <div class="input-row">
           <span class="loupe">${SEARCH_ICON}</span>
-          <input type="text" placeholder="Search, Enter URL or Command…" autocomplete="off" spellcheck="false">
+          <input type="text" placeholder="${escapeHtml(t("barPlaceholder"))}" autocomplete="off" spellcheck="false">
         </div>
         <ul class="results"></ul>
         <div class="preview" hidden>
           <div class="preview-head">
             <span class="preview-lang"></span>
-            <span class="preview-hint">Enter copy · Tab collapse</span>
+            <span class="preview-hint">${escapeHtml(t("previewHint"))}</span>
           </div>
           <pre class="code"></pre>
           <div class="preview-notes"></div>
@@ -160,7 +161,7 @@ export class CommandBar {
     if (item.variant) {
       const chip = document.createElement("button");
       chip.className = "variant";
-      chip.title = `Tab: switch to ${item.variant.next}`;
+      chip.title = t("variantSwitch", item.variant.next);
       chip.textContent = `${item.variant.value} ⇥`;
       chip.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -173,7 +174,7 @@ export class CommandBar {
     if (item.preview) {
       const expand = document.createElement("button");
       expand.className = "expand";
-      expand.title = "Expand (Tab)";
+      expand.title = t("expand");
       expand.innerHTML = EXPAND_ICON;
       expand.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -302,7 +303,7 @@ export class CommandBar {
     if (item?.copy != null) {
       await copyText(item.copy, this.root);
       const preview = item.copy.length > 40 ? item.copy.slice(0, 40) + "…" : item.copy;
-      return this.showToast("Copied " + preview.replace(/\s+/g, " "));
+      return this.showToast(t("copied", preview.replace(/\s+/g, " ")));
     }
 
     if (this.options.overlay) this.options.close();

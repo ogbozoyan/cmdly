@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { ResultItem } from "../shared/model.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { looksLikeUrl, shortUrl, toUrl } from "../shared/url.ts";
@@ -17,7 +18,7 @@ export async function search(query: string, host: chrome.tabs.Tab, overlay: bool
 
   if (query && looksLikeUrl(query)) {
     const url = toUrl(query);
-    results.add({ kind: "url", title: shortUrl(url), url, icon: favicon(url), action: "Open" });
+    results.add({ kind: "url", title: shortUrl(url), url, icon: favicon(url), action: t("actionOpen") });
   }
 
   if (sources.tabs) results.addAll(await safely("tabs", () => findTabs(query, host, query ? limits.tabs : Math.max(limits.tabs, 6))));
@@ -27,7 +28,7 @@ export async function search(query: string, host: chrome.tabs.Tab, overlay: bool
   if (sources.history) results.addAll(await safely("history", () => findHistory(query, limits.history)));
 
   // Web search goes first for text, last for things that look like a URL.
-  const webSearch: ResultItem = { kind: "search", title: query, action: "Search" };
+  const webSearch: ResultItem = { kind: "search", title: query, action: t("actionSearch") };
   if (looksLikeUrl(query)) results.items.push(webSearch);
   else results.items.unshift(webSearch);
 
@@ -66,6 +67,7 @@ class ResultList {
 
 async function findTabs(query: string, host: chrome.tabs.Tab, limit: number): Promise<ResultItem[]> {
   const tabs = await chrome.tabs.query({});
+  const action = t("actionSwitchTab");
   return tabs
     .filter((t) => t.id !== host.id && t.url && !t.url.startsWith(PALETTE_URL) && !t.url.startsWith("about:") && !isGuardTab(t))
     .map((t) => ({ t, relevance: query ? score(query, t.title, t.url) : 1 }))
@@ -79,7 +81,7 @@ async function findTabs(query: string, host: chrome.tabs.Tab, limit: number): Pr
       icon: favicon(t.url!, t.favIconUrl),
       tabId: t.id,
       windowId: t.windowId,
-      action: "Switch to Tab",
+      action,
     }));
 }
 

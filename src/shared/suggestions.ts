@@ -2,6 +2,7 @@
  * Search suggestions: which engine to ask, whether a query may be sent at all, and how to turn
  * the engine's OpenSearch answer into rows. Pure — the fetch lives in background/suggest-service.ts.
  */
+import { t } from "../i18n/index.ts";
 import type { ResultItem } from "./model.ts";
 import { looksLikeUrl, shortUrl, toUrl } from "./url.ts";
 
@@ -58,21 +59,25 @@ export function suggestionRows(query: string, suggestions: string[], limit: numb
     seen.add(key);
     rows.push(
       looksLikeUrl(text)
-        ? { kind: "url", title: shortUrl(toUrl(text)), url: toUrl(text), action: "Open", suggestion: true }
-        : { kind: "search", title: text, action: "Search", suggestion: true },
+        ? { kind: "url", title: shortUrl(toUrl(text)), url: toUrl(text), action: t("actionOpen"), suggestion: true }
+        : { kind: "search", title: text, action: t("actionSearch"), suggestion: true },
     );
     if (rows.length >= limit) break;
   }
   return rows;
 }
 
-/** Puts suggestion rows right after the main web-search row (or after tool rows if there is none). */
+/**
+ * Puts suggestion rows after the main web-search row and the commands that follow it
+ * (an exact "Close Other Tabs" beats a popular query), before tabs and history.
+ */
 export function withSuggestions(items: ResultItem[], rows: ResultItem[]): ResultItem[] {
   if (!rows.length) return items;
   const titles = new Set(items.filter((i) => i.kind === "search").map((i) => i.title.toLowerCase()));
   const urls = new Set(items.map((i) => i.url).filter(Boolean));
   const fresh = rows.filter((r) => (r.url ? !urls.has(r.url) : !titles.has(r.title.toLowerCase())));
   const search = items.findIndex((i) => i.kind === "search");
-  const at = search === -1 ? items.length : search + 1;
+  let at = search === -1 ? items.length : search + 1;
+  while (items[at]?.kind === "command") at++;
   return [...items.slice(0, at), ...fresh, ...items.slice(at)];
 }

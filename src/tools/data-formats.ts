@@ -1,4 +1,5 @@
 /** JSON / YAML detection, formatting and conversion. Pure functions, unit-tested. */
+import { tp } from "../i18n/index.ts";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 export type DataFormat = "json" | "yaml";
@@ -54,9 +55,8 @@ export function toYaml(value: unknown): string {
 
 /** "object · 4 keys", "array · 12 items" */
 export function describeData(value: object): string {
-  if (Array.isArray(value)) return `array · ${value.length} item${value.length === 1 ? "" : "s"}`;
-  const keys = Object.keys(value).length;
-  return `object · ${keys} key${keys === 1 ? "" : "s"}`;
+  if (Array.isArray(value)) return tp("dataArray", value.length);
+  return tp("dataObject", Object.keys(value).length);
 }
 
 /** "312 B", "4.2 KB" */
