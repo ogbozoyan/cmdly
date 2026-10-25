@@ -360,13 +360,53 @@ try {
     expect(result.guardBefore && result.guardBefore === result.guardAfter, `guard flickered on ⌘T: ${result.guardBefore} → ${result.guardAfter}`);
   });
 
+  await check("⌘T assigned in Chrome: no flash setup, + opens the bar in the new tab", async () => {
+    const options = await openPage(`chrome-extension://${extensionId}/options.html`);
+    await sleep(500);
+    const before = await options.$eval(".banner-title", (el) => el.textContent);
+    expect(/one-time setup/.test(before), `banner before: ${before}`);
+
+    // Same call chrome://extensions/shortcuts makes when the user presses ⌘T in the field.
+    const shortcuts = await openPage("chrome://extensions/shortcuts");
+    await sleep(500);
+    await shortcuts.evaluate((id) => chrome.developerPrivate.updateExtensionCommand({ extensionId: id, commandName: "open-bar", keybinding: "Command+T" }), extensionId);
+    await shortcuts.close();
+
+    await options.bringToFront();
+    await options.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await sleep(300);
+    const after = await options.$eval(".banner-title", (el) => el.textContent);
+    expect(after === "⌘T opens Cmdly instantly", `banner after: ${after}`);
+    await shot(options, "options");
+    await options.close();
+
+    // "+" button / menu → Chrome opens our new tab page → the bar stays in that tab.
+    await page.bringToFront();
+    const result = await inWorker(async () => {
+      const opened = await chrome.tabs.create({});
+      await new Promise((r) => setTimeout(r, 1500));
+      const tabs = await chrome.tabs.query({ currentWindow: true });
+      const active = tabs.find((t) => t.active);
+      return { activeUrl: active.url, index: active.index, openedIndex: opened.index };
+    });
+    expect(result.activeUrl.endsWith("/palette.html") && result.index === result.openedIndex, `new tab: ${JSON.stringify(result)}`);
+    expect(!(await page.$("#cmdly-overlay")), "overlay must not appear on the previous page");
+
+    const cleanup = await openPage("chrome://extensions/shortcuts");
+    await sleep(300);
+    await cleanup.evaluate((id) => chrome.developerPrivate.updateExtensionCommand({ extensionId: id, commandName: "open-bar", keybinding: "" }), extensionId);
+    await cleanup.close();
+    await inWorker(async () => {
+      for (const t of await chrome.tabs.query({})) if (t.url?.endsWith("/palette.html")) await chrome.tabs.remove(t.id);
+    });
+  });
+
   await check("options page renders shortcuts and saves changes", async () => {
     const options = await openPage(`chrome-extension://${extensionId}/options.html`);
     await options.waitForSelector('[data-shortcut="copyUrl"]');
     await sleep(300);
     const label = await options.$eval('[data-shortcut="copyUrl"]', (el) => el.textContent);
     expect(label === "⇧⌘C" || label === "Ctrl+Shift+C", `copyUrl label: ${label}`);
-    await shot(options, "options");
 
     await options.click('[data-shortcut-clear="copyUrl"]');
     await sleep(300);

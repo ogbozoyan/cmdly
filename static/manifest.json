@@ -24,7 +24,7 @@
   ],
   "commands": {
     "open-bar": {
-      "description": "Open the command bar (no new-tab flash)"
+      "description": "Open the command bar — assign ⌘T / Ctrl+T here"
     }
   }
 }

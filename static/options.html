@@ -17,10 +17,18 @@
       <span id="saved" class="saved" hidden>Saved</span>
     </header>
 
+    <div id="native-shortcut" class="banner" hidden>
+      <div>
+        <b class="banner-title"></b>
+        <p class="banner-text"></p>
+      </div>
+      <button id="chrome-shortcuts">Open Chrome shortcuts</button>
+    </div>
+
     <section>
       <h2>Keyboard shortcuts</h2>
       <div class="row">
-        <span><b>Open command bar</b><small>Default ⌘T. With another shortcut, ⌘T opens a regular new tab with the search bar.</small></span>
+        <span><b>Open command bar</b><small>Fallback shortcut handled on web pages. For an instant ⌘T use the Chrome setup above.</small></span>
         <span class="pair">
           <button class="shortcut" data-shortcut="openBar"></button>
           <button class="link" data-shortcut-reset="openBar">Default</button>
@@ -41,10 +49,6 @@
           <button class="link" data-shortcut-clear="undoClose">Off</button>
           <button class="link" data-shortcut-reset="undoClose">Default</button>
         </span>
-      </div>
-      <div class="row">
-        <span><b>Chrome shortcut</b><small>Works on every page incl. chrome:// and opens the bar without the new tab flash.</small></span>
-        <button id="chrome-shortcuts">Configure…</button>
       </div>
       <p class="note">Shortcuts work on regular web pages. Chrome doesn't allow extensions on chrome:// pages and the Web Store.</p>
     </section>

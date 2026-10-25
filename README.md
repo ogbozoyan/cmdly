@@ -189,13 +189,33 @@ or more tabs, the pinned tab disappears again, so the tab bar stays clean.
 | Last window  | Only the last remaining window — other windows close normally |
 | Every window | Every window                                                  |
 
+## Instant ⌘T
+
+Out of the box <kbd>⌘</kbd> <kbd>T</kbd> briefly opens a new tab before the bar appears. Chrome only lets
+**you** give <kbd>⌘</kbd> <kbd>T</kbd> to an extension, so it's a one-time step (the settings page shows
+a reminder until it's done):
+
+1. Open `chrome://extensions/shortcuts`.
+2. Find **Cmdly → Open the command bar**, click the field and press <kbd>⌘</kbd> <kbd>T</kbd>.
+
+Now <kbd>⌘</kbd> <kbd>T</kbd> shows the bar over the current page instantly, and the **+** button opens the
+bar in a new tab — like Arc.
+
+<details>
+<summary>macOS: ⌘T still opens a new tab?</summary>
+
+Chrome's menu item *File → New Tab* may win over the extension. Give the menu item another shortcut:
+**System Settings → Keyboard → Keyboard Shortcuts → App Shortcuts → +**, application *Google Chrome*,
+menu title `New Tab`, shortcut e.g. <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>T</kbd>. Restart Chrome.
+</details>
+
 ## Limitations
 
 These come from how Chrome works, not from Cmdly:
 
-- **New tab flash.** Chrome doesn't let extensions intercept <kbd>⌘</kbd> <kbd>T</kbd>, so Cmdly
-  replaces the new tab page, closes it instantly and shows the bar on the previous page.
-  To avoid the flash, assign a shortcut at `chrome://extensions/shortcuts` → *Cmdly → Open the command bar*.
+- **New tab flash until ⌘T is set up.** Chrome won't let an extension claim <kbd>⌘</kbd> <kbd>T</kbd> by
+  default, so out of the box Cmdly replaces the new tab page, closes it and shows the bar on the
+  previous page — the new tab flashes for a moment. See [Instant ⌘T](#instant-t) to remove it.
 - **chrome:// pages and the Web Store** don't allow extensions: there the bar opens as a separate
   tab and page shortcuts (<kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>C</kbd>, <kbd>⌘</kbd> <kbd>Z</kbd>) don't work.
 - **Split View:** the bar appears in the focused pane only.

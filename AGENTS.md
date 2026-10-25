@@ -116,8 +116,12 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 
 ## Known limitations (by Chrome design)
 
-- Chrome doesn't let extensions intercept `⌘T`. Cmdly overrides the new tab page, closes it and
-  shows the overlay on the previous tab — the new tab flashes for a split second. A shortcut
-  assigned at `chrome://extensions/shortcuts` avoids the flash.
+- `⌘T` as a manifest `suggested_key` is rejected by Chrome (the command stays unbound), but a user
+  can assign it at `chrome://extensions/shortcuts`. With it assigned, `⌘T` fires the `open-bar`
+  command (no new tab, no flash) and `handleNewTab` treats new tabs as the "+" button (bar opens
+  in that tab). Without it, the fallback overrides the new tab page, closes it and shows the overlay
+  on the previous tab — the new tab flashes. The options page shows a setup banner until it's done.
+- CDP (puppeteer) key events never reach browser accelerators, so `⌘T` itself can't be e2e-tested;
+  the e2e test assigns the command via `chrome.developerPrivate` from chrome://extensions instead.
 - Extensions can't run on `chrome://` pages and the Web Store: no overlay, no page shortcuts there.
 - Split View: the overlay appears only in the focused pane (each pane is a separate tab).

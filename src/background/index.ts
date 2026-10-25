@@ -27,7 +27,10 @@ chrome.commands.onCommand.addListener((command, tab) => {
 });
 
 // Chrome doesn't add content scripts to tabs that were open before install/update — inject them now.
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
+  // First install: the settings page explains the one-time ⌘T setup that removes the new tab flash.
+  if (reason === chrome.runtime.OnInstalledReason.INSTALL) chrome.runtime.openOptionsPage();
+
   const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*", "file://*/*"] });
   for (const tab of tabs) {
     chrome.scripting

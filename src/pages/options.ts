@@ -4,6 +4,7 @@
  */
 import { DEFAULT_SETTINGS, fromImportFile, toExportFile, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
+import { IS_MAC } from "../shared/platform.ts";
 import { formatShortcut, isValidShortcut, shortcutFromEvent } from "../shared/shortcuts.ts";
 
 type ShortcutName = keyof Settings["shortcuts"];
@@ -130,6 +131,30 @@ document.querySelectorAll<HTMLButtonElement>("[data-shortcut-clear]").forEach((b
 });
 
 $("#chrome-shortcuts").addEventListener("click", () => chrome.tabs.create({ url: "chrome://extensions/shortcuts" }));
+
+/**
+ * ⌘T without a flash needs a one-time step only the user can do: assign ⌘T to Cmdly's
+ * "open-bar" command in Chrome (Chrome refuses it as a manifest default). Show where we are.
+ */
+async function renderNativeShortcut(): Promise<void> {
+  const commands = await chrome.commands.getAll();
+  const assigned = commands.find((c) => c.name === "open-bar")?.shortcut ?? "";
+  const key = IS_MAC ? "⌘T" : "Ctrl+T";
+  const banner = $("#native-shortcut");
+  banner.hidden = false;
+  banner.classList.toggle("ok", !!assigned);
+  $("#chrome-shortcuts").textContent = assigned ? "Change…" : "Open Chrome shortcuts";
+  $(".banner-title").textContent = assigned
+    ? `${assigned} opens Cmdly instantly`
+    : `Make ${key} instant — one-time setup`;
+  $(".banner-text").textContent = assigned
+    ? "The shortcut is handled by Chrome directly: no new tab flash. The + button opens the bar in a new tab."
+    : `Right now ${key} briefly opens a new tab before the bar appears. In Chrome shortcuts find Cmdly → "Open the command bar", click the field and press ${key}.`;
+}
+
+// Re-check when the user comes back from chrome://extensions/shortcuts.
+window.addEventListener("focus", renderNativeShortcut);
+renderNativeShortcut();
 
 // ---------- export / import / reset ----------
 

@@ -8,7 +8,20 @@ import { canInjectInto, PALETTE_URL, previousTab } from "./tab-service.ts";
  * Two display modes:
  *  - overlay: injected into the current web page (dist/overlay.js), the page stays visible;
  *  - palette page: a standalone tab (palette.html) — used where Chrome forbids scripts (chrome:// pages).
+ *
+ * Two ways ⌘T reaches us:
+ *  - native: the user assigned ⌘T to the "open-bar" command at chrome://extensions/shortcuts.
+ *    Chrome then calls chrome.commands.onCommand instead of opening a tab — no flash at all.
+ *    (Chrome rejects ⌘T as a manifest default, so only the user can assign it.)
+ *  - fallback: Chrome opens our new tab page (newtab.html); we close it and show the overlay
+ *    on the previous page. Works without setup, but the new tab flashes for a moment.
  */
+
+/** The shortcut assigned to the "open-bar" command in Chrome, or "" if none. */
+export async function nativeOpenBarShortcut(): Promise<string> {
+  const commands = await chrome.commands.getAll();
+  return commands.find((c) => c.name === "open-bar")?.shortcut ?? "";
+}
 
 export async function showOverlay(tabId: number): Promise<void> {
   await chrome.scripting.executeScript({ target: { tabId }, files: ["overlay.js"] });
@@ -29,15 +42,18 @@ export async function openBar(tab: chrome.tabs.Tab | undefined): Promise<void> {
 }
 
 /**
- * Cmd+T opened our new tab page. Chrome doesn't let extensions intercept Cmd+T directly,
- * so we close that tab and show the overlay on the page the user came from.
+ * Our new tab page was opened.
+ *  - ⌘T is handled natively → this tab came from the "+" button or the menu: show the bar
+ *    right in this new tab, like Arc does for "New Tab".
+ *  - otherwise this is the ⌘T fallback: close the tab and show the overlay on the previous page.
  */
 export async function handleNewTab(newTab: chrome.tabs.Tab): Promise<void> {
   const { features, shortcuts } = await settingsRepository.get();
   const cmdTIsOurs = shortcuts.openBar === `${MOD}+KeyT`;
+  const nativeShortcut = await nativeOpenBarShortcut();
   const prev = await previousTab(newTab);
 
-  if (features.overlay && cmdTIsOurs && prev?.id && canInjectInto(prev)) {
+  if (!nativeShortcut && features.overlay && cmdTIsOurs && prev?.id && canInjectInto(prev)) {
     try {
       await chrome.tabs.update(prev.id, { active: true });
       await showOverlay(prev.id);

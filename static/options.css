@@ -171,6 +171,26 @@ input[type="color"] {
   cursor: pointer;
 }
 
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, #f5a623 45%, transparent);
+  background: color-mix(in srgb, #f5a623 10%, var(--panel));
+}
+
+.banner.ok {
+  border-color: color-mix(in srgb, #34c759 40%, transparent);
+  background: color-mix(in srgb, #34c759 8%, var(--panel));
+}
+
+.banner > div { flex: 1; }
+.banner p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.banner button { flex: none; }
+
 button.shortcut {
   min-width: 84px;
   font: 13px ui-monospace, SFMono-Regular, Menlo, monospace;
