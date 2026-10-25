@@ -8,6 +8,7 @@ export const de: Messages = {
     "Befehlsleiste für Chrome: Tabs, Verlauf und Lesezeichen durchsuchen, Befehle ausführen, rechnen und dekodieren — mit Cmd+T.",
   actionTitle: "Cmdly öffnen",
   commandOpenBar: "Befehlsleiste öffnen — hier ⌘T / Strg+T zuweisen",
+  commandCopyUrl: "Seiten-URL kopieren — funktioniert überall, auch wenn die Adressleiste aktiv ist",
   newTabTitle: "Neuer Tab",
   keepOpenText: "Dieser angeheftete Tab hält das Fenster offen, wenn Sie den letzten Tab schließen. Cmdly entfernt ihn, sobald das Fenster weitere Tabs hat.",
 

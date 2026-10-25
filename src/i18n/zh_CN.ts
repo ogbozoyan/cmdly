@@ -7,6 +7,7 @@ export const zh_CN: Messages = {
   extDescription: "Chrome 效率命令栏：搜索标签页、历史记录和书签，执行命令、计算和解码 — 按 Cmd+T 即可。",
   actionTitle: "打开 Cmdly",
   commandOpenBar: "打开命令栏 — 在此处设置 ⌘T / Ctrl+T",
+  commandCopyUrl: "复制页面网址 — 在任何位置都有效，包括焦点在地址栏时",
   newTabTitle: "新标签页",
   keepOpenText: "关闭最后一个标签页时，这个固定标签页会让窗口保持打开。窗口中有其他标签页后，Cmdly 会立即移除它。",
 

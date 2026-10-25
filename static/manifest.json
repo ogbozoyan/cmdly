@@ -30,7 +30,8 @@
     "favicon",
     "scripting",
     "sessions",
-    "storage"
+    "storage",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -67,6 +68,9 @@
   "commands": {
     "open-bar": {
       "description": "__MSG_commandOpenBar__"
+    },
+    "copy-url": {
+      "description": "__MSG_commandCopyUrl__"
     }
   }
 }

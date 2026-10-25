@@ -28,6 +28,8 @@ chrome.runtime.onMessage.addListener((request: Request, sender, sendResponse) =>
 chrome.action.onClicked.addListener(openBar);
 chrome.commands.onCommand.addListener((command, tab) => {
   if (command === "open-bar") openBar(tab);
+  // The content script copies (it can show a toast on the page); chrome:// pages have none — ignore.
+  if (command === "copy-url" && tab?.id) chrome.tabs.sendMessage(tab.id, { type: "copy-url" }, { frameId: 0 }).catch(() => {});
 });
 
 // Chrome doesn't add content scripts to tabs that were open before install/update — inject them now.

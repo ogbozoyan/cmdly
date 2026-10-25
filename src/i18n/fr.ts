@@ -8,6 +8,7 @@ export const fr: Messages = {
     "Barre de commandes pour Chrome : cherchez onglets, historique et favoris, lancez des commandes, calculez et décodez — avec Cmd+T.",
   actionTitle: "Ouvrir Cmdly",
   commandOpenBar: "Ouvrir la barre de commandes — attribuez ⌘T / Ctrl+T ici",
+  commandCopyUrl: "Copier l'URL de la page — fonctionne partout, même dans la barre d'adresse",
   newTabTitle: "Nouvel onglet",
   keepOpenText: "Cet onglet épinglé garde la fenêtre ouverte quand vous fermez le dernier onglet. Cmdly le retire dès que la fenêtre a d'autres onglets.",
 

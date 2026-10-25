@@ -18,6 +18,7 @@ export const en = {
     "A productivity command bar for Chrome: search tabs, history and bookmarks, run commands, calculate and decode — on Cmd+T.",
   actionTitle: "Open Cmdly",
   commandOpenBar: "Open the command bar — assign ⌘T / Ctrl+T here",
+  commandCopyUrl: "Copy the page URL — works on any page, even when focus is in the address bar",
   newTabTitle: "New Tab",
   keepOpenText: "This pinned tab keeps the window open when you close the last tab. Cmdly removes it as soon as the window has more tabs.",
 

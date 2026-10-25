@@ -44,6 +44,7 @@ exactly as if you typed them into the address bar.
 | `favicon` | Show site icons next to results |
 | `scripting`, host access to all sites | Show the command bar on top of the page you're on and handle shortcuts there; request search suggestions |
 | `storage` | Save your settings |
+| `clipboardWrite` | Copy the page URL with a Chrome-level shortcut, even when the page isn't focused |
 
 ## Contact
 

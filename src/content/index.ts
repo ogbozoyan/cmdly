@@ -30,6 +30,11 @@ function start(): void {
   settingsRepository.get().then(apply);
   settingsRepository.onChange(apply);
 
+  // "Copy page URL" assigned at chrome://extensions/shortcuts: Chrome handles the key, the background asks us.
+  chrome.runtime.onMessage.addListener((message: { type?: string }) => {
+    if (message?.type === "copy-url" && window === window.top) copyPageUrl();
+  });
+
   // Capture phase on window = we see the key before any page handler can stop it.
   window.addEventListener("keydown", (e) => {
     if (e.repeat || e.isComposing) return;
