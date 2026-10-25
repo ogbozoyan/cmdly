@@ -408,6 +408,18 @@ try {
     const label = await options.$eval('[data-shortcut="copyUrl"]', (el) => el.textContent);
     expect(label === "⇧⌘C" || label === "Ctrl+Shift+C", `copyUrl label: ${label}`);
 
+    const links = await options.evaluate(() => ({
+      bug: document.querySelector("#report-bug").href,
+      author: document.querySelector('.credits a[href="https://github.com/ogbozoyan"]')?.textContent,
+      version: document.querySelector("#version").textContent,
+    }));
+    expect(links.bug.startsWith("https://github.com/ogbozoyan/cmdly/issues/new?labels=bug"), `bug link: ${links.bug}`);
+    expect(links.author === "ogbozoyan" && links.version, `credits: ${JSON.stringify(links)}`);
+    if (SCREENSHOTS) {
+      await options.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await shot(options, "options-footer");
+    }
+
     await options.click('[data-shortcut-clear="copyUrl"]');
     await sleep(300);
     const saved = await inWorker(async () => (await chrome.storage.sync.get("settings")).settings?.shortcuts?.copyUrl);

@@ -4,6 +4,7 @@
  */
 import { DEFAULT_SETTINGS, fromImportFile, toExportFile, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
+import { bugReportUrl, featureRequestUrl } from "../shared/feedback.ts";
 import { IS_MAC } from "../shared/platform.ts";
 import { formatShortcut, isValidShortcut, shortcutFromEvent } from "../shared/shortcuts.ts";
 
@@ -189,6 +190,17 @@ $("#reset").addEventListener("click", async () => {
   fillForm();
   flash("Reset");
 });
+
+// ---------- feedback & credits ----------
+
+const environment = {
+  version: chrome.runtime.getManifest().version,
+  userAgent: navigator.userAgent,
+  platform: navigator.platform,
+};
+$<HTMLAnchorElement>("#report-bug").href = bugReportUrl(environment);
+$<HTMLAnchorElement>("#request-feature").href = featureRequestUrl(environment);
+$("#version").textContent = environment.version;
 
 // ---------- misc ----------
 
