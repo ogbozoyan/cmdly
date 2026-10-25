@@ -66,6 +66,7 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   `src/shared/messages.ts`) and the background does the work.
 - Instant results (calculator, UUID, encoders, JWT, JSON/YAML) are computed in the UI by
   `src/tools/local-results.ts`; tabs/bookmarks/history/commands come from `search-service.ts`.
+  Tool rows go first, but the regular results (web search, tabs, history) are always shown below them.
 - A row with `preview` (see `Preview` in `model.ts`) gets an expand button; <kbd>Tab</kbd> opens the
   viewer panel under the results (`CommandBar.renderPreview`, highlighting in `src/ui/highlight.ts`).
 - **Keep window open**: `keep-open-plan.ts` is a pure planner (windows snapshot → actions), unit-tested;

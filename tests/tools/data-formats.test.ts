@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { DEFAULT_SETTINGS } from "../../src/shared/settings.ts";
 import { describeData, formatSize, parseData, toYaml } from "../../src/tools/data-formats.ts";
 import { jwtTimeNotes } from "../../src/tools/dev-tools.ts";
-import { isDataQuery, localResults } from "../../src/tools/local-results.ts";
+import { localResults } from "../../src/tools/local-results.ts";
 
 const features = DEFAULT_SETTINGS.features;
 const titles = (q: string) => localResults(q, features).map((r) => r.title);
@@ -36,7 +36,6 @@ test("JSON rows: format, minify, convert to YAML — all expandable", () => {
   assert.ok(rows.every((r) => r.preview));
   assert.equal(rows[2].preview!.language, "yaml");
   assert.match(rows[0].meta!, /^object · 2 keys · \d+ B$/);
-  assert.equal(isDataQuery(rows), true);
 });
 
 test("YAML rows: format and convert to JSON", () => {
@@ -51,7 +50,6 @@ test("viewer can be switched off", () => {
 
 test("normal queries are unaffected", () => {
   assert.deepEqual(titles("github"), []);
-  assert.equal(isDataQuery(localResults("2+2", features)), false);
 });
 
 test("JWT rows are expandable with human-readable dates", () => {

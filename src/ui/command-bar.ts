@@ -2,7 +2,7 @@ import type { ResultItem } from "../shared/model.ts";
 import { send } from "../shared/messages.ts";
 import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
-import { isDataQuery, localResults } from "../tools/local-results.ts";
+import { localResults } from "../tools/local-results.ts";
 import { copyText } from "./clipboard.ts";
 import { highlight } from "./highlight.ts";
 import { ARROW_ICON, EXPAND_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
@@ -92,11 +92,9 @@ export class CommandBar {
 
   private async render(): Promise<void> {
     const id = ++this.requestId;
+    // Tool rows (calculator, JSON/YAML, JWT…) come first; web search, tabs and history always follow.
     const local = localResults(this.rawQuery(), this.settings.features);
-    // Pasted JSON/YAML/JWT: show the viewer rows only, searching history for it is pointless.
-    const remote = isDataQuery(local)
-      ? []
-      : ((await send({ type: "search", query: this.input.value.trim(), overlay: this.options.overlay })) ?? []);
+    const remote = (await send({ type: "search", query: this.input.value.trim(), overlay: this.options.overlay })) ?? [];
     if (id !== this.requestId) return;
 
     this.items = [...local, ...remote];

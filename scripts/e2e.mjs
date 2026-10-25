@@ -201,11 +201,15 @@ try {
     expect(titles[0].includes('"sub":"42"'), `first row: ${titles[0]}`);
   });
 
-  await check("JSON paste keeps structure, Tab expands the viewer", async () => {
+  await check("JSON paste: viewer rows first, web search still offered, Tab expands", async () => {
     await typeInBar(page, "");
     await pasteInBar(page, SAMPLE_JSON);
     const titles = await rowTitles(page);
-    expect(titles.join() === "Format JSON,Minify JSON,Convert to YAML", `rows: ${JSON.stringify(titles)}`);
+    expect(titles.slice(0, 3).join() === "Format JSON,Minify JSON,Convert to YAML", `rows: ${JSON.stringify(titles)}`);
+    const kinds = await page.evaluate(() =>
+      [...document.getElementById("cmdly-overlay").shadowRoot.querySelectorAll("li .action")].map((el) => el.textContent)
+    );
+    expect(kinds.includes("Search"), `no web search row: ${JSON.stringify(kinds)}`);
     await page.keyboard.press("Tab");
     const code = await previewText(page);
     expect(code?.startsWith('{\n  "service": "checkout"'), `preview: ${code?.slice(0, 60)}`);
@@ -221,7 +225,7 @@ try {
     await typeInBar(page, "");
     await pasteInBar(page, "server:\n  port: 8080\n  hosts:\n    - a.local\n    - b.local\n");
     const titles = await rowTitles(page);
-    expect(titles.join() === "Format YAML,Convert to JSON", `rows: ${JSON.stringify(titles)}`);
+    expect(titles.slice(0, 2).join() === "Format YAML,Convert to JSON", `rows: ${JSON.stringify(titles)}`);
   });
 
   await check("JWT row expands with readable dates", async () => {

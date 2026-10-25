@@ -21,11 +21,6 @@ export function localResults(query: string, features: Features): ResultItem[] {
   ];
 }
 
-/** True if the results are a viewer for pasted data — then searching tabs/history makes no sense. */
-export function isDataQuery(items: ResultItem[]): boolean {
-  return items.some((item) => item.preview);
-}
-
 function copyRow(
   title: string,
   meta: string,
