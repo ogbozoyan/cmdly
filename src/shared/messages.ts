@@ -7,6 +7,7 @@ import type { CommandResult, ResultItem } from "./model.ts";
  */
 export type Request =
   | { type: "search"; query: string; overlay: boolean }
+  | { type: "suggest"; query: string }
   | { type: "open"; item?: ResultItem; text: string; inBackground: boolean; overlay: boolean }
   | { type: "command"; id: string; overlay: boolean }
   | { type: "newtab-opened" }
@@ -18,6 +19,7 @@ export type Request =
 /** Response type for each request type. */
 export interface ResponseMap {
   search: ResultItem[];
+  suggest: ResultItem[];
   open: void;
   command: CommandResult;
   "newtab-opened": void;

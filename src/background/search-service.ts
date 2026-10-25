@@ -109,7 +109,7 @@ function pageRow(kind: "bookmark" | "history", title: string | undefined, url: s
 }
 
 /** Tab's own favicon if usable, otherwise Chrome's favicon cache (needs the "favicon" permission). */
-function favicon(pageUrl: string, favIconUrl?: string): string {
+export function favicon(pageUrl: string, favIconUrl?: string): string {
   if (favIconUrl && /^(https?|data):/.test(favIconUrl)) return favIconUrl;
   const u = new URL(chrome.runtime.getURL("/_favicon/"));
   u.searchParams.set("pageUrl", pageUrl);

@@ -18,8 +18,15 @@ You can export, import or reset them on the settings page.
 
 ## Data Cmdly sends
 
-**None.** Cmdly makes no network requests of its own, has no servers, no analytics, no tracking
-and no ads. Web searches you start from the bar are performed by Chrome's default search engine,
+Cmdly has no servers, no analytics, no tracking and no ads. Nothing is ever sent to the developer.
+
+**Search suggestions** (on by default, can be turned off in Settings → Search sources): while you
+type, the text is sent to the search engine you picked (Google by default; Bing, DuckDuckGo or Yandex)
+to get suggested queries — the same thing Chrome's address bar does. Requests carry no cookies.
+They are never made in incognito windows, and never for pasted JSON/YAML, tokens/JWTs, long encoded
+strings, tool commands or math.
+
+Web searches you start from the bar are performed by Chrome's default search engine,
 exactly as if you typed them into the address bar.
 
 ## Permissions
@@ -31,7 +38,7 @@ exactly as if you typed them into the address bar.
 | `sessions` | Reopen recently closed tabs (`⌘Z`) |
 | `search` | Run web searches with your default search engine |
 | `favicon` | Show site icons next to results |
-| `scripting`, host access to all sites | Show the command bar on top of the page you're on and handle shortcuts there |
+| `scripting`, host access to all sites | Show the command bar on top of the page you're on and handle shortcuts there; request search suggestions |
 | `storage` | Save your settings |
 
 ## Contact

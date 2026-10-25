@@ -253,6 +253,17 @@ try {
     await page.keyboard.press("Escape");
   });
 
+  await check("Search suggestions appear under the web search row", async () => {
+    await typeInBar(page, "how to center a");
+    await page.waitForFunction(
+      () => document.getElementById("cmdly-overlay").shadowRoot.querySelectorAll("li").length > 2,
+      { timeout: 5000 },
+    ).catch(() => {});
+    const titles = await rowTitles(page);
+    expect(titles[0] === "how to center a", `first row: ${titles[0]}`);
+    expect(titles.slice(1, 3).some((t) => /^how to center a /i.test(t)), `suggestions: ${titles.join(" | ")}`);
+  });
+
   await check("UUID: Tab switches the version, remembers it, Enter copies what is shown", async () => {
     await typeInBar(page, "uuid");
     const chip = () => page.evaluate(() => document.getElementById("cmdly-overlay").shadowRoot.querySelector("li.active .variant")?.textContent);

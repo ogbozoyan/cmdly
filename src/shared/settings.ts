@@ -1,4 +1,5 @@
 import { MOD } from "./platform.ts";
+import type { SuggestEngine } from "./suggestions.ts";
 
 /** What "keep window open" protects: nothing, the last remaining window, or every window. */
 export type KeepOpenMode = "off" | "last" | "every";
@@ -34,11 +35,18 @@ export interface Settings {
     tabs: boolean;
     bookmarks: boolean;
     history: boolean;
+    /** Ask the search engine for suggestions while typing (sends the typed text to it). */
+    suggestions: boolean;
+  };
+  /** Engine asked for suggestions; the search itself always uses Chrome's default engine. */
+  suggest: {
+    engine: SuggestEngine;
   };
   limits: {
     tabs: number;
     bookmarks: number;
     history: number;
+    suggestions: number;
   };
   appearance: {
     theme: "dark" | "light" | "system";
@@ -75,11 +83,16 @@ export const DEFAULT_SETTINGS: Settings = {
     tabs: true,
     bookmarks: true,
     history: true,
+    suggestions: true,
+  },
+  suggest: {
+    engine: "google",
   },
   limits: {
     tabs: 5,
     bookmarks: 3,
     history: 4,
+    suggestions: 4,
   },
   appearance: {
     theme: "dark",

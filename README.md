@@ -57,14 +57,14 @@ you actually navigate somewhere.
 
 |                       |                                                                                                                                                             |
 |-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Search everything** | Open tabs, bookmarks and history in one list. Pick an open tab to switch to it instead of opening a duplicate.                                              |
+| **Search everything** | Open tabs, bookmarks and history in one list. Search suggestions from Google, Bing, DuckDuckGo or Yandex as you type. Pick an open tab to switch to it instead of opening a duplicate.                                              |
 | **Commands**          | Copy URL, Copy as Markdown, Pin/Unpin, Mute, Duplicate, Close other tabs, Move to new window, Reopen closed tab, Bookmark, open History/Downloads/Settings… |
 | **Calculator**        | `2+2`, `200+15%`, `sqrt(16)`, `5!`, `2^10`, `3x4`. Enter copies the result.                                                                                 |
 | **JSON / YAML**       | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results.                              |
 | **Dev tools**         | `uuid` / `uuid 5` (v4, v7, v1), `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates.                       |
 | **Shortcuts**         | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable.                                                                |
 | **Settings**          | Turn every feature on/off, rebind shortcuts, pick theme, accent color, position and width. Export / import as JSON.                                         |
-| **Private**           | No network requests, no analytics. Everything stays in your browser.                                                                                        |
+| **Private**           | No analytics, no servers. Tabs, history and pasted data stay in your browser; only search suggestions go to your search engine (can be turned off).                                                                                        |
 
 # Screenshots
 
@@ -259,8 +259,10 @@ Contributions are welcome — open an issue or a pull request. Please run `npm r
 
 ## Privacy
 
-Cmdly reads your tabs, history and bookmarks locally to show results and never sends anything
-anywhere. No servers, no analytics. See [PRIVACY.md](PRIVACY.md).
+Cmdly reads your tabs, history and bookmarks locally and never sends them anywhere. No servers,
+no analytics. The one exception is search suggestions: the text you type goes to the search engine
+you picked, like in Chrome's address bar — never in incognito or for pasted data, and it can be
+turned off in Settings. See [PRIVACY.md](PRIVACY.md).
 
 ## License
 

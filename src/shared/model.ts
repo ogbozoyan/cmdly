@@ -41,6 +41,8 @@ export interface ResultItem {
   commandId?: string;
   /** If set, Enter copies this text instead of navigating. */
   copy?: string;
+  /** Came from the search engine's suggestions (see shared/suggestions.ts). */
+  suggestion?: boolean;
   /** If set, the row can be expanded into a viewer panel. */
   preview?: Preview;
   /** If set, Tab switches this row to the next variant and remembers it (e.g. UUID version). */

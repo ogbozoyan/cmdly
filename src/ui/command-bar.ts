@@ -2,6 +2,7 @@ import type { ResultItem } from "../shared/model.ts";
 import { send } from "../shared/messages.ts";
 import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
+import { withSuggestions } from "../shared/suggestions.ts";
 import { localResults } from "../tools/local-results.ts";
 import { copyText } from "./clipboard.ts";
 import { highlight } from "./highlight.ts";
@@ -96,13 +97,35 @@ export class CommandBar {
     // Tool rows (calculator, JSON/YAML, JWT…) come first; web search, tabs and history always follow.
     const query = this.input.value.trim();
     const local = localResults(this.rawQuery(), this.settings.features, this.settings.tools);
+    // Text that a tool understood (JSON, JWT, math…) is never sent to the search engine.
+    const suggestions = local.length ? null : this.suggest(query, id);
     const remote = (await send({ type: "search", query, overlay: this.options.overlay })) ?? [];
     if (id !== this.requestId) return;
 
     const previous = this.active;
-    this.items = withWebSearch([...local, ...remote], query);
-    this.list.replaceChildren(...this.items.map((item, i) => this.renderRow(item, i)));
-    this.setActive(keepActive ? Math.min(previous, this.items.length - 1) : 0);
+    const items = withWebSearch([...local, ...remote], query);
+    this.draw(items, keepActive ? Math.min(previous, items.length - 1) : 0);
+
+    // Suggestions arrive later (network); tabs and history are already on screen.
+    const rows = (await suggestions) ?? [];
+    if (id !== this.requestId || !rows.length) return;
+    const selected = this.items[this.active];
+    const merged = withSuggestions(this.items, rows);
+    this.draw(merged, this.active === 0 ? 0 : Math.max(merged.indexOf(selected), 0));
+  }
+
+  private draw(items: ResultItem[], active: number): void {
+    this.items = items;
+    this.list.replaceChildren(...items.map((item, i) => this.renderRow(item, i)));
+    this.setActive(active);
+  }
+
+  /** Short pause first: fast typing sends only the last query, not every letter. */
+  private async suggest(query: string, id: number): Promise<ResultItem[] | null> {
+    if (!this.settings.sources.suggestions || !query) return null;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    if (id !== this.requestId) return null;
+    return send({ type: "suggest", query });
   }
 
   private renderRow(item: ResultItem, index: number): HTMLLIElement {

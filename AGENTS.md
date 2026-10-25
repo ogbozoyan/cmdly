@@ -86,6 +86,8 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   `keep-open-service.ts` reads Chrome state, debounces events and applies the actions. The guard is
   Cmdly's own pinned `keep-open.html` — never `chrome://newtab`, which Cmdly itself replaces.
   Helpers that pick "the previous tab" must skip it (`isGuardTab` in `tab-service.ts`).
+- **Search suggestions** are a separate `suggest` message: the UI draws tabs/history first, then
+  merges suggestion rows under the web-search row (`withSuggestions`) when the network answers.
 - A row with `variant` (see `Variant` in `model.ts`) shows a chip; <kbd>Tab</kbd> calls
   `CommandBar.cycleVariant`, which stores the next value in `Settings.tools` and re-renders.
   Used for the UUID version (`src/tools/uuid.ts`: v4, v7, v1).
@@ -113,8 +115,10 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 - Every bundle in `dist/` is self-contained (content scripts can't import modules). Entry points
   are listed in `scripts/build.mjs`.
 - Never hard-code company/internal URLs: the repo is public. User-specific values go to Settings.
-- Privacy: no network requests, no analytics. Everything stays in the browser.
-  Keep `PRIVACY.md` true when adding features.
+- Privacy: no analytics, nothing goes to the developer. The only network request is search
+  suggestions (`background/suggest-service.ts`, toggle `sources.suggestions`): no cookies, never in
+  incognito, and `maySuggest` (`shared/suggestions.ts`) keeps pasted data/tokens local. Never add
+  other requests without a setting. Keep `PRIVACY.md` true when adding features.
 - Keep the UI copy in English (the Web Store listing is English).
 - Anything inserted with `innerHTML` must go through `escapeHtml` (`src/ui/highlight.ts`): the bar
   runs inside other people's pages and renders pasted text.

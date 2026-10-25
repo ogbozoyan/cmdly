@@ -3,6 +3,7 @@ import { dismissPalettePage, handleNewTab, openBar } from "./bar-service.ts";
 import { runCommand } from "./command-service.ts";
 import { open } from "./navigation-service.ts";
 import { search } from "./search-service.ts";
+import { suggest } from "./suggest-service.ts";
 import { restoreClosedTab } from "./tab-service.ts";
 
 /**
@@ -14,6 +15,8 @@ export async function route(request: Request, sender: chrome.tabs.Tab): Promise<
   switch (request.type) {
     case "search":
       return search(request.query, sender, request.overlay);
+    case "suggest":
+      return suggest(request.query, sender);
     case "open":
       return open(request, sender);
     case "command":
