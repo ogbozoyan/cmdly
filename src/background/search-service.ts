@@ -20,11 +20,11 @@ export async function search(query: string, host: chrome.tabs.Tab, overlay: bool
     results.add({ kind: "url", title: shortUrl(url), url, icon: favicon(url), action: "Open" });
   }
 
-  if (sources.tabs) results.addAll(await findTabs(query, host, query ? limits.tabs : Math.max(limits.tabs, 6)));
+  if (sources.tabs) results.addAll(await safely("tabs", () => findTabs(query, host, query ? limits.tabs : Math.max(limits.tabs, 6))));
   if (!query) return results.items;
 
-  if (sources.bookmarks) results.addAll(await findBookmarks(query, limits.bookmarks));
-  if (sources.history) results.addAll(await findHistory(query, limits.history));
+  if (sources.bookmarks) results.addAll(await safely("bookmarks", () => findBookmarks(query, limits.bookmarks)));
+  if (sources.history) results.addAll(await safely("history", () => findHistory(query, limits.history)));
 
   // Web search goes first for text, last for things that look like a URL.
   const webSearch: ResultItem = { kind: "search", title: query, action: "Search" };
@@ -32,9 +32,20 @@ export async function search(query: string, host: chrome.tabs.Tab, overlay: bool
   else results.items.unshift(webSearch);
 
   if (features.commands) {
-    results.items.splice(1, 0, ...matchCommands(query, await commandTarget(host, overlay)));
+    const commands = await safely("commands", async () => matchCommands(query, await commandTarget(host, overlay)));
+    results.items.splice(1, 0, ...commands);
   }
   return results.items;
+}
+
+/** One failing source (e.g. history API error) must not empty the whole list. */
+async function safely(source: string, find: () => Promise<ResultItem[]>): Promise<ResultItem[]> {
+  try {
+    return await find();
+  } catch (error) {
+    console.error(`[cmdly] ${source} search failed`, error);
+    return [];
+  }
 }
 
 /** Result list without duplicate URLs (a page can be open, bookmarked and in history at once). */

@@ -221,6 +221,21 @@ try {
     expect((await previewText(page)) === null, "Esc collapses the viewer first");
   });
 
+  await check("palette page: pasted JSON still offers web search", async () => {
+    const palette = await openPage(`chrome-extension://${extensionId}/palette.html`);
+    await palette.waitForSelector("input");
+    await palette.evaluate((value) => {
+      const input = document.querySelector("input");
+      const data = new DataTransfer();
+      data.setData("text/plain", value);
+      input.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+    }, '{\n  "sub": "1234567890",\n  "name": "John Doe",\n  "admin": true,\n  "iat": 1516239022\n}');
+    await sleep(500);
+    const actions = await palette.$$eval("li .action", (els) => els.map((el) => el.textContent));
+    await palette.close();
+    expect(actions.slice(0, 3).every((a) => a === "Copy") && actions.includes("Search"), `actions: ${JSON.stringify(actions)}`);
+  });
+
   await check("YAML paste → Convert to JSON", async () => {
     await typeInBar(page, "");
     await pasteInBar(page, "server:\n  port: 8080\n  hosts:\n    - a.local\n    - b.local\n");

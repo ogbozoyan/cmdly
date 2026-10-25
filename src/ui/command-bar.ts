@@ -6,6 +6,7 @@ import { localResults } from "../tools/local-results.ts";
 import { copyText } from "./clipboard.ts";
 import { highlight } from "./highlight.ts";
 import { ARROW_ICON, EXPAND_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
+import { withWebSearch } from "./results.ts";
 
 export interface CommandBarOptions {
   /** true = drawn over a web page (shadow DOM), false = standalone palette page. */
@@ -93,11 +94,12 @@ export class CommandBar {
   private async render(): Promise<void> {
     const id = ++this.requestId;
     // Tool rows (calculator, JSON/YAML, JWT…) come first; web search, tabs and history always follow.
+    const query = this.input.value.trim();
     const local = localResults(this.rawQuery(), this.settings.features);
-    const remote = (await send({ type: "search", query: this.input.value.trim(), overlay: this.options.overlay })) ?? [];
+    const remote = (await send({ type: "search", query, overlay: this.options.overlay })) ?? [];
     if (id !== this.requestId) return;
 
-    this.items = [...local, ...remote];
+    this.items = withWebSearch([...local, ...remote], query);
     this.list.replaceChildren(...this.items.map((item, i) => this.renderRow(item, i)));
     this.setActive(0);
   }
