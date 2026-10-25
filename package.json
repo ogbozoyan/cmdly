@@ -13,7 +13,7 @@
     "check": "npm run typecheck && npm test && npm run build",
     "icons": "./scripts/icons.sh",
     "check_package": "npm run check && ./scripts/package.sh",
-    "package": "scripts/package.sh",
+    "package": "npm run check && ./scripts/package.sh",
     "e2e": "npm run build && node scripts/e2e.mjs",
     "demo": "npm run build && node scripts/record-demo.mjs",
     "release": "./scripts/release.sh"

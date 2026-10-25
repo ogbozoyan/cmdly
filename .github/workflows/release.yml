@@ -65,8 +65,11 @@ jobs:
             exit 1
           fi
 
-      - name: Typecheck, test, build, zip
-        run: npm run package
+      - name: Typecheck, unit tests, build
+        run: npm run check
+
+      - name: Zip
+        run: ./scripts/package.sh
 
       - name: Commit and tag the new version
         if: github.event_name == 'workflow_dispatch'
