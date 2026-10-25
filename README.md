@@ -55,32 +55,64 @@ you actually navigate somewhere.
 
 ## Features
 
-| | |
-|---|---|
-| **Search everything** | Open tabs, bookmarks and history in one list. Pick an open tab to switch to it instead of opening a duplicate. |
-| **Commands** | Copy URL, Copy as Markdown, Pin/Unpin, Mute, Duplicate, Close other tabs, Move to new window, Reopen closed tab, Bookmark, open History/Downloads/Settings… |
-| **Calculator** | `2+2`, `200+15%`, `sqrt(16)`, `5!`, `2^10`, `3x4`. Enter copies the result. |
-| **JSON / YAML** | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results. |
-| **Dev tools** | `uuid` / `uuid 5`, `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates. |
-| **Keep window open** | Closing the last tab doesn't close the window — the command bar opens instead. Protect the last window or every window. Replaces separate "don't close window with last tab" extensions, which conflict with any new-tab override. |
-| **Shortcuts** | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable. |
-| **Settings** | Turn every feature on/off, rebind shortcuts, pick theme, accent color, position and width. Export / import as JSON. |
-| **Private** | No network requests, no analytics. Everything stays in your browser. |
+|                       |                                                                                                                                                             |
+|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Search everything** | Open tabs, bookmarks and history in one list. Pick an open tab to switch to it instead of opening a duplicate.                                              |
+| **Commands**          | Copy URL, Copy as Markdown, Pin/Unpin, Mute, Duplicate, Close other tabs, Move to new window, Reopen closed tab, Bookmark, open History/Downloads/Settings… |
+| **Calculator**        | `2+2`, `200+15%`, `sqrt(16)`, `5!`, `2^10`, `3x4`. Enter copies the result.                                                                                 |
+| **JSON / YAML**       | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results.                              |
+| **Dev tools**         | `uuid` / `uuid 5`, `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates.                       |
+| **Shortcuts**         | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable.                                                                |
+| **Settings**          | Turn every feature on/off, rebind shortcuts, pick theme, accent color, position and width. Export / import as JSON.                                         |
+| **Private**           | No network requests, no analytics. Everything stays in your browser.                                                                                        |
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/commands.png" alt="Commands"><p align="center"><sub>Commands — type what you want to do</sub></p></td>
-    <td width="50%"><img src="docs/screenshots/calculator.png" alt="Calculator"><p align="center"><sub>Calculator — Enter copies the result</sub></p></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/json-viewer.png" alt="JSON viewer"><p align="center"><sub>Pasted JSON — format, minify or convert to YAML</sub></p></td>
-    <td width="50%"><img src="docs/screenshots/jwt.png" alt="JWT decoder"><p align="center"><sub>JWT payload with readable dates</sub></p></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/overlay.png" alt="Command bar"><p align="center"><sub>The bar over any page — open tabs first</sub></p></td>
-    <td width="50%"><img src="docs/screenshots/options.png" alt="Settings"><p align="center"><sub>Settings — features, shortcuts, appearance</sub></p></td>
-  </tr>
-</table>
+# Screenshots
+
+#### Commands — type what you want to do
+
+<p>
+<img src="docs/screenshots/commands.png" alt="Commands"><p align="center">
+</p>
+
+---
+
+#### Calculator — Enter copies the result
+
+<p>
+<img src="docs/screenshots/calculator.png" alt="Calculator"><p align="center">
+</p>
+
+---
+
+#### Pasted JSON — format, minify or convert to YAML
+
+<p>
+<img src="docs/screenshots/json-viewer.png" alt="JSON viewer"><p align="center">
+</p>
+
+---
+
+#### JWT payload with readable dates
+
+<p>
+<img src="docs/screenshots/jwt.png" alt="JWT decoder"><p align="center">
+</p>
+
+---
+
+#### The bar over any page — open tabs first
+
+<p>
+<img src="docs/screenshots/overlay.png" alt="Command bar"><p align="center">
+</p>
+
+---
+
+#### Settings — features, shortcuts, appearance
+
+<p>
+<img src="docs/screenshots/options.png" alt="Settings"><p align="center">
+</p>
 
 ## Installation
 
@@ -88,10 +120,12 @@ Cmdly is not in the Chrome Web Store yet. Install it locally in a minute.
 
 ### Option 1 — download a release (no build tools needed)
 
-1. Download `cmdly-<version>.zip` from the [latest release](https://github.com/ogbozoyan/cmdly/releases/latest) and unzip it.
+1. Download `cmdly-<version>.zip` from the [latest release](https://github.com/ogbozoyan/cmdly/releases/latest) and
+   unzip it.
 2. Open `chrome://extensions` and turn on **Developer mode** (top right).
 3. Click **Load unpacked** and select the unzipped folder.
-4. Press <kbd>⌘</kbd> <kbd>T</kbd> on any web page. If Chrome asks whether to keep the changed new tab page, choose **Keep it**.
+4. Press <kbd>⌘</kbd> <kbd>T</kbd> on any web page. If Chrome asks whether to keep the changed new tab page, choose
+   **Keep it**.
 
 ### Option 2 — build from source
 
@@ -112,30 +146,31 @@ To update: `git pull && npm run build`, then click ↻ on the Cmdly card in `chr
 
 Press <kbd>⌘</kbd> <kbd>T</kbd> and start typing.
 
-| Type | You get |
-|---|---|
-| `git` | Open tabs, bookmarks and history matching "git" |
-| `github.com` | Open the address in a new tab |
-| `how to ...` | Search with your default search engine |
-| `copy`, `pin`, `close`, `mute` | Commands for the current tab |
-| `200+15%` | `= 230` — Enter copies it |
-| `uuid`, `uuid 5` | Fresh UUID v4 |
-| `b64 hello` / `unb64 aGVsbG8=` | Base64 encode / decode |
-| `url a b&c` / `unurl a%20b` | URL encode / decode |
-| `eyJhbGciOi…` | Decoded JWT payload, header and expiry — <kbd>Tab</kbd> to expand |
-| paste `{"a": 1}` or YAML | Format JSON · Minify JSON · Convert to YAML (or Format YAML · Convert to JSON) |
-| `settings` | Cmdly Settings, Chrome Settings |
+| Type                           | You get                                                                        |
+|--------------------------------|--------------------------------------------------------------------------------|
+| `git`                          | Open tabs, bookmarks and history matching "git"                                |
+| `github.com`                   | Open the address in a new tab                                                  |
+| `how to ...`                   | Search with your default search engine                                         |
+| `copy`, `pin`, `close`, `mute` | Commands for the current tab                                                   |
+| `200+15%`                      | `= 230` — Enter copies it                                                      |
+| `uuid`, `uuid 5`               | Fresh UUID v4                                                                  |
+| `b64 hello` / `unb64 aGVsbG8=` | Base64 encode / decode                                                         |
+| `url a b&c` / `unurl a%20b`    | URL encode / decode                                                            |
+| `eyJhbGciOi…`                  | Decoded JWT payload, header and expiry — <kbd>Tab</kbd> to expand              |
+| paste `{"a": 1}` or YAML       | Format JSON · Minify JSON · Convert to YAML (or Format YAML · Convert to JSON) |
+| `settings`                     | Cmdly Settings, Chrome Settings                                                |
 
-In the bar: <kbd>↑</kbd> <kbd>↓</kbd> select · <kbd>Enter</kbd> open / copy · <kbd>⌘</kbd> <kbd>Enter</kbd> open in background ·
+In the bar: <kbd>↑</kbd> <kbd>↓</kbd> select · <kbd>Enter</kbd> open / copy · <kbd>⌘</kbd> <kbd>Enter</kbd> open in
+background ·
 <kbd>Tab</kbd> expand the viewer · <kbd>Esc</kbd> collapse, clear, then close.
 
 ## Keyboard shortcuts
 
-| Shortcut | Action | Configurable |
-|---|---|---|
-| <kbd>⌘</kbd> <kbd>T</kbd> | Open the command bar over the current page | ✅ |
-| <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>C</kbd> | Copy the page URL | ✅ can be turned off |
-| <kbd>⌘</kbd> <kbd>Z</kbd> | Reopen the last closed tab (when no text field is focused) | ✅ can be turned off |
+| Shortcut                               | Action                                                     | Configurable         |
+|----------------------------------------|------------------------------------------------------------|----------------------|
+| <kbd>⌘</kbd> <kbd>T</kbd>              | Open the command bar over the current page                 | ✅                   |
+| <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>C</kbd> | Copy the page URL                                          | ✅ can be turned off |
+| <kbd>⌘</kbd> <kbd>Z</kbd>              | Reopen the last closed tab (when no text field is focused) | ✅ can be turned off |
 
 On Windows and Linux use <kbd>Ctrl</kbd> instead of <kbd>⌘</kbd>. Change them in **Cmdly Settings**
 (right-click the toolbar icon → Options, or type `cmdly settings` in the bar).
@@ -148,15 +183,11 @@ While a protected window has a single tab, Cmdly adds a small pinned tab to it. 
 tab — the window stays and the command bar opens as a fresh tab. As soon as the window has two
 or more tabs, the pinned tab disappears again, so the tab bar stays clean.
 
-| Mode | Protects |
-|---|---|
-| Off | Nothing (default) |
-| Last window | Only the last remaining window — other windows close normally |
-| Every window | Every window |
-
-> If you used [Don't Close Window With Last Tab](https://github.com/moneytoo/DontCloseWindowWithLastTab),
-> remove it: both extensions manage new tabs and fight each other. Cmdly's version is an independent
-> implementation of the same idea that knows about its own new tab handling.
+| Mode         | Protects                                                      |
+|--------------|---------------------------------------------------------------|
+| Off          | Nothing (default)                                             |
+| Last window  | Only the last remaining window — other windows close normally |
+| Every window | Every window                                                  |
 
 ## Limitations
 
