@@ -58,6 +58,22 @@
           <button class="link" data-shortcut-reset="undoClose" data-i18n="optDefault">Default</button>
         </span>
       </div>
+      <div class="row">
+        <span><b data-i18n="optSwitcher">Switch tabs</b><small id="switcher-hint"></small></span>
+        <button id="switcher-shortcut" class="shortcut"></button>
+      </div>
+      <label class="row">
+        <span><b data-i18n="optSwitcherCtrlTab">Use Ctrl+Tab</b><small data-i18n="optSwitcherCtrlTabHint">The next tab flashes for a moment.</small></span>
+        <input type="checkbox" data-path="switcher.ctrlTab">
+      </label>
+      <label class="row">
+        <span><b data-i18n="optSwitcherWrap">Wrap tabs into rows</b><small data-i18n="optSwitcherWrapHint">Cards go onto new lines instead of scrolling sideways.</small></span>
+        <input type="checkbox" data-path="switcher.softWrap">
+      </label>
+      <label class="row">
+        <span><b data-i18n="optSwitcherThumbs">Tab previews in the switcher</b><small data-i18n="optSwitcherThumbsHint">Remembers a small picture of each tab when you look at it.</small></span>
+        <input type="checkbox" data-path="switcher.thumbnails">
+      </label>
       <p class="note" data-i18n="optShortcutsNote">Shortcuts work on regular web pages. Chrome doesn't allow extensions on chrome:// pages and the Web Store.</p>
     </section>
 

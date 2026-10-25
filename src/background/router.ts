@@ -7,6 +7,7 @@ import { runCommand } from "./command-service.ts";
 import { open } from "./navigation-service.ts";
 import { search } from "./search-service.ts";
 import { suggest } from "./suggest-service.ts";
+import { setCtrlState, switchTab, switcherTabs } from "./switcher-service.ts";
 import { restoreClosedTab } from "./tab-service.ts";
 
 /**
@@ -45,5 +46,11 @@ export async function route(request: Request, sender: chrome.tabs.Tab): Promise<
       return openBar(sender);
     case "tab-url":
       return sender.url ?? null;
+    case "switcher-tabs":
+      return switcherTabs(sender);
+    case "switch-tab":
+      return switchTab(request.tabId);
+    case "ctrl-state":
+      return setCtrlState(sender, request.held);
   }
 }

@@ -14,7 +14,7 @@ import { copyText } from "../ui/clipboard.ts";
 import { setLanguage, t } from "../i18n/index.ts";
 import { showPageToast } from "./toast.ts";
 
-type GuardedWindow = Window & { __cmdlyContent?: boolean };
+type GuardedWindow = Window & { __cmdlyContent?: boolean; __cmdlyModifierHeld?: boolean };
 
 function start(): void {
   // onInstalled re-injects this script into open tabs; don't register twice.
@@ -34,6 +34,8 @@ function start(): void {
   chrome.runtime.onMessage.addListener((message: { type?: string }) => {
     if (message?.type === "copy-url" && window === window.top) copyPageUrl();
   });
+
+  trackModifiers(w);
 
   // Capture phase on window = we see the key before any page handler can stop it.
   window.addEventListener("keydown", (e) => {
@@ -60,6 +62,43 @@ function start(): void {
       }, 0);
     }
   }, true);
+}
+
+/**
+ * The tab switcher shortcut is handled by Chrome, so the switcher (injected later, same isolated
+ * world) can't tell a quick tap from "still holding the modifier". The page does see the modifier
+ * itself go down and up — remember it here. A tap switches to the previous tab without any UI.
+ */
+function trackModifiers(w: GuardedWindow): void {
+  let ctrl = false;
+  // The background needs Ctrl to recognise Chrome's own Ctrl+Tab (see switcher-service.ts).
+  const reportCtrl = (held: boolean) => {
+    if (held === ctrl) return;
+    ctrl = held;
+    send({ type: "ctrl-state", held });
+  };
+  const update = (e: KeyboardEvent) => {
+    if (window === window.top) w.__cmdlyModifierHeld = e.ctrlKey || e.altKey || e.metaKey;
+    // After Ctrl+Tab the release lands in a tab that never saw Ctrl go down — report it anyway.
+    if (e.type === "keyup" && e.key === "Control" && !ctrl) send({ type: "ctrl-state", held: false });
+    reportCtrl(e.ctrlKey);
+  };
+  window.addEventListener("keydown", update, true);
+  window.addEventListener("keyup", update, true);
+  // Focus left the page (address bar, another app): keys are no longer visible from here.
+  // Not when the tab itself was hidden — that is Ctrl+Tab at work, and Ctrl is still down.
+  let hiddenAt = 0;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) hiddenAt = Date.now();
+  });
+  window.addEventListener("blur", () => {
+    setTimeout(() => {
+      // The tab may already be visible again: the background undoes Ctrl+Tab within milliseconds.
+      if (document.hidden || Date.now() - hiddenAt < 500) return;
+      w.__cmdlyModifierHeld = false;
+      reportCtrl(false);
+    }, 50);
+  });
 }
 
 /** Our shortcut wins over the page's and the browser's handlers for the same keys. */

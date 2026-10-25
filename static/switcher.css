@@ -1,0 +1,118 @@
+.wrap {
+  --panel: rgba(30, 30, 30, 0.82);
+  --border: rgba(255, 255, 255, 0.12);
+  --text: #ececec;
+  --card-active: rgba(255, 255, 255, 0.14);
+  --preview: #2a2a2a;
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 12px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-align: left;
+  line-height: normal;
+}
+
+.wrap.light {
+  --panel: rgba(250, 250, 250, 0.86);
+  --border: rgba(0, 0, 0, 0.1);
+  --text: #1d1d1f;
+  --card-active: rgba(0, 0, 0, 0.08);
+  --preview: #e9e9ec;
+}
+
+* { box-sizing: border-box; }
+
+.panel {
+  max-width: 92vw;
+  padding: 8px;
+  border-radius: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.35), 0 6px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(24px) saturate(1.4);
+  overflow-x: auto;
+  scrollbar-width: none;
+  outline: none;
+  animation: pop 0.12s ease-out;
+}
+
+ul {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  flex: none;
+  width: 196px;
+  padding: 6px;
+  border-radius: 10px;
+  cursor: default;
+}
+
+.soft-wrap .panel {
+  width: max-content;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+/* Up to 5 cards per row (196px + 4px gap), fewer on narrow windows. */
+.soft-wrap ul {
+  flex-wrap: wrap;
+  max-width: min(1000px, calc(92vw - 18px));
+}
+
+li.active { background: var(--card-active); }
+
+.preview {
+  height: 116px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--preview);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.preview.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.big { width: 32px; height: 32px; }
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 2px 1px;
+  font-weight: 500;
+}
+
+.label span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.favicon { width: 14px; height: 14px; flex: none; }
+
+@keyframes pop { from { opacity: 0; transform: scale(0.98); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { animation: none; }
+}

@@ -170,7 +170,16 @@ async function renderNativeShortcut(): Promise<void> {
   $("#chrome-shortcuts").textContent = t(assigned ? "optBannerChange" : "optBannerOpen");
   $(".banner-title").textContent = assigned ? t("optBannerOkTitle", assigned) : t("optBannerSetupTitle", key);
   $(".banner-text").textContent = assigned ? t("optBannerOkText") : t("optBannerSetupText", key);
+
+  // The tab switcher exists only as a Chrome command (Ctrl+Tab is reserved), so its key lives there too.
+  const switcher = commands.find((c) => c.name === "tab-switcher")?.shortcut ?? "";
+  const button = $("#switcher-shortcut");
+  button.textContent = switcher || t("optSwitcherNotSet");
+  button.classList.toggle("off", !switcher);
+  $("#switcher-hint").textContent = t("optSwitcherHint", switcher || (IS_MAC ? "⌃Q" : "Alt+Q"));
 }
+
+$("#switcher-shortcut").addEventListener("click", () => chrome.tabs.create({ url: "chrome://extensions/shortcuts" }));
 
 // Re-check when the user comes back from chrome://extensions/shortcuts.
 window.addEventListener("focus", renderNativeShortcut);

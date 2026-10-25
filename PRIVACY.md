@@ -20,6 +20,11 @@ Text you typed into the bar but didn't run is kept in Chrome's in-memory session
 up to 10 minutes, so it is still there if the bar closes or the page reloads. It never touches disk
 and is gone when Chrome quits.
 
+**Tab switcher previews** (on by default, Settings → Keyboard shortcuts → Tab previews): when you
+look at a tab, Cmdly takes a small screenshot of it to show in the tab switcher. Previews live in the
+same in-memory session storage, are deleted when the tab closes or the option is turned off, are
+never taken in incognito windows and never leave your browser.
+
 ## Data Cmdly sends
 
 Cmdly has no servers, no analytics, no tracking and no ads. Nothing is ever sent to the developer.
@@ -44,6 +49,7 @@ exactly as if you typed them into the address bar.
 | `favicon` | Show site icons next to results |
 | `scripting`, host access to all sites | Show the command bar on top of the page you're on and handle shortcuts there; request search suggestions |
 | `storage` | Save your settings |
+| host access to all sites (`captureVisibleTab`) | Tab switcher previews (see above) |
 | `clipboardWrite` | Copy the page URL with a Chrome-level shortcut, even when the page isn't focused |
 
 ## Contact

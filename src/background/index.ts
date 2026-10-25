@@ -7,12 +7,16 @@ import { openBar } from "./bar-service.ts";
 import { watchBarState } from "./bar-state-service.ts";
 import { watchKeepOpen } from "./keep-open-service.ts";
 import { route } from "./router.ts";
+import { openSwitcher, watchTabSwitches } from "./switcher-service.ts";
 
 // "Keep window open": closing the last tab doesn't close the window.
 watchKeepOpen();
 
 // The bar survives a page reload and keeps what was typed (Arc behaviour).
 watchBarState();
+
+// Tab switcher: previews of each tab as it was last seen, and Chrome's Ctrl+Tab taken over.
+watchTabSwitches();
 
 // Messages from the command bar, content scripts and extension pages.
 chrome.runtime.onMessage.addListener((request: Request, sender, sendResponse) => {
@@ -28,6 +32,7 @@ chrome.runtime.onMessage.addListener((request: Request, sender, sendResponse) =>
 chrome.action.onClicked.addListener(openBar);
 chrome.commands.onCommand.addListener((command, tab) => {
   if (command === "open-bar") openBar(tab);
+  if (command === "tab-switcher") openSwitcher(tab);
   // The content script copies (it can show a toast on the page); chrome:// pages have none — ignore.
   if (command === "copy-url" && tab?.id) chrome.tabs.sendMessage(tab.id, { type: "copy-url" }, { frameId: 0 }).catch(() => {});
 });

@@ -71,6 +71,7 @@ Think of it as a small backend + frontend in one package:
 overlay.js / palette.js ─▶ CommandBar (src/ui) ──send()──▶ router ─▶ search / command / navigation service
 chrome command "copy-url" ─▶ background ─▶ message to content.js (top frame) ─▶ copy + toast
 content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "open bar" shortcut
+"tab-switcher" command / Chrome's Ctrl+Tab ─▶ switcher-service ─▶ inject switcher.js (cards, release Ctrl → switch)
 tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add/remove pinned guard, open bar
 ```
 
@@ -88,6 +89,13 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   `keep-open-service.ts` reads Chrome state, debounces events and applies the actions. The guard is
   Cmdly's own pinned `keep-open.html` — never `chrome://newtab`, which Cmdly itself replaces.
   Helpers that pick "the previous tab" must skip it (`isGuardTab` in `tab-service.ts`).
+- **Tab switcher** (`switcher-service.ts`, UI `src/content/switcher.ts`, pure parts `shared/switcher.ts`):
+  Ctrl+Tab is reserved by Chrome, so pages never see it. Content scripts report Ctrl down/up
+  (`ctrl-state`); if the tab with Ctrl down is replaced by its neighbour, the background switches back
+  and injects the switcher (`Settings.switcher.ctrlTab`). The `tab-switcher` command (`⌃Q`) does the same
+  without the flash. MRU order uses a `lastAccessed` snapshot taken on Ctrl down, so the neighbour's
+  brief activation doesn't count. Previews: `captureVisibleTab` after activation → downscaled JPEG in
+  `chrome.storage.session` (`thumb:<tabId>`), never in incognito, never while Cmdly UI is on screen.
 - **Bar state** (`bar-state-service.ts`, `chrome.storage.session`): the typed text is a draft that
   survives closing the bar and reloads until something is run (then `clearDraft`); an overlay that
   was open when its page reloaded is injected again (same URL only). `open`/`command` messages clear
@@ -157,4 +165,6 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 - CDP (puppeteer) key events never reach browser accelerators, so `⌘T` itself can't be e2e-tested;
   the e2e test assigns the command via `chrome.developerPrivate` from chrome://extensions instead.
 - Extensions can't run on `chrome://` pages and the Web Store: no overlay, no page shortcuts there.
+- Ctrl+Tab can't be intercepted: Chrome switches first, Cmdly undoes it — the neighbour tab flashes.
+  On chrome:// pages the switcher can't be shown (the command falls back to "previous tab").
 - Split View: the overlay appears only in the focused pane (each pane is a separate tab).

@@ -58,6 +58,7 @@
     {
       "resources": [
         "ui.css",
+        "switcher.css",
         "_favicon/*"
       ],
       "matches": [
@@ -71,6 +72,13 @@
     },
     "copy-url": {
       "description": "__MSG_commandCopyUrl__"
+    },
+    "tab-switcher": {
+      "suggested_key": {
+        "default": "Alt+Q",
+        "mac": "MacCtrl+Q"
+      },
+      "description": "__MSG_commandTabSwitcher__"
     }
   }
 }

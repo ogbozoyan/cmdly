@@ -10,6 +10,7 @@ const watch = process.argv.includes("--watch");
 const entryPoints = {
   background: "src/background/index.ts", // service worker
   overlay: "src/content/overlay.ts", // injected on demand: the command bar over a page
+  switcher: "src/content/switcher.ts", // injected on demand: the tab switcher (Arc's Ctrl+Tab)
   content: "src/content/index.ts", // always-on content script: keyboard shortcuts
   palette: "src/pages/palette.ts", // standalone command bar page
   newtab: "src/pages/newtab.ts", // Cmd+T handler

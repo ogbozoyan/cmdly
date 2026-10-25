@@ -1,4 +1,5 @@
 import type { CommandResult, Draft, ResultItem } from "./model.ts";
+import type { SwitcherTab } from "./switcher.ts";
 
 /**
  * Message contract between UI / content scripts and the background service worker.
@@ -17,7 +18,10 @@ export type Request =
   | { type: "dismiss-page" }
   | { type: "restore-tab" }
   | { type: "open-bar" }
-  | { type: "tab-url" };
+  | { type: "tab-url" }
+  | { type: "switcher-tabs" }
+  | { type: "switch-tab"; tabId: number }
+  | { type: "ctrl-state"; held: boolean };
 
 /** Response type for each request type. */
 export interface ResponseMap {
@@ -33,6 +37,9 @@ export interface ResponseMap {
   "restore-tab": void;
   "open-bar": void;
   "tab-url": string | null;
+  "switcher-tabs": SwitcherTab[];
+  "switch-tab": void;
+  "ctrl-state": void;
 }
 
 /** Typed wrapper around chrome.runtime.sendMessage. Resolves to null if the background failed. */

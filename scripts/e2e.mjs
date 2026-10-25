@@ -327,6 +327,104 @@ try {
     expect(!(await page.$("#cmdly-overlay")), "overlay still present");
   });
 
+  // Chrome delivers the "tab-switcher" command itself; inject what the command handler injects.
+  const pressSwitcher = (tabId) =>
+    inWorker((id) => chrome.scripting.executeScript({ target: { tabId: id }, files: ["switcher.js"] }), tabId);
+  const activeTabId = () => inWorker(async () => (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.id);
+
+  await check("tab switcher: hold the modifier, press twice, release → third most recent tab", async () => {
+    await page.bringToFront();
+    await page.click("h1");
+    await sleep(1200); // time for the preview capture
+    const tabId = await tabIdOf(page);
+    const order = await inWorker(async () =>
+      (await chrome.tabs.query({ currentWindow: true })).sort((a, b) => Number(b.active) - Number(a.active) || b.lastAccessed - a.lastAccessed).map((t) => t.id)
+    );
+    await page.keyboard.down("Control");
+    await pressSwitcher(tabId);
+    await page.waitForFunction(() => document.getElementById("cmdly-switcher")?.shadowRoot.querySelectorAll("li").length >= 3);
+    await pressSwitcher(tabId);
+    await sleep(200);
+    const state = await page.evaluate(() => {
+      const root = document.getElementById("cmdly-switcher").shadowRoot;
+      const cards = [...root.querySelectorAll("li")];
+      return { active: cards.findIndex((li) => li.classList.contains("active")), shots: root.querySelectorAll("img.shot").length };
+    });
+    expect(state.active === 2, `selected card ${state.active}`);
+    expect(state.shots >= 1, "no tab previews");
+    await shot(page, "switcher");
+    await page.keyboard.up("Control");
+    await sleep(500);
+    expect((await activeTabId()) === order[2], `active tab ${await activeTabId()}, expected ${order[2]}`);
+    expect(!(await page.$("#cmdly-switcher")), "switcher still on the page");
+  });
+
+  await check("tab switcher: a quick tap goes straight back to the previous tab", async () => {
+    await page.bringToFront();
+    await page.click("h1");
+    await page.keyboard.down("Control");
+    await page.keyboard.up("Control");
+    const previous = await inWorker(async () =>
+      (await chrome.tabs.query({ currentWindow: true })).filter((t) => !t.active).sort((a, b) => b.lastAccessed - a.lastAccessed)[0].id
+    );
+    await pressSwitcher(await tabIdOf(page));
+    await sleep(500);
+    expect((await activeTabId()) === previous, "did not switch to the previous tab");
+    await page.bringToFront();
+  });
+
+  await check("tab switcher: Chrome's Ctrl+Tab is taken back, Ctrl+Tab again moves, release switches", async () => {
+    await page.bringToFront();
+    await page.click("h1");
+    const tabId = await tabIdOf(page);
+    // What Chrome's Ctrl+Tab does: activate the right-hand neighbour (CDP keys can't reach the accelerator).
+    const ctrlTab = () =>
+      inWorker(async (id) => {
+        const tabs = await chrome.tabs.query({ currentWindow: true });
+        const me = tabs.find((t) => t.id === id);
+        await chrome.tabs.update(tabs[(me.index + 1) % tabs.length].id, { active: true });
+      }, tabId);
+    const order = await inWorker(async () =>
+      (await chrome.tabs.query({ currentWindow: true })).sort((a, b) => Number(b.active) - Number(a.active) || b.lastAccessed - a.lastAccessed).map((t) => t.id)
+    );
+    await page.keyboard.down("Control");
+    await sleep(200);
+    await ctrlTab();
+    await page.waitForFunction(() => document.getElementById("cmdly-switcher")?.shadowRoot.querySelectorAll("li").length >= 3, { timeout: 5000 });
+    expect((await activeTabId()) === tabId, "the page was not brought back");
+    await ctrlTab();
+    await sleep(500);
+    const active = await page.evaluate(() =>
+      [...document.getElementById("cmdly-switcher").shadowRoot.querySelectorAll("li")].findIndex((li) => li.classList.contains("active"))
+    );
+    expect(active === 2, `selected card ${active}`);
+    await page.keyboard.up("Control");
+    await sleep(500);
+    expect((await activeTabId()) === order[2], `active tab ${await activeTabId()}, expected ${order[2]}`);
+  });
+
+  await check("tab switcher: soft wrap puts cards on rows", async () => {
+    await inWorker(async () => {
+      const { settings = {} } = await chrome.storage.sync.get("settings");
+      await chrome.storage.sync.set({ settings: { ...settings, switcher: { ...settings.switcher, softWrap: true } } });
+    });
+    await page.bringToFront();
+    await page.click("h1");
+    await page.keyboard.down("Control");
+    await pressSwitcher(await tabIdOf(page));
+    await page.waitForFunction(() => document.getElementById("cmdly-switcher")?.shadowRoot.querySelectorAll("li").length >= 6);
+    await sleep(300);
+    const rows = await page.evaluate(() => new Set([...document.getElementById("cmdly-switcher").shadowRoot.querySelectorAll("li")].map((li) => li.offsetTop)).size);
+    await shot(page, "switcher-wrap");
+    await page.keyboard.press("Escape");
+    await page.keyboard.up("Control");
+    await inWorker(async () => {
+      const { settings } = await chrome.storage.sync.get("settings");
+      await chrome.storage.sync.set({ settings: { ...settings, switcher: { ...settings.switcher, softWrap: false } } });
+    });
+    expect(rows >= 2, `rows: ${rows}`);
+  });
+
   await check("Cmd+T (new tab) turns into the overlay on the previous page", async () => {
     await page.bringToFront();
     await inWorker(() => chrome.tabs.create({}));
