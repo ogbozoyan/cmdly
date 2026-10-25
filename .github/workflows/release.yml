@@ -1,0 +1,60 @@
+name: Release
+
+# Runs when a version tag is pushed: `npm run release -- 1.2.0` creates and pushes it.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write # create the GitHub release
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for generated release notes
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tag matches manifest version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest=$(node -p "require('./static/manifest.json').version")
+          package=$(node -p "require('./package.json').version")
+          echo "tag=$tag manifest=$manifest package=$package"
+          if [ "$tag" != "$manifest" ] || [ "$tag" != "$package" ]; then
+            echo "::error::Tag v$tag doesn't match manifest.json ($manifest) / package.json ($package)"
+            exit 1
+          fi
+
+      - name: Typecheck, test, build, zip
+        run: npm run package
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zip="cmdly-${GITHUB_REF_NAME#v}.zip"
+          cat > notes.md <<EOF
+          ## Install
+
+          1. Download **$zip** below and unzip it.
+          2. Open \`chrome://extensions\` and turn on **Developer mode**.
+          3. Click **Load unpacked** and select the unzipped folder.
+          4. Optional: make ⌘T instant — see [Instant ⌘T](https://github.com/${GITHUB_REPOSITORY}#instant-t).
+
+          Updating: unzip the new version over the old folder and click ↻ on the Cmdly card.
+          EOF
+          gh release create "$GITHUB_REF_NAME" "$zip" \
+            --title "Cmdly ${GITHUB_REF_NAME#v}" \
+            --notes-file notes.md \
+            --generate-notes \
+            --verify-tag

@@ -15,7 +15,8 @@
     "check_package": "npm run check && ./scripts/package.sh",
     "package": "scripts/package.sh",
     "e2e": "npm run build && node scripts/e2e.mjs",
-    "demo": "npm run build && node scripts/record-demo.mjs"
+    "demo": "npm run build && node scripts/record-demo.mjs",
+    "release": "./scripts/release.sh"
   },
   "devDependencies": {
     "@types/chrome": "^0.3.6",

@@ -116,18 +116,26 @@ you actually navigate somewhere.
 
 ## Installation
 
-Cmdly is not in the Chrome Web Store yet. Install it locally in a minute.
+### 1. Chrome Web Store
 
-### Option 1 — download a release (no build tools needed)
+**Coming soon (TBD).** Until then, use one of the options below — it takes about a minute.
 
-1. Download `cmdly-<version>.zip` from the [latest release](https://github.com/ogbozoyan/cmdly/releases/latest) and
-   unzip it.
+### 2. Download a release
+
+No build tools needed.
+
+1. Download `cmdly-<version>.zip` from the [latest release](https://github.com/ogbozoyan/cmdly/releases/latest)
+   and unzip it to a folder you'll keep (Chrome loads the extension from there).
 2. Open `chrome://extensions` and turn on **Developer mode** (top right).
 3. Click **Load unpacked** and select the unzipped folder.
-4. Press <kbd>⌘</kbd> <kbd>T</kbd> on any web page. If Chrome asks whether to keep the changed new tab page, choose
-   **Keep it**.
+4. Press <kbd>⌘</kbd> <kbd>T</kbd> on any web page. If Chrome asks whether to keep the changed new tab page,
+   choose **Keep it**.
+5. Recommended: make <kbd>⌘</kbd> <kbd>T</kbd> instant — see [Instant ⌘T](#instant-t).
 
-### Option 2 — build from source
+**Update:** download the new zip, unzip it over the same folder, click ↻ on the Cmdly card in
+`chrome://extensions`. Your settings are kept.
+
+### 3. Build manually
 
 Requires Node.js 22+.
 
@@ -138,9 +146,9 @@ npm install
 npm run build
 ```
 
-Then **Load unpacked** → select the `dist/` folder (steps 2–4 above).
+Then in `chrome://extensions` → **Developer mode** → **Load unpacked** → select the `dist/` folder.
 
-To update: `git pull && npm run build`, then click ↻ on the Cmdly card in `chrome://extensions`.
+**Update:** `git pull && npm install && npm run build`, then click ↻ on the Cmdly card.
 
 ## Usage
 
@@ -229,6 +237,7 @@ npm run check        # typecheck + unit tests + build
 npm run e2e          # end-to-end test in Chrome for Testing (see scripts/e2e.mjs)
 npm run demo         # re-record the GIFs in docs/demo (needs ffmpeg)
 npm run package      # zip for the Chrome Web Store
+npm run release -- 1.2.0   # bump version, tag, push → GitHub Actions publishes the release
 ```
 
 Project layout (details in [AGENTS.md](AGENTS.md)):

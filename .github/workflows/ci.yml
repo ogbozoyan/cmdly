@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck, unit tests, build
+        run: npm run check
+
+      - name: Manifest and package versions match
+        run: |
+          manifest=$(node -p "require('./static/manifest.json').version")
+          package=$(node -p "require('./package.json').version")
+          echo "manifest=$manifest package=$package"
+          test "$manifest" = "$package"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cmdly-dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7
