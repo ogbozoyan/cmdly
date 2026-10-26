@@ -10,8 +10,7 @@ const watch = process.argv.includes("--watch");
 const entryPoints = {
   background: "src/background/index.ts", // service worker
   overlay: "src/content/overlay.ts", // injected on demand: the command bar over a page
-  switcher: "src/content/switcher.ts", // injected on demand: the tab switcher (Arc's Ctrl+Tab)
-  content: "src/content/index.ts", // always-on content script: keyboard shortcuts
+  content: "src/content/index.ts", // always-on content script: keyboard shortcuts, tab switcher
   palette: "src/pages/palette.ts", // standalone command bar page
   newtab: "src/pages/newtab.ts", // Cmd+T handler
   options: "src/pages/options.ts", // settings page
@@ -35,6 +34,8 @@ const options = {
   format: "iife",
   target: "chrome120",
   logLevel: "info",
+  // CSS imported from TS is inlined as text (the switcher sets it without waiting for a stylesheet).
+  loader: { ".css": "text" },
 };
 
 if (watch) {

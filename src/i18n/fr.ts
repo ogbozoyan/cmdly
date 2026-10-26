@@ -10,6 +10,7 @@ export const fr: Messages = {
   commandOpenBar: "Ouvrir la barre de commandes — attribuez ⌘T / Ctrl+T ici",
   commandCopyUrl: "Copier l'URL de la page — fonctionne partout, même dans la barre d'adresse",
   commandTabSwitcher: "Changer d'onglet : maintenez le modificateur et appuyez à nouveau pour reculer, relâchez pour changer (Chrome garde Ctrl+Tab pour lui)",
+  commandTabSwitcherBack: "Changer d'onglet en arrière : comme le raccourci du sélecteur, mais depuis l'onglet le plus ancien et dans l'autre sens",
   newTabTitle: "Nouvel onglet",
   keepOpenText: "Cet onglet épinglé garde la fenêtre ouverte quand vous fermez le dernier onglet. Cmdly le retire dès que la fenêtre a d'autres onglets.",
 
@@ -130,8 +131,11 @@ export const fr: Messages = {
   optSwitcherThumbsHint: "Garde une petite image de chaque onglet quand vous le regardez. En mémoire uniquement, oubliée à la fermeture de Chrome ; jamais en navigation privée.",
   optSwitcherCtrlTab: "Utiliser Ctrl+Tab",
   optSwitcherCtrlTabHint: "Chrome passe d'abord à l'onglet suivant, Cmdly vous ramène et affiche le sélecteur — l'onglet suivant apparaît un instant. Désactivé : seulement le raccourci ci-dessus.",
-  optSwitcherWrap: "Renvoyer les onglets à la ligne",
-  optSwitcherWrapHint: "Les cartes passent à la ligne au lieu de défiler sur le côté. ↑ ↓ changent de ligne.",
+  optSwitcherOverflow: "Quand les onglets ne tiennent pas",
+  optSwitcherOverflowHint: "Ajuster : seulement les onglets récents qui tiennent dans la fenêtre (jusqu'à 5), comme dans Arc. Défiler : jusqu'à 10 cartes sur une ligne. Renvoyer : jusqu'à 10 cartes sur plusieurs lignes, ↑ ↓ changent de ligne.",
+  optOverflowFit: "Ajuster à la fenêtre",
+  optOverflowScroll: "Défiler sur le côté",
+  optOverflowWrap: "Renvoyer à la ligne",
   optShortcutsNote: "Les raccourcis fonctionnent sur les pages web classiques. Chrome n'autorise pas les extensions sur les pages chrome:// ni sur le Web Store.",
 
   optBehavior: "Comportement",

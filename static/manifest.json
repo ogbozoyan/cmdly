@@ -58,7 +58,6 @@
     {
       "resources": [
         "ui.css",
-        "switcher.css",
         "_favicon/*"
       ],
       "matches": [
@@ -79,6 +78,13 @@
         "mac": "MacCtrl+Q"
       },
       "description": "__MSG_commandTabSwitcher__"
+    },
+    "tab-switcher-back": {
+      "suggested_key": {
+        "default": "Alt+Shift+Q",
+        "mac": "MacCtrl+Shift+Q"
+      },
+      "description": "__MSG_commandTabSwitcherBack__"
     }
   }
 }

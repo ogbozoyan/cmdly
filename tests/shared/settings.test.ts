@@ -46,3 +46,10 @@ test("import rejects garbage with a readable message", () => {
   assert.throws(() => fromImportFile({ app: "cmdly" }), /Settings are missing/);
   assert.throws(() => fromImportFile({ foo: 1 }), /No Cmdly settings/);
 });
+
+test("the old soft-wrap switch becomes overflow = wrap, bad values fall back", () => {
+  assert.equal(mergeSettings({ switcher: { softWrap: true } }).switcher.overflow, "wrap");
+  assert.equal(mergeSettings({ switcher: { softWrap: false } }).switcher.overflow, "fit");
+  assert.equal(mergeSettings({ switcher: { softWrap: true, overflow: "scroll" } }).switcher.overflow, "scroll");
+  assert.equal(mergeSettings({ switcher: { overflow: "sideways" } }).switcher.overflow, "fit");
+});

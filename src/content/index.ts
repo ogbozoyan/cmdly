@@ -3,6 +3,7 @@
  *   - open the command bar (when it is not Cmd+T — that one goes through the new tab page);
  *   - copy the page URL;
  *   - reopen the last closed tab.
+ * The top frame also hosts the tab switcher (content/switcher.ts).
  * Shortcuts are configured on the options page and stored in Settings.shortcuts.
  */
 import { send } from "../shared/messages.ts";
@@ -12,6 +13,8 @@ import { settingsRepository } from "../shared/settings-repository.ts";
 import { matchesShortcut } from "../shared/shortcuts.ts";
 import { copyText } from "../ui/clipboard.ts";
 import { setLanguage, t } from "../i18n/index.ts";
+import type { SwitcherMessage } from "../shared/switcher.ts";
+import { handleSwitcherMessage, watchSwitcherSettings } from "./switcher.ts";
 import { showPageToast } from "./toast.ts";
 
 type GuardedWindow = Window & { __cmdlyContent?: boolean; __cmdlyModifierHeld?: boolean };
@@ -32,8 +35,11 @@ function start(): void {
 
   // "Copy page URL" assigned at chrome://extensions/shortcuts: Chrome handles the key, the background asks us.
   chrome.runtime.onMessage.addListener((message: { type?: string }) => {
-    if (message?.type === "copy-url" && window === window.top) copyPageUrl();
+    if (window !== window.top) return;
+    if (message?.type === "copy-url") copyPageUrl();
+    if (message?.type === "switcher-show" || message?.type === "switcher-release") handleSwitcherMessage(message as SwitcherMessage);
   });
+  if (window === window.top) watchSwitcherSettings();
 
   trackModifiers(w);
 

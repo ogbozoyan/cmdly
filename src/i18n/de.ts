@@ -10,6 +10,7 @@ export const de: Messages = {
   commandOpenBar: "Befehlsleiste öffnen — hier ⌘T / Strg+T zuweisen",
   commandCopyUrl: "Seiten-URL kopieren — funktioniert überall, auch wenn die Adressleiste aktiv ist",
   commandTabSwitcher: "Tabs wechseln: Modifikator halten und erneut drücken, um zurückzugehen, loslassen zum Wechseln (Strg+Tab behält Chrome für sich)",
+  commandTabSwitcherBack: "Tabs rückwärts wechseln: wie das Wechsler-Kürzel, beginnt aber beim ältesten Tab und läuft in die andere Richtung",
   newTabTitle: "Neuer Tab",
   keepOpenText: "Dieser angeheftete Tab hält das Fenster offen, wenn Sie den letzten Tab schließen. Cmdly entfernt ihn, sobald das Fenster weitere Tabs hat.",
 
@@ -127,8 +128,11 @@ export const de: Messages = {
   optSwitcherThumbsHint: "Merkt sich ein kleines Bild jedes Tabs, wenn du ihn ansiehst. Nur im Arbeitsspeicher, beim Schließen von Chrome vergessen; nie im Inkognito-Modus.",
   optSwitcherCtrlTab: "Strg+Tab verwenden",
   optSwitcherCtrlTabHint: "Chrome wechselt zuerst zum nächsten Tab, Cmdly holt dich zurück und zeigt den Umschalter — der nächste Tab blitzt kurz auf. Aus: nur die Tastenkombination oben.",
-  optSwitcherWrap: "Tabs in Zeilen umbrechen",
-  optSwitcherWrapHint: "Karten brechen in neue Zeilen um, statt seitlich zu scrollen. ↑ ↓ wechseln die Zeile.",
+  optSwitcherOverflow: "Wenn Tabs nicht passen",
+  optSwitcherOverflowHint: "Anpassen: nur die letzten Tabs, die ins Fenster passen (bis zu 5), wie in Arc. Scrollen: bis zu 10 Karten in einer Zeile. Umbrechen: bis zu 10 Karten in Zeilen, ↑ ↓ wechseln die Zeile.",
+  optOverflowFit: "An Fenster anpassen",
+  optOverflowScroll: "Seitlich scrollen",
+  optOverflowWrap: "In Zeilen umbrechen",
   optShortcutsNote: "Tastenkombinationen funktionieren auf normalen Webseiten. Chrome erlaubt Erweiterungen nicht auf chrome://-Seiten und im Web Store.",
 
   optBehavior: "Verhalten",

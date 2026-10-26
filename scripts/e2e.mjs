@@ -253,7 +253,21 @@ try {
     await sleep(500);
     const actions = await palette.$$eval("li .action", (els) => els.map((el) => el.textContent));
     await palette.close();
+    // Leaving the tab closed the bar on it (see content/overlay.ts) — open it again for the next checks.
+    await page.bringToFront();
+    if (!(await page.$("#cmdly-overlay"))) await openOverlay(page);
     expect(actions.slice(0, 3).every((a) => a === "Copy") && actions.includes("Search"), `actions: ${JSON.stringify(actions)}`);
+  });
+
+  await check("switching to another tab and back leaves no stale bar", async () => {
+    expect(!!(await page.$("#cmdly-overlay")), "bar is not open before the switch");
+    const other = await openPage(`chrome-extension://${extensionId}/options.html`);
+    await sleep(400);
+    await other.close();
+    await page.bringToFront();
+    await sleep(400);
+    expect(!(await page.$("#cmdly-overlay")), "bar is still on the page after coming back");
+    await openOverlay(page);
   });
 
   await check("YAML paste → Convert to JSON", async () => {
@@ -347,9 +361,14 @@ try {
     expect(!(await page.$("#cmdly-overlay")), "overlay still present");
   });
 
-  // Chrome delivers the "tab-switcher" command itself; inject what the command handler injects.
+  // Chrome delivers the "tab-switcher" command itself; send what the command handler sends.
   const pressSwitcher = (tabId) =>
-    inWorker((id) => chrome.scripting.executeScript({ target: { tabId: id }, files: ["switcher.js"] }), tabId);
+    inWorker((id) => chrome.tabs.sendMessage(id, { type: "switcher-show", delta: 1 }, { frameId: 0 }), tabId);
+  const setOverflow = (overflow) =>
+    inWorker(async (value) => {
+      const { settings = {} } = await chrome.storage.sync.get("settings");
+      await chrome.storage.sync.set({ settings: { ...settings, switcher: { ...settings.switcher, overflow: value } } });
+    }, overflow);
   const activeTabId = () => inWorker(async () => (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.id);
 
   await check("tab switcher: hold the modifier, press twice, release → third most recent tab", async () => {
@@ -377,6 +396,17 @@ try {
     await sleep(500);
     expect((await activeTabId()) === order[2], `active tab ${await activeTabId()}, expected ${order[2]}`);
     expect(!(await page.$("#cmdly-switcher")), "switcher still on the page");
+  });
+
+  await check("tab switcher: opening it closes the command bar", async () => {
+    await openOverlay(page);
+    await page.keyboard.down("Control");
+    await pressSwitcher(await tabIdOf(page));
+    await page.waitForFunction(() => document.getElementById("cmdly-switcher")?.shadowRoot.querySelectorAll("li").length >= 2);
+    const bar = !!(await page.$("#cmdly-overlay"));
+    await page.keyboard.press("Escape");
+    await page.keyboard.up("Control");
+    expect(!bar, "the command bar is still open behind the switcher");
   });
 
   await check("tab switcher: a quick tap goes straight back to the previous tab", async () => {
@@ -423,11 +453,24 @@ try {
     expect((await activeTabId()) === order[2], `active tab ${await activeTabId()}, expected ${order[2]}`);
   });
 
-  await check("tab switcher: soft wrap puts cards on rows", async () => {
-    await inWorker(async () => {
-      const { settings = {} } = await chrome.storage.sync.get("settings");
-      await chrome.storage.sync.set({ settings: { ...settings, switcher: { ...settings.switcher, softWrap: true } } });
+  await check("tab switcher: overflow = fit shows only the cards that fit, at most 5", async () => {
+    await page.bringToFront();
+    await page.click("h1");
+    await page.keyboard.down("Control");
+    await pressSwitcher(await tabIdOf(page));
+    await page.waitForFunction(() => document.getElementById("cmdly-switcher")?.shadowRoot.querySelectorAll("li").length >= 2);
+    const { cards, fits } = await page.evaluate(() => {
+      const root = document.getElementById("cmdly-switcher").shadowRoot;
+      const panel = root.querySelector(".panel");
+      return { cards: root.querySelectorAll("li").length, fits: panel.scrollWidth <= panel.clientWidth };
     });
+    await page.keyboard.press("Escape");
+    await page.keyboard.up("Control");
+    expect(cards <= 5 && fits, `cards: ${cards}, fits: ${fits}`);
+  });
+
+  await check("tab switcher: overflow = wrap puts cards on rows", async () => {
+    await setOverflow("wrap");
     await page.bringToFront();
     await page.click("h1");
     await page.keyboard.down("Control");
@@ -438,10 +481,7 @@ try {
     await shot(page, "switcher-wrap");
     await page.keyboard.press("Escape");
     await page.keyboard.up("Control");
-    await inWorker(async () => {
-      const { settings } = await chrome.storage.sync.get("settings");
-      await chrome.storage.sync.set({ settings: { ...settings, switcher: { ...settings.switcher, softWrap: false } } });
-    });
+    await setOverflow("fit");
     expect(rows >= 2, `rows: ${rows}`);
   });
 

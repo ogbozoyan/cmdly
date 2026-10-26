@@ -6,8 +6,11 @@
   <link rel="icon" href="icons/32.png">
   <style>
     html, body { margin: 0; height: 100%; background: #1c1c1e; color: #8a8a8a; }
-    body { display: grid; place-items: center; font: 14px -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; }
+    body { display: grid; place-items: center; font: 500 14px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; text-align: center; }
+    body > * { animation: rise 0.35s ease both; }
     img { opacity: 0.6; margin-bottom: 12px; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+    @media (prefers-reduced-motion: reduce) { body > * { animation: none; } }
   </style>
 </head>
 <body>
