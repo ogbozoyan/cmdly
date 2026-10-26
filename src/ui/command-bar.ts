@@ -167,7 +167,9 @@ export class CommandBar {
     if (id !== this.requestId) return;
 
     const previous = this.active;
-    const items = withWebSearch([...local, ...remote], query);
+    // Text recognized as HTML / Markdown / OpenAPI is a document, not a query: no "Search" row for it.
+    const isMarkup = local.some((item) => item.preview?.language === "html");
+    const items = isMarkup ? [...local, ...remote.filter((item) => item.kind !== "search")] : withWebSearch([...local, ...remote], query);
     this.draw(items, keepActive ? Math.min(previous, items.length - 1) : 0);
 
     // Suggestions arrive later (network); tabs and history are already on screen.
