@@ -163,7 +163,11 @@ async function closeBar() {
   await sleep(300);
 }
 
+/** DEMO_ONLY=modes,paste-preview re-records just those. */
+const ONLY = process.env.DEMO_ONLY?.split(",");
+
 async function record(name, scenario) {
+  if (ONLY && !ONLY.includes(name)) return;
   mkdirSync(OUT_DIR, { recursive: true });
   const webm = `${OUT_DIR}/${name}.webm`;
   const gif = `${OUT_DIR}/${name}.gif`;
@@ -186,6 +190,14 @@ async function record(name, scenario) {
 }
 
 // ---------- scenarios ----------
+
+const SAMPLES = [
+  ["html", `<h1>Release notes</h1><p>Shipped <b>v3.1</b> today.</p><ul><li>Faster tab switcher</li><li>Paste previews</li></ul>`],
+  ["md", "# Release notes\n\nShipped **v3.1** today.\n\n- Faster tab switcher\n- Paste previews\n\n> Tab opens the viewer\n\n| Mode | Look |\n|---|---|\n| md | graphite |"],
+  ["swagger", JSON.stringify({ openapi: "3.0.3", info: { title: "Orders API", version: "1.2.0", description: "Create and read orders." }, servers: [{ url: "https://api.example.com/v1" }],
+    paths: { "/orders": { get: { summary: "List orders", responses: { 200: { description: "OK" } } }, post: { summary: "Create order", responses: { 201: { description: "Created" } } } },
+      "/orders/{id}": { get: { summary: "Get order", parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }], responses: { 200: { description: "OK" }, 404: { description: "Not found" } } } } } }, null, 2)],
+];
 
 console.log("Recording demos");
 try {
@@ -225,6 +237,32 @@ try {
     await clearInput();
     await paste(SAMPLE_JWT);
     await press("Tab", "⇥ tab", 2200);
+  });
+  // Type the format, Tab, paste: only the pasted text is rendered, in the mode's colors.
+  await record("modes", async () => {
+    await openBar();
+    await clearInput(); // the previous scenario leaves its text as a draft
+    for (const [word, sample] of SAMPLES) {
+      await type(word);
+      await press("Tab", "⇥ tab", 1000);
+      await paste(sample);
+      await sleep(1800);
+      await press("Escape", "esc", 1400); // back to normal search, the text stays
+      await clearInput();
+    }
+  });
+
+  // Paste first: the bar recognizes the format and offers a preview under a rule; Tab opens it.
+  await record("paste-preview", async () => {
+    await openBar();
+    await clearInput();
+    for (const [, sample] of SAMPLES) {
+      await paste(sample);
+      await sleep(900);
+      await press("Tab", "⇥ tab", 1800);
+      await press("Tab", "⇥ tab", 500);
+      await clearInput();
+    }
   });
 } finally {
   await browser.close();
