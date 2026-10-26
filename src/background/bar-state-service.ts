@@ -1,5 +1,5 @@
 import type { Draft } from "../shared/model.ts";
-import { showOverlay } from "./bar-service.ts";
+import { hasOverlay, showOverlay } from "./bar-service.ts";
 
 /**
  * Keeps the command bar alive across interruptions, like Arc:
@@ -44,6 +44,9 @@ export function watchBarState(): void {
     const bars = await openBars();
     const url = bars[tabId];
     if (!url) return;
+    // A frame inside the page (the HTML preview) also flips the tab to loading → complete.
+    // The bar is still there then, and showing it again would toggle it off.
+    if (await hasOverlay(tabId).catch(() => false)) return;
     delete bars[tabId];
     await chrome.storage.session.set({ [OPEN_KEY]: bars });
     // Same address = reload: bring the bar back. Another address = the user went somewhere else.

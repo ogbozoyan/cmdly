@@ -27,6 +27,12 @@ export async function showOverlay(tabId: number): Promise<void> {
   await chrome.scripting.executeScript({ target: { tabId }, files: ["overlay.js"] });
 }
 
+/** True while the bar is drawn on the page (running overlay.js again would toggle it off). */
+export async function hasOverlay(tabId: number): Promise<boolean> {
+  const [result] = await chrome.scripting.executeScript({ target: { tabId }, func: () => !!document.getElementById("cmdly-overlay") });
+  return !!result?.result;
+}
+
 async function openPalettePage(index: number, windowId: number): Promise<void> {
   await chrome.tabs.create({ url: PALETTE_URL, index, windowId, active: true });
 }
