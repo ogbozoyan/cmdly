@@ -51,6 +51,18 @@ you actually navigate somewhere.
       <img src="docs/demo/json.gif" alt="Paste JSON, expand the viewer, convert to YAML, decode a JWT">
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <b>Paste modes</b><br>
+      <sub>Type <code>html</code>, <code>md</code> or <code>swagger</code>, press <kbd>Tab</kbd>, paste. Only the paste is rendered, in the mode's colors; <kbd>Esc</kbd> goes back to search.</sub><br><br>
+      <img src="docs/demo/modes.gif" alt="html, md and swagger paste modes with their own colors">
+    </td>
+    <td width="50%" valign="top">
+      <b>Preview of a paste</b><br>
+      <sub>Paste HTML, Markdown or an OpenAPI spec: the bar offers a preview, <kbd>Tab</kbd> opens it under a rule.</sub><br><br>
+      <img src="docs/demo/paste-preview.gif" alt="Paste HTML, Markdown and OpenAPI, Tab opens the rendered preview">
+    </td>
+  </tr>
 </table>
 
 ## Features
