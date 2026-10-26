@@ -18,6 +18,7 @@ export const fr: Messages = {
   variantSwitch: "Tab : passer à $1",
   expand: "Déplier (Tab)",
   previewHint: "Entrée copier · Tab replier",
+  previewHintMode: "Entrée copier · Tab replier · Esc retour à la recherche",
   copied: "Copié : $1",
   switcherLabel: "Onglets récents",
   actionSearch: "Rechercher",

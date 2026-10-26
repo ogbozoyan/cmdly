@@ -18,6 +18,7 @@ export const ru: Messages = {
   variantSwitch: "Tab: переключить на $1",
   expand: "Развернуть (Tab)",
   previewHint: "Enter — копировать · Tab — свернуть",
+  previewHintMode: "Enter — копировать · Tab — свернуть · Esc — назад к поиску",
   copied: "Скопировано: $1",
   switcherLabel: "Недавние вкладки",
   actionSearch: "Найти",

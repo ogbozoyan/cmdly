@@ -29,6 +29,7 @@ export const en = {
   variantSwitch: "Tab: switch to $1",
   expand: "Expand (Tab)",
   previewHint: "Enter copy · Tab collapse",
+  previewHintMode: "Enter copy · Tab collapse · Esc back to search",
   copied: "Copied $1",
   switcherLabel: "Recent tabs",
   actionSearch: "Search",

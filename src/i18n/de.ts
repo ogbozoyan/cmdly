@@ -18,6 +18,7 @@ export const de: Messages = {
   variantSwitch: "Tab: zu $1 wechseln",
   expand: "Aufklappen (Tab)",
   previewHint: "Enter kopieren · Tab zuklappen",
+  previewHintMode: "Enter kopieren · Tab zuklappen · Esc zurück zur Suche",
   copied: "Kopiert: $1",
   switcherLabel: "Letzte Tabs",
   actionSearch: "Suchen",

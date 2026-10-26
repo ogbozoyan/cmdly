@@ -17,6 +17,7 @@ export const zh_CN: Messages = {
   variantSwitch: "Tab：切换到 $1",
   expand: "展开 (Tab)",
   previewHint: "Enter 复制 · Tab 收起",
+  previewHintMode: "Enter 复制 · Tab 收起 · Esc 返回搜索",
   copied: "已复制 $1",
   switcherLabel: "最近的标签页",
   actionSearch: "搜索",

@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { withSuggestions } from "../shared/suggestions.ts";
 import { localResults } from "../tools/local-results.ts";
+import { MODE_THEMES, PALETTE_VARS, type Palette } from "../shared/modes.ts";
 import { markupLabel, markupModeFromPrefix, type MarkupKind } from "../tools/markup.ts";
 import { copyText } from "./clipboard.ts";
 import { escapeHtml, highlight } from "./highlight.ts";
@@ -26,6 +27,15 @@ const TOAST_MS = 1100;
  * and the background "search" request (tabs, bookmarks, history, commands).
  * Rows with a `preview` (JSON, YAML, JWT) can be expanded into a viewer with Tab.
  */
+const KEY_NAMES: Record<string, string> = { Enter: "enter", Entrée: "enter", Tab: "tab", Esc: "esc" };
+/** How long a keycap in the hint shows its press before the key's action runs (the hint disappears with it). */
+const KEY_FX_MS = 170;
+
+/** Draws the key names in a hint ("Enter copy · Tab collapse") as keycaps. The text is escaped first. */
+function keyHints(text: string): string {
+  return escapeHtml(text).replace(/\b(Enter|Entrée|Tab|Esc)\b/g, (key) => `<kbd data-key="${KEY_NAMES[key]}">${key}</kbd>`);
+}
+
 export class CommandBar {
   readonly input: HTMLInputElement;
 
@@ -45,6 +55,8 @@ export class CommandBar {
   private previewOpen = false;
   /** "html" / "md" / "swagger" + Tab: everything typed or pasted is treated as that format. */
   private markupMode: MarkupKind | null = null;
+  private replaying = false;
+  private morphTimer: ReturnType<typeof setTimeout> | undefined;
   private draftTimer: ReturnType<typeof setTimeout> | undefined;
   /**
    * The <input> is single-line and drops line breaks on paste, which breaks YAML.
@@ -67,7 +79,8 @@ export class CommandBar {
         <div class="preview" hidden>
           <div class="preview-head">
             <span class="preview-lang"></span>
-            <span class="preview-hint">${escapeHtml(t("previewHint"))}</span>
+            <span class="preview-rule"></span>
+            <span class="preview-hint">${keyHints(t("previewHint"))}</span>
           </div>
           <pre class="code"></pre>
           <iframe class="frame" sandbox="" referrerpolicy="no-referrer" hidden></iframe>
@@ -100,7 +113,7 @@ export class CommandBar {
   private applyLanguage(): void {
     setLanguage(this.settings.appearance.language);
     this.input.placeholder = this.markupMode ? t("markupPlaceholder", markupLabel(this.markupMode)) : t("barPlaceholder");
-    this.root.querySelector(".preview-hint")!.textContent = t("previewHint");
+    this.updateHint();
   }
 
   // ---------- draft (survives close / reload until something is run) ----------
@@ -141,6 +154,13 @@ export class CommandBar {
       ...this.settings.tools,
       markupMode: this.markupMode,
     });
+    // In a mode only the pasted text is rendered: no tabs, history, web search or suggestions,
+    // and the pasted markup never leaves the bar.
+    if (this.markupMode) {
+      this.previewOpen = !!local[0]?.preview;
+      this.draw(local, 0);
+      return;
+    }
     // Text that a tool understood (JSON, JWT, math…) is never sent to the search engine.
     const suggestions = local.length ? null : this.suggest(query, id);
     const remote = (await send({ type: "search", query, overlay: this.options.overlay })) ?? [];
@@ -256,16 +276,46 @@ export class CommandBar {
     this.renderPreview();
   }
 
-  private setMarkupMode(mode: MarkupKind | null): void {
+  /** `keepInput`: leaving a mode with Esc keeps the text, which is then analyzed like any paste. */
+  private setMarkupMode(mode: MarkupKind | null, keepInput = false): void {
     this.markupMode = mode;
     this.previewOpen = false;
-    this.input.value = "";
-    this.pasted = null;
-    this.clearDraft();
+    if (!keepInput) {
+      this.input.value = "";
+      this.pasted = null;
+      this.clearDraft();
+    }
     this.chip.hidden = !mode;
     this.chip.textContent = mode ? markupLabel(mode) : "";
     this.input.placeholder = mode ? t("markupPlaceholder", markupLabel(mode)) : t("barPlaceholder");
+    this.applyModeTheme();
+    this.updateHint();
     this.render();
+  }
+
+  private modePalette(): Palette | null {
+    if (!this.markupMode) return null;
+    const theme = MODE_THEMES[this.markupMode];
+    return this.root.classList.contains("light") ? theme.light : theme.dark;
+  }
+
+  /** Recolors the bar for the mode and replays the transition: colors fade, the chip springs out, the bar breathes once. */
+  private applyModeTheme(): void {
+    const palette = this.modePalette();
+    for (const [key, name] of Object.entries(PALETTE_VARS) as [keyof Palette, string][]) {
+      if (palette) this.root.style.setProperty(name, palette[key]);
+      else this.root.style.removeProperty(name);
+    }
+    // The accent is a user setting: keep it when leaving a mode.
+    if (!palette) this.root.style.setProperty("--accent", this.settings.appearance.accent);
+    if (this.markupMode) this.root.dataset.mode = this.markupMode;
+    else delete this.root.dataset.mode;
+
+    this.root.classList.remove("morph");
+    void this.root.offsetWidth; // restart the animations
+    this.root.classList.add("morph");
+    clearTimeout(this.morphTimer);
+    this.morphTimer = setTimeout(() => this.root.classList.remove("morph"), 900);
   }
 
   /** Tab on a row with a variant (UUID version): switch, remember in settings, regenerate. */
@@ -275,6 +325,33 @@ export class CommandBar {
     this.settings = { ...this.settings, tools: { ...this.settings.tools, [variant.setting]: variant.next } };
     await this.render(true);
     await settingsRepository.save(this.settings);
+  }
+
+  /**
+   * Enter / Tab / Esc while the preview is open: the matching keycap in the hint sinks like a real key,
+   * then the key is handled as usual.
+   */
+  private pressed(e: KeyboardEvent): boolean {
+    const name = e.shiftKey ? undefined : KEY_NAMES[e.key === "Escape" ? "Esc" : e.key];
+    if (!name || this.replaying || this.previewPanel.hidden) return false;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+    const cap = this.previewPanel.querySelector<HTMLElement>(`kbd[data-key="${name}"]`);
+    if (!cap) return false;
+    e.preventDefault();
+    cap.classList.remove("hit");
+    void cap.offsetWidth; // restart the animation
+    cap.classList.add("hit");
+    const { key, metaKey } = e;
+    setTimeout(() => {
+      this.replaying = true;
+      this.input.dispatchEvent(new KeyboardEvent("keydown", { key, metaKey, bubbles: true, cancelable: true }));
+      this.replaying = false;
+    }, KEY_FX_MS);
+    return true;
+  }
+
+  private updateHint(): void {
+    this.root.querySelector(".preview-hint")!.innerHTML = keyHints(t(this.markupMode ? "previewHintMode" : "previewHint"));
   }
 
   private togglePreview(): void {
@@ -359,7 +436,7 @@ export class CommandBar {
 
   private bindEvents(): void {
     this.chip.addEventListener("click", () => {
-      this.setMarkupMode(null);
+      this.setMarkupMode(null, true);
       this.input.focus();
     });
 
@@ -384,6 +461,7 @@ export class CommandBar {
     this.input.addEventListener("keydown", (e) => {
       if (e.isComposing) return;
       const key = e.key;
+      if (this.pressed(e)) return;
       if (key === "ArrowDown" || (e.ctrlKey && key === "n")) {
         e.preventDefault();
         this.setActive(this.active + 1);
@@ -405,11 +483,12 @@ export class CommandBar {
         else if (item?.variant) this.cycleVariant();
       } else if (key === "Escape") {
         e.preventDefault();
-        // Esc collapses the preview, then clears the input, then closes the bar.
-        if (this.previewOpen && this.items[this.active]?.preview) {
+        // In a mode Esc goes back to normal search and keeps the text. Otherwise it collapses the
+        // preview, then clears the input, then closes the bar.
+        if (this.markupMode) {
+          this.setMarkupMode(null, true);
+        } else if (this.previewOpen && this.items[this.active]?.preview) {
           this.togglePreview();
-        } else if (this.markupMode) {
-          this.setMarkupMode(null);
         } else if (this.input.value) {
           this.input.value = "";
           this.clearDraft();
