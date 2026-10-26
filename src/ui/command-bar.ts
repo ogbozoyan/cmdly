@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { withSuggestions } from "../shared/suggestions.ts";
 import { localResults } from "../tools/local-results.ts";
+import { markupLabel, markupModeFromPrefix, type MarkupKind } from "../tools/markup.ts";
 import { copyText } from "./clipboard.ts";
 import { escapeHtml, highlight } from "./highlight.ts";
 import { ARROW_ICON, EXPAND_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
@@ -33,6 +34,7 @@ export class CommandBar {
   private readonly list: HTMLUListElement;
   private readonly previewPanel: HTMLElement;
   private readonly toast: HTMLElement;
+  private readonly chip: HTMLButtonElement;
   private readonly options: CommandBarOptions;
 
   private settings: Settings = DEFAULT_SETTINGS;
@@ -41,6 +43,8 @@ export class CommandBar {
   /** Drops responses of outdated searches when the user types fast. */
   private requestId = 0;
   private previewOpen = false;
+  /** "html" / "md" / "swagger" + Tab: everything typed or pasted is treated as that format. */
+  private markupMode: MarkupKind | null = null;
   private draftTimer: ReturnType<typeof setTimeout> | undefined;
   /**
    * The <input> is single-line and drops line breaks on paste, which breaks YAML.
@@ -56,6 +60,7 @@ export class CommandBar {
       <div class="bar">
         <div class="input-row">
           <span class="loupe">${SEARCH_ICON}</span>
+          <button class="mode-chip" hidden></button>
           <input type="text" placeholder="${escapeHtml(t("barPlaceholder"))}" autocomplete="off" spellcheck="false">
         </div>
         <ul class="results"></ul>
@@ -65,6 +70,7 @@ export class CommandBar {
             <span class="preview-hint">${escapeHtml(t("previewHint"))}</span>
           </div>
           <pre class="code"></pre>
+          <iframe class="frame" sandbox="" referrerpolicy="no-referrer" hidden></iframe>
           <div class="preview-notes"></div>
         </div>
       </div>
@@ -76,6 +82,7 @@ export class CommandBar {
     this.list = this.root.querySelector(".results")!;
     this.previewPanel = this.root.querySelector(".preview")!;
     this.toast = this.root.querySelector(".toast")!;
+    this.chip = this.root.querySelector(".mode-chip")!;
 
     this.bindEvents();
     this.applyAppearance();
@@ -92,7 +99,7 @@ export class CommandBar {
   /** Texts drawn before settings loaded used Chrome's language; redo them in the chosen one. */
   private applyLanguage(): void {
     setLanguage(this.settings.appearance.language);
-    this.input.placeholder = t("barPlaceholder");
+    this.input.placeholder = this.markupMode ? t("markupPlaceholder", markupLabel(this.markupMode)) : t("barPlaceholder");
     this.root.querySelector(".preview-hint")!.textContent = t("previewHint");
   }
 
@@ -130,7 +137,10 @@ export class CommandBar {
     const id = ++this.requestId;
     // Tool rows (calculator, JSON/YAML, JWT…) come first; web search, tabs and history always follow.
     const query = this.input.value.trim();
-    const local = localResults(this.rawQuery(), this.settings.features, this.settings.tools);
+    const local = localResults(this.rawQuery(), this.settings.features, {
+      ...this.settings.tools,
+      markupMode: this.markupMode,
+    });
     // Text that a tool understood (JSON, JWT, math…) is never sent to the search engine.
     const suggestions = local.length ? null : this.suggest(query, id);
     const remote = (await send({ type: "search", query, overlay: this.options.overlay })) ?? [];
@@ -246,6 +256,18 @@ export class CommandBar {
     this.renderPreview();
   }
 
+  private setMarkupMode(mode: MarkupKind | null): void {
+    this.markupMode = mode;
+    this.previewOpen = false;
+    this.input.value = "";
+    this.pasted = null;
+    this.clearDraft();
+    this.chip.hidden = !mode;
+    this.chip.textContent = mode ? markupLabel(mode) : "";
+    this.input.placeholder = mode ? t("markupPlaceholder", markupLabel(mode)) : t("barPlaceholder");
+    this.render();
+  }
+
   /** Tab on a row with a variant (UUID version): switch, remember in settings, regenerate. */
   private async cycleVariant(): Promise<void> {
     const variant = this.items[this.active]?.variant;
@@ -269,10 +291,18 @@ export class CommandBar {
     this.list.querySelectorAll(".expand").forEach((b) => b.classList.toggle("open", this.previewOpen));
     if (!visible || !preview) return;
 
-    this.previewPanel.querySelector(".preview-lang")!.textContent = preview.language.toUpperCase();
+    this.previewPanel.querySelector(".preview-lang")!.textContent = preview.label ?? preview.language.toUpperCase();
     const code = this.previewPanel.querySelector("pre")!;
-    code.innerHTML = highlight(preview.content, preview.language);
-    code.scrollTop = 0;
+    const frame = this.previewPanel.querySelector("iframe")!;
+    code.hidden = preview.language === "html";
+    frame.hidden = preview.language !== "html";
+    if (preview.language === "html") {
+      // sandbox="" = no scripts, forms, popups or same-origin; the document's own CSP blocks the network.
+      if (frame.srcdoc !== preview.content) frame.srcdoc = preview.content;
+    } else {
+      code.innerHTML = highlight(preview.content, preview.language);
+      code.scrollTop = 0;
+    }
     const notes = this.previewPanel.querySelector(".preview-notes")!;
     notes.replaceChildren(
       ...(preview.notes ?? []).map((text) => {
@@ -328,6 +358,11 @@ export class CommandBar {
   // ---------- events ----------
 
   private bindEvents(): void {
+    this.chip.addEventListener("click", () => {
+      this.setMarkupMode(null);
+      this.input.focus();
+    });
+
     this.input.addEventListener("input", () => {
       if (this.pasted && this.input.value !== this.pasted.shown) this.pasted = null;
       this.saveDraftSoon();
@@ -358,16 +393,23 @@ export class CommandBar {
       } else if (key === "Enter") {
         e.preventDefault();
         this.choose(this.items[this.active], e.metaKey);
+      } else if (key === "Backspace" && this.markupMode && !this.input.value) {
+        e.preventDefault();
+        this.setMarkupMode(null);
       } else if (key === "Tab" && !e.shiftKey) {
         e.preventDefault();
         const item = this.items[this.active];
-        if (item?.preview) this.togglePreview();
+        const prefixMode = this.settings.features.markup && !this.markupMode ? markupModeFromPrefix(this.input.value) : null;
+        if (prefixMode) this.setMarkupMode(prefixMode);
+        else if (item?.preview) this.togglePreview();
         else if (item?.variant) this.cycleVariant();
       } else if (key === "Escape") {
         e.preventDefault();
         // Esc collapses the preview, then clears the input, then closes the bar.
         if (this.previewOpen && this.items[this.active]?.preview) {
           this.togglePreview();
+        } else if (this.markupMode) {
+          this.setMarkupMode(null);
         } else if (this.input.value) {
           this.input.value = "";
           this.clearDraft();

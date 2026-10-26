@@ -5,8 +5,10 @@ export type GlyphName =
 
 /** Content of the expandable panel under the results (Tab to open). */
 export interface Preview {
-  /** Decides syntax highlighting. */
-  language: "json" | "yaml";
+  /** Decides syntax highlighting; "html" means `content` is a full document shown in a sandboxed iframe. */
+  language: "json" | "yaml" | "html";
+  /** Panel title instead of the upper-cased language, e.g. "Markdown". */
+  label?: string;
   content: string;
   /** Extra lines under the code, e.g. human-readable JWT expiry. */
   notes?: string[];

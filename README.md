@@ -60,6 +60,7 @@ you actually navigate somewhere.
 | **Search everything** | Open tabs, bookmarks and history in one list. Search suggestions from Google, Bing, DuckDuckGo or Yandex as you type. Pick an open tab to switch to it instead of opening a duplicate.                                              |
 | **Commands**          | Copy URL, Copy as Markdown, Pin/Unpin, Mute, Duplicate, Close other tabs, Move to new window, Reopen closed tab, Bookmark, open History/Downloads/Settings… |
 | **Calculator**        | `2+2`, `200+15%`, `sqrt(16)`, `5!`, `2^10`, `3x4`. Enter copies the result.                                                                                 |
+| **HTML / Markdown / OpenAPI** | Paste HTML, Markdown or a Swagger/OpenAPI spec: <kbd>Tab</kbd> shows it rendered. Type `html`, `md` or `swagger` + <kbd>Tab</kbd> for a paste mode. Runs in a sandbox: no scripts, no network unless you allow it in settings. |
 | **JSON / YAML**       | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results.                              |
 | **Dev tools**         | `uuid` / `uuid 5` (v4, v7, v1), `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates.                       |
 | **Shortcuts**         | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable.                                                                |
@@ -259,7 +260,7 @@ Project layout (details in [AGENTS.md](AGENTS.md)):
 src/
   background/   service worker: router (controller) + services
   shared/       types, message contract, settings model and repository
-  tools/        pure functions: calculator, UUID, Base64, JWT, JSON/YAML
+  tools/        pure functions: calculator, UUID, Base64, JWT, JSON/YAML, HTML/Markdown/OpenAPI
   ui/           the command bar component
   content/      scripts injected into web pages
   pages/        options, palette and new tab pages

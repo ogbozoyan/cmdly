@@ -221,6 +221,26 @@ try {
     expect((await previewText(page)) === null, "Esc collapses the viewer first");
   });
 
+  await check("HTML paste: sandboxed iframe preview; md mode via Tab + chip", async () => {
+    await typeInBar(page, "");
+    await pasteInBar(page, "<h1>Hello</h1><script>document.title='x'</script>");
+    expect((await rowTitles(page))[0] === "HTML preview", "HTML preview row is first");
+    await page.keyboard.press("Tab");
+    const frame = await page.evaluate(() => {
+      const f = document.getElementById("cmdly-overlay").shadowRoot.querySelector("iframe.frame");
+      return { hidden: f.hidden, sandbox: f.getAttribute("sandbox"), doc: f.srcdoc };
+    });
+    expect(!frame.hidden && frame.sandbox === "" && frame.doc.includes("<h1>Hello</h1>"), "iframe shows the document");
+    expect(!/<script/i.test(frame.doc) && frame.doc.includes("Content-Security-Policy"), "no script, CSP present");
+    await page.keyboard.press("Escape");
+    await typeInBar(page, "md");
+    await page.keyboard.press("Tab");
+    await pasteInBar(page, "# Title\n\n- a\n- b");
+    const chip = await page.evaluate(() => document.getElementById("cmdly-overlay").shadowRoot.querySelector(".mode-chip").textContent);
+    expect(chip === "Markdown" && (await rowTitles(page))[0] === "Markdown preview", `mode chip: ${chip}`);
+    await page.keyboard.press("Escape"); // leaves the mode and clears the input
+  });
+
   await check("palette page: pasted JSON still offers web search", async () => {
     const palette = await openPage(`chrome-extension://${extensionId}/palette.html`);
     await palette.waitForSelector("input");

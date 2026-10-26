@@ -26,6 +26,10 @@ export interface Settings {
     jwt: boolean;
     /** JSON / YAML viewer, formatter and converter. */
     formats: boolean;
+    /** HTML / Markdown / OpenAPI preview of pasted text. */
+    markup: boolean;
+    /** Let the preview load images, fonts and styles from the network (off: nothing is requested). */
+    markupRemote: boolean;
   };
   windows: {
     /** Closing the last tab doesn't close the window (see background/keep-open-plan.ts). */
@@ -86,6 +90,8 @@ export const DEFAULT_SETTINGS: Settings = {
     encode: true,
     jwt: true,
     formats: true,
+    markup: true,
+    markupRemote: false,
   },
   windows: {
     keepOpen: "off",

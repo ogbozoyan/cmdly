@@ -35,6 +35,11 @@ to get suggested queries — the same thing Chrome's address bar does. Requests 
 They are never made in incognito windows, and never for pasted JSON/YAML, tokens/JWTs, long encoded
 strings, tool commands or math.
 
+**HTML / Markdown / OpenAPI preview**: pasted text is rendered locally in a sandboxed frame — scripts never
+run and, by default, the preview makes no network requests at all. Only if you turn on
+"Load external images and styles" in Settings may the pasted HTML fetch images, fonts and styles it
+references (directly from their servers, without cookies). Pasted markup is never sent to search suggestions.
+
 Web searches you start from the bar are performed by Chrome's default search engine,
 exactly as if you typed them into the address bar.
 

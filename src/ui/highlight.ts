@@ -4,9 +4,9 @@
  * into someone else's page, so pasted "<img onerror=…>" must stay inert text.
  */
 
-export function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-}
+import { escapeHtml } from "../shared/escape.ts";
+
+export { escapeHtml };
 
 const span = (cls: string, text: string) => `<span class="tok-${cls}">${escapeHtml(text)}</span>`;
 

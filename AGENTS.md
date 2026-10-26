@@ -83,6 +83,11 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 - Instant results (calculator, UUID, encoders, JWT, JSON/YAML) are computed in the UI by
   `src/tools/local-results.ts`; tabs/bookmarks/history/commands come from `search-service.ts`.
   Tool rows go first, but the regular results (web search, tabs, history) are always shown below them.
+- **Markup preview** (`tools/markup.ts`, `markdown.ts`, `openapi.ts`): pasted HTML / Markdown / OpenAPI gets a row whose
+  `Preview.language` is `"html"` — `content` is a complete document shown in `<iframe sandbox="" srcdoc>` (no scripts,
+  CSP `default-src 'none'`; `features.markupRemote` opens img/font/style over http(s)). `html`/`md`/`swagger` + Tab
+  sets `CommandBar.markupMode` (chip in the input row): `localResults` then returns only that format's row.
+  Markdown/OpenAPI renderers escape everything first — never pass raw pasted HTML through them.
 - A row with `preview` (see `Preview` in `model.ts`) gets an expand button; <kbd>Tab</kbd> opens the
   viewer panel under the results (`CommandBar.renderPreview`, highlighting in `src/ui/highlight.ts`).
 - **Keep window open**: `keep-open-plan.ts` is a pure planner (windows snapshot → actions), unit-tested;

@@ -308,3 +308,31 @@ li.active .icon.glyph svg { color: var(--chip-text); }
 @media (prefers-reduced-motion: reduce) {
   .bar, .toast { animation: none; }
 }
+
+/* ---------- paste mode chip & rendered preview ---------- */
+
+.mode-chip {
+  all: unset;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  cursor: pointer;
+}
+
+.mode-chip[hidden] { display: none; }
+
+.frame {
+  display: block;
+  width: 100%;
+  height: calc(92vh - 8vh - 24vh - 150px);
+  min-height: 200px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.frame[hidden], .code[hidden] { display: none; }

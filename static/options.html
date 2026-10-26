@@ -131,6 +131,14 @@
         <span><b data-i18n="optFormats">JSON / YAML viewer</b><small data-i18n="optFormatsHint">Paste JSON or YAML to format, minify or convert it. <code>Tab</code> expands the result.</small></span>
         <input type="checkbox" data-path="features.formats">
       </label>
+      <label class="row">
+        <span><b data-i18n="optMarkup">HTML / Markdown / OpenAPI preview</b><small data-i18n="optMarkupHint">Paste HTML, Markdown or a Swagger/OpenAPI spec to see it rendered. <code>html</code>, <code>md</code> or <code>swagger</code> + <code>Tab</code> starts a paste mode. Scripts never run.</small></span>
+        <input type="checkbox" data-path="features.markup">
+      </label>
+      <label class="row">
+        <span><b data-i18n="optMarkupRemote">Load external images and styles</b><small data-i18n="optMarkupRemoteHint">Off: the preview makes no network requests. On: pasted HTML may fetch images, fonts and styles it references.</small></span>
+        <input type="checkbox" data-path="features.markupRemote">
+      </label>
     </section>
 
     <section>
