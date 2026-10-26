@@ -91,17 +91,15 @@ function neutralize(html: string): string {
     .replace(/<script\b[\s\S]*?<\/script\s*>/gi, "");
 }
 
-/** Wraps a fragment, or injects the CSP into a full document. The CSP comes first so nothing can precede it. */
+/**
+ * Wraps a fragment, or a full document. Our own doctype and the CSP come first, before any pasted text,
+ * so nothing (a comment, <textarea>…) can hide the policy; the pasted doctype is dropped to stay in standards mode.
+ */
 export function htmlDocument(source: string, remote: boolean): string {
   const meta = `<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp(remote)}">`;
-  const html = neutralize(source);
-  if (/<!doctype|<html\b/i.test(html)) {
-    const withMeta = /<head\b[^>]*>/i.test(html)
-      ? html.replace(/<head\b[^>]*>/i, (head) => head + meta)
-      : html.replace(/<html\b[^>]*>/i, (root) => `${root}<head>${meta}</head>`);
-    return /<head\b/i.test(withMeta) ? withMeta : meta + withMeta;
-  }
-  return `<!doctype html><html><head>${meta}<style>${BASE_CSS}</style></head><body>${html}</body></html>`;
+  const html = neutralize(source).replace(/^\s*<!doctype[^>]*>/i, "");
+  if (/<html\b/i.test(html)) return `<!doctype html>${meta}${html}`;
+  return `<!doctype html>${meta}<style>${BASE_CSS}</style>${html}`;
 }
 
 function bodyDocument(body: string): string {

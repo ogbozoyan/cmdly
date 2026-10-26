@@ -256,7 +256,6 @@ export class CommandBar {
     this.renderPreview();
   }
 
-  /** Tab on a row with a variant (UUID version): switch, remember in settings, regenerate. */
   private setMarkupMode(mode: MarkupKind | null): void {
     this.markupMode = mode;
     this.previewOpen = false;
@@ -269,6 +268,7 @@ export class CommandBar {
     this.render();
   }
 
+  /** Tab on a row with a variant (UUID version): switch, remember in settings, regenerate. */
   private async cycleVariant(): Promise<void> {
     const variant = this.items[this.active]?.variant;
     if (!variant) return;
