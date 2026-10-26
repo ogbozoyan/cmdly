@@ -63,7 +63,7 @@ you actually navigate somewhere.
 | **JSON / YAML**       | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results.                              |
 | **Dev tools**         | `uuid` / `uuid 5` (v4, v7, v1), `b64 text` / `unb64 …`, `url text` / `unurl …`. Paste a JWT to see payload, header and readable `iat`/`exp` dates.                       |
 | **Shortcuts**         | `⇧⌘C` copies the page URL, `⌘Z` reopens the last closed tab — like in Arc. All configurable.                                                                |
-| **Tab switcher**      | Arc's `Ctrl+Tab`: hold Ctrl, press Tab to go through recent tabs with previews (Shift goes back), release to switch. Also on `⌃Q`; cards can wrap into rows. |
+| **Tab switcher**      | Arc's `Ctrl+Tab`: hold Ctrl, press Tab to go through recent tabs with previews (Shift goes back), release to switch. Also on `⌃Q`; when tabs don't fit, cards are limited, scroll or wrap into rows. |
 | **Settings**          | Turn every feature on/off, rebind shortcuts, pick theme, accent color, position and width. Export / import as JSON.                                         |
 | **5 languages**        | English, Русский, 简体中文, Deutsch, Français — follows the Chrome language.                                                                                  |
 | **Private**           | No analytics, no servers. Tabs, history and pasted data stay in your browser; only search suggestions go to your search engine (can be turned off).                                                                                        |
@@ -194,6 +194,7 @@ recent first. Keep pressing <kbd>Tab</kbd> (<kbd>Shift</kbd> goes back, arrows w
 Chrome reserves Ctrl+Tab and switches to the next tab first; Cmdly brings you back and shows the
 switcher, so the next tab flashes for a moment. For a flash-free switcher use the `⌃Q` / `Alt+Q`
 command (change it at `chrome://extensions/shortcuts`), or turn **Use Ctrl+Tab** off in settings.
+**When tabs don't fit** chooses between showing only the cards that fit (default), one scrolling line, or rows.
 
 ## Keep window open
 

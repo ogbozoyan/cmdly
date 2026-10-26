@@ -9,6 +9,7 @@ export const zh_CN: Messages = {
   commandOpenBar: "打开命令栏 — 在此处设置 ⌘T / Ctrl+T",
   commandCopyUrl: "复制页面网址 — 在任何位置都有效，包括焦点在地址栏时",
   commandTabSwitcher: "切换标签页：按住修饰键并再次按下以向后浏览，松开即切换（Chrome 保留 Ctrl+Tab）",
+  commandTabSwitcherBack: "向前切换标签页：与切换器快捷键相同，但从最旧的标签页开始，方向相反",
   newTabTitle: "新标签页",
   keepOpenText: "关闭最后一个标签页时，这个固定标签页会让窗口保持打开。窗口中有其他标签页后，Cmdly 会立即移除它。",
 
@@ -125,8 +126,11 @@ export const zh_CN: Messages = {
   optSwitcherThumbsHint: "在您查看标签页时保存一张小图。仅保存在内存中，关闭 Chrome 后即清除；无痕模式下从不保存。",
   optSwitcherCtrlTab: "使用 Ctrl+Tab",
   optSwitcherCtrlTabHint: "Chrome 会先切换到下一个标签页，Cmdly 再把您带回并显示切换器 — 下一个标签页会闪现一下。关闭时：仅使用上面的快捷键。",
-  optSwitcherWrap: "标签页换行显示",
-  optSwitcherWrapHint: "卡片换到新行，而不是横向滚动。↑ ↓ 在行之间移动。",
+  optSwitcherOverflow: "标签页放不下时",
+  optSwitcherOverflowHint: "适应窗口：只显示窗口放得下的最近标签页（最多 5 个），与 Arc 相同。横向滚动：一行最多 10 张卡片。换行：最多 10 张卡片分多行显示，↑ ↓ 在行之间移动。",
+  optOverflowFit: "适应窗口",
+  optOverflowScroll: "横向滚动",
+  optOverflowWrap: "换行显示",
   optShortcutsNote: "快捷键在普通网页上有效。Chrome 不允许扩展程序在 chrome:// 页面和应用商店中运行。",
 
   optBehavior: "行为",

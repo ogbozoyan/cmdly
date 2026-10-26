@@ -20,6 +20,7 @@ export const en = {
   commandOpenBar: "Open the command bar — assign ⌘T / Ctrl+T here",
   commandCopyUrl: "Copy the page URL — works on any page, even when focus is in the address bar",
   commandTabSwitcher: "Switch tabs: hold the modifier and press again to go back, release to switch (Chrome keeps Ctrl+Tab for itself)",
+  commandTabSwitcherBack: "Switch tabs backwards: like the switcher shortcut, but starts from the oldest tab and goes the other way",
   newTabTitle: "New Tab",
   keepOpenText: "This pinned tab keeps the window open when you close the last tab. Cmdly removes it as soon as the window has more tabs.",
 
@@ -142,8 +143,11 @@ export const en = {
   optSwitcherThumbsHint: "Remembers a small picture of each tab when you look at it. Kept in memory only and forgotten when Chrome closes; never in incognito.",
   optSwitcherCtrlTab: "Use Ctrl+Tab",
   optSwitcherCtrlTabHint: "Chrome switches to the next tab first, Cmdly brings you back and shows the switcher — the next tab flashes for a moment. Off: only the shortcut above.",
-  optSwitcherWrap: "Wrap tabs into rows",
-  optSwitcherWrapHint: "Cards go onto new lines instead of scrolling sideways. ↑ ↓ move between rows.",
+  optSwitcherOverflow: "When tabs don't fit",
+  optSwitcherOverflowHint: "Fit: only the recent tabs that fit in the window (up to 5), like Arc. Scroll: up to 10 cards in one line. Wrap: up to 10 cards in rows, ↑ ↓ move between rows.",
+  optOverflowFit: "Fit to window",
+  optOverflowScroll: "Scroll sideways",
+  optOverflowWrap: "Wrap into rows",
   optShortcutsNote: "Shortcuts work on regular web pages. Chrome doesn't allow extensions on chrome:// pages and the Web Store.",
 
   optBehavior: "Behavior",

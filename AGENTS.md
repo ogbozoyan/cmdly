@@ -71,7 +71,7 @@ Think of it as a small backend + frontend in one package:
 overlay.js / palette.js ─▶ CommandBar (src/ui) ──send()──▶ router ─▶ search / command / navigation service
 chrome command "copy-url" ─▶ background ─▶ message to content.js (top frame) ─▶ copy + toast
 content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "open bar" shortcut
-"tab-switcher" command / Chrome's Ctrl+Tab ─▶ switcher-service ─▶ inject switcher.js (cards, release Ctrl → switch)
+"tab-switcher" command / Chrome's Ctrl+Tab ─▶ switcher-service ─▶ message "switcher-show" to content.js (cards, release Ctrl → switch)
 tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add/remove pinned guard, open bar
 ```
 
@@ -92,8 +92,11 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 - **Tab switcher** (`switcher-service.ts`, UI `src/content/switcher.ts`, pure parts `shared/switcher.ts`):
   Ctrl+Tab is reserved by Chrome, so pages never see it. Content scripts report Ctrl down/up
   (`ctrl-state`); if the tab with Ctrl down is replaced by its neighbour, the background switches back
-  and injects the switcher (`Settings.switcher.ctrlTab`). The `tab-switcher` command (`⌃Q`) does the same
-  without the flash. MRU order uses a `lastAccessed` snapshot taken on Ctrl down, so the neighbour's
+  and shows the switcher (`Settings.switcher.ctrlTab`). The switcher lives in the always-on content
+  script (`content/switcher.ts` + `switcher.css`, inlined by esbuild): a press is one `SwitcherMessage`
+  (`shared/switcher.ts`), not a script injection, so it opens without lag. `Settings.switcher.overflow`:
+  `fit` (default: only the cards that fit, at most 5 — `fitCount`), `scroll` (one line) or `wrap` (rows).
+  The `tab-switcher` command (`⌃Q`) does the same without the flash. MRU order uses a `lastAccessed` snapshot taken on Ctrl down, so the neighbour's
   brief activation doesn't count. Previews: `captureVisibleTab` after activation → downscaled JPEG in
   `chrome.storage.session` (`thumb:<tabId>`), never in incognito, never while Cmdly UI is on screen.
 - **Bar state** (`bar-state-service.ts`, `chrome.storage.session`): the typed text is a draft that

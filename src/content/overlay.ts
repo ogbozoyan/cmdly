@@ -34,15 +34,46 @@ function toggleOverlay(): void {
     host.addEventListener(type, (e) => e.stopPropagation());
   }
 
-  const close = () => {
+  let closed = false;
+  const close = (restoreFocus = true) => {
+    if (closed) return;
+    closed = true;
     host.remove();
+    clearInterval(focusTimer);
+    window.removeEventListener("blur", onBlur);
+    document.removeEventListener("visibilitychange", onVisibility);
+    clearTimeout(hiddenTimer);
     send({ type: "overlay-state", open: false });
-    previousFocus?.focus?.();
+    // Not when the user went to the address bar: that would pull the focus back from it.
+    if (restoreFocus) previousFocus?.focus?.();
   };
-  host.cmdlyClose = close;
+  host.cmdlyClose = () => close();
+
+  // Clicking the address bar or other browser UI leaves the page without any click on it. Only
+  // counts once the page had focus: the bar may be opened while the address bar still holds it.
+  let hadFocus = document.hasFocus();
+  const checkFocus = () => {
+    if (document.hasFocus()) hadFocus = true;
+    else if (hadFocus && !document.hidden) close(false);
+  };
+  const onBlur = () => setTimeout(checkFocus, 50);
+  // Switching to another tab ends the bar's session: coming back must not show a stale bar. Only once
+  // the page was visible — the ⌘T fallback injects the bar while the previous tab is still hidden.
+  let seenVisible = !document.hidden;
+  // A reload or navigation hides the page too, and the bar must come back after a reload (see
+  // bar-state-service.ts): wait a moment — a page that is going away never gets to the timer.
+  let hiddenTimer: ReturnType<typeof setTimeout> | undefined;
+  const onVisibility = () => {
+    clearTimeout(hiddenTimer);
+    if (!document.hidden) seenVisible = true;
+    else if (seenVisible) hiddenTimer = setTimeout(() => document.hidden && close(false), 150);
+  };
+  document.addEventListener("visibilitychange", onVisibility);
+  const focusTimer = setInterval(checkFocus, 150);
+  window.addEventListener("blur", onBlur);
 
   document.documentElement.appendChild(host);
-  const bar = new CommandBar(shadow, { overlay: true, close });
+  const bar = new CommandBar(shadow, { overlay: true, close: () => close() });
   send({ type: "overlay-state", open: true });
 
   stylesheet.onload = () => {

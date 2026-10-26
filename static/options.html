@@ -67,8 +67,12 @@
         <input type="checkbox" data-path="switcher.ctrlTab">
       </label>
       <label class="row">
-        <span><b data-i18n="optSwitcherWrap">Wrap tabs into rows</b><small data-i18n="optSwitcherWrapHint">Cards go onto new lines instead of scrolling sideways.</small></span>
-        <input type="checkbox" data-path="switcher.softWrap">
+        <span><b data-i18n="optSwitcherOverflow">When tabs don't fit</b><small data-i18n="optSwitcherOverflowHint">Fit shows the recent tabs that fit in the window.</small></span>
+        <select data-path="switcher.overflow">
+          <option value="fit" data-i18n="optOverflowFit">Fit to window</option>
+          <option value="scroll" data-i18n="optOverflowScroll">Scroll sideways</option>
+          <option value="wrap" data-i18n="optOverflowWrap">Wrap into rows</option>
+        </select>
       </label>
       <label class="row">
         <span><b data-i18n="optSwitcherThumbs">Tab previews in the switcher</b><small data-i18n="optSwitcherThumbsHint">Remembers a small picture of each tab when you look at it.</small></span>

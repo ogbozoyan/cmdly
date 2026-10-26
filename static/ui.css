@@ -35,7 +35,7 @@
 .wrap {
   position: fixed;
   inset: 0;
-  font: 15px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font: 15px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   text-align: left;
@@ -53,11 +53,11 @@
   border-radius: 14px;
   padding: 6px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  animation: pop 0.16s ease-out;
 }
 
 .wrap.overlay .bar {
   box-shadow: 0 30px 120px 40px rgba(0, 0, 0, 0.28), 0 8px 30px rgba(0, 0, 0, 0.35);
-  animation: pop 0.12s ease-out;
 }
 
 .input-row {
@@ -284,22 +284,27 @@ li.active .icon.glyph svg { color: var(--chip-text); }
 .wrap.light .tok-comment { color: #008000; }
 
 .toast {
-  position: absolute;
-  left: 50%;
-  bottom: 48px;
-  transform: translateX(-50%);
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: rgba(30, 30, 35, 0.95);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   font-size: 14px;
   font-weight: 500;
-  animation: rise 0.15s ease-out;
+  line-height: 1.4;
+  animation: fade-in 0.3s ease;
 }
 
 .toast[hidden] { display: none; }
 
-@keyframes rise { from { opacity: 0; transform: translate(-50%, 6px); } }
+/* Shared motion (same as options.css): a soft fade for text, a small pop for the bar. */
+@keyframes fade-in { from { opacity: 0; } }
 
-@keyframes pop { from { opacity: 0; transform: translateX(-50%) scale(0.98); } }
+@keyframes pop { from { opacity: 0; transform: translateX(-50%) translateY(4px) scale(0.98); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .bar, .toast { animation: none; }
+}

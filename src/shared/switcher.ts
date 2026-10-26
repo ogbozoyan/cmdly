@@ -14,8 +14,32 @@ export interface SwitcherTab {
   thumbnail?: string;
 }
 
+/**
+ * Background → content script (top frame) messages. The switcher lives in the always-on content
+ * script, so a press is one message instead of injecting a script.
+ */
+export type SwitcherMessage =
+  /** Open the switcher, or move the selection if it is open. -1 = Ctrl+Shift+Tab (start from the oldest). */
+  | { type: "switcher-show"; delta: 1 | -1 }
+  /** Ctrl was released in a tab that never saw it go down (after Chrome's Ctrl+Tab). */
+  | { type: "switcher-release" };
+
 /** Cards shown at most — older tabs are still reachable from the command bar. */
 export const MAX_SWITCHER_TABS = 10;
+
+/** Card geometry, kept in sync with src/content/switcher.css. */
+export const CARD_WIDTH = 160;
+export const CARD_GAP = 8;
+const PANEL_PADDING = 12;
+const SCREEN_MARGIN = 40;
+/** "Fit" shows at most this many cards, like Arc. */
+export const FIT_MAX_CARDS = 5;
+
+/** Cards that fit on one line of a `windowWidth` window (overflow = "fit"): 1…FIT_MAX_CARDS. */
+export function fitCount(windowWidth: number, max = FIT_MAX_CARDS): number {
+  const available = windowWidth - SCREEN_MARGIN * 2 - PANEL_PADDING * 2;
+  return Math.max(1, Math.min(max, Math.floor((available + CARD_GAP) / (CARD_WIDTH + CARD_GAP))));
+}
 
 /** Thumbnail width in pixels: enough for a sharp card on a Retina screen, small in memory. */
 export const THUMBNAIL_WIDTH = 360;

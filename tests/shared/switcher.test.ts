@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { initialIndex, neighbourDirection, recentFirst, step, thumbnailSize } from "../../src/shared/switcher.ts";
+import { fitCount, initialIndex, neighbourDirection, recentFirst, step, thumbnailSize } from "../../src/shared/switcher.ts";
 
 test("orders tabs by last use with the active tab first", () => {
   const tabs = [
@@ -38,4 +38,11 @@ test("recognises Chrome's Ctrl+Tab and Ctrl+Shift+Tab moves", () => {
   assert.equal(neighbourDirection(0, 4, 5), -1);
   assert.equal(neighbourDirection(0, 2, 5), 0);
   assert.equal(neighbourDirection(0, 0, 1), 0);
+});
+
+test("fits as many cards as the window allows, at most five", () => {
+  assert.equal(fitCount(1440), 5);
+  assert.equal(fitCount(600), 3);
+  assert.equal(fitCount(200), 1);
+  assert.equal(fitCount(4000, 3), 3);
 });

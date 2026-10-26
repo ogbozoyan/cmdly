@@ -21,7 +21,8 @@ export type Request =
   | { type: "tab-url" }
   | { type: "switcher-tabs" }
   | { type: "switch-tab"; tabId: number }
-  | { type: "ctrl-state"; held: boolean };
+  | { type: "ctrl-state"; held: boolean }
+  | { type: "switcher-state"; open: boolean };
 
 /** Response type for each request type. */
 export interface ResponseMap {
@@ -40,6 +41,7 @@ export interface ResponseMap {
   "switcher-tabs": SwitcherTab[];
   "switch-tab": void;
   "ctrl-state": void;
+  "switcher-state": void;
 }
 
 /** Typed wrapper around chrome.runtime.sendMessage. Resolves to null if the background failed. */

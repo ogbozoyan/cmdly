@@ -1,35 +1,52 @@
 /**
- * Tab switcher, injected on demand by background/switcher-service.ts (Arc's Ctrl+Tab).
- * Each injection while it is open moves the selection; releasing the modifier, Enter or a click
- * switches to the selected tab; Esc or a click outside cancels.
+ * Tab switcher UI (Arc's Ctrl+Tab), part of the always-on content script (top frame only).
+ * The background sends "switcher-show" on every press: the first one opens it, the next ones move
+ * the selection. Releasing the modifier, Enter or a click switches; Esc or a click outside cancels.
+ *
+ * Built for speed: no script injection per press, styles inlined (no stylesheet to wait for),
+ * no animations, and the background answers from its in-memory preview cache.
  */
+import css from "./switcher.css";
 import { setLanguage, t } from "../i18n/index.ts";
 import { send } from "../shared/messages.ts";
+import type { Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
-import { initialIndex, step, type SwitcherTab } from "../shared/switcher.ts";
+import { fitCount, initialIndex, step, type SwitcherMessage, type SwitcherTab } from "../shared/switcher.ts";
 
 const HOST_ID = "cmdly-switcher";
 
-type HostElement = HTMLElement & { cmdlyNext?: () => void; cmdlyMove?: (delta: number) => void; cmdlyRelease?: () => void };
 type TrackedWindow = Window & {
-  /** Set by the always-on content script (content/index.ts); undefined = unknown, treated as held. */
+  /** Set by content/index.ts; undefined = unknown, treated as held. */
   __cmdlyModifierHeld?: boolean;
-  /** Set by the background when Ctrl+Shift+Tab opened the switcher: start from the oldest tab. */
-  __cmdlySwitcherStart?: number;
 };
 
-function start(): void {
-  const existing = document.getElementById(HOST_ID) as HostElement | null;
-  if (existing) {
-    existing.cmdlyNext?.();
+interface OpenSwitcher {
+  move(delta: number): void;
+  commit(): void;
+}
+
+let current: OpenSwitcher | null = null;
+/** Read ahead of time so opening doesn't wait for storage. */
+let settings: Settings | null = null;
+
+export function watchSwitcherSettings(): void {
+  settingsRepository.get().then((s) => (settings = s));
+  settingsRepository.onChange((s) => (settings = s));
+}
+
+export function handleSwitcherMessage(message: SwitcherMessage): void {
+  if (message.type === "switcher-release") {
+    (window as TrackedWindow).__cmdlyModifierHeld = false;
+    current?.commit();
     return;
   }
+  if (current) return current.move(message.delta);
   // The modifier is already up: a quick tap means "previous tab", like Arc — no UI at all.
   if ((window as TrackedWindow).__cmdlyModifierHeld === false) {
     quickSwitch();
     return;
   }
-  mount();
+  current = mount(message.delta === -1);
 }
 
 async function quickSwitch(): Promise<void> {
@@ -38,19 +55,17 @@ async function quickSwitch(): Promise<void> {
   if (target && target !== tabs[0]) await send({ type: "switch-tab", tabId: target.tabId });
 }
 
-function mount(): void {
-  const w = window as TrackedWindow;
-  const backwards = w.__cmdlySwitcherStart === -1;
-  delete w.__cmdlySwitcherStart;
+function mount(backwards: boolean): OpenSwitcher {
+  // The command bar and the switcher are never on screen together (and the bar would end up in previews).
+  (document.getElementById("cmdly-overlay") as (HTMLElement & { cmdlyClose?: () => void }) | null)?.cmdlyClose?.();
   const previousFocus = document.activeElement as HTMLElement | null;
-  const host: HostElement = document.createElement("div");
+  const host = document.createElement("div");
   host.id = HOST_ID;
-  host.style.cssText = "all: initial; position: fixed; inset: 0; z-index: 2147483647; visibility: hidden;";
+  host.style.cssText = "all: initial; position: fixed; inset: 0; z-index: 2147483647;";
   const shadow = host.attachShadow({ mode: "open" });
 
-  const stylesheet = document.createElement("link");
-  stylesheet.rel = "stylesheet";
-  stylesheet.href = chrome.runtime.getURL("switcher.css");
+  const style = document.createElement("style");
+  style.textContent = css;
   const wrap = document.createElement("div");
   wrap.className = "wrap";
   const panel = document.createElement("div");
@@ -60,7 +75,19 @@ function mount(): void {
   const list = document.createElement("ul");
   panel.append(list);
   wrap.append(panel);
-  shadow.append(stylesheet, wrap);
+  shadow.append(style, wrap);
+
+  const s = settings;
+  const overflow = s?.switcher.overflow ?? "fit";
+  if (s) {
+    setLanguage(s.appearance.language);
+    const a = s.appearance;
+    const dark = a.theme === "dark" || (a.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+    wrap.classList.toggle("light", !dark);
+    wrap.style.setProperty("--accent", a.accent);
+  }
+  wrap.classList.add(`overflow-${overflow}`);
+  panel.setAttribute("aria-label", t("switcherLabel"));
 
   let tabs: SwitcherTab[] | null = null;
   let index = 0;
@@ -73,11 +100,11 @@ function mount(): void {
 
   const select = (next: number) => {
     if (!tabs) return;
+    list.children[index]?.classList.remove("active");
+    list.children[index]?.setAttribute("aria-selected", "false");
     index = next;
-    list.querySelectorAll("li").forEach((li, i) => {
-      li.classList.toggle("active", i === index);
-      li.setAttribute("aria-selected", String(i === index));
-    });
+    list.children[index]?.classList.add("active");
+    list.children[index]?.setAttribute("aria-selected", "true");
     list.children[index]?.scrollIntoView({ block: "nearest", inline: "nearest" });
   };
 
@@ -85,20 +112,19 @@ function mount(): void {
     if (tabs) select(step(index, tabs.length, delta));
     else queuedMoves += delta;
   };
-  host.cmdlyNext = () => move(1);
-  host.cmdlyMove = move;
-  // Ctrl released while Chrome showed another tab — the keyup never reached this page.
-  host.cmdlyRelease = () => commit();
 
   const close = () => {
     if (closed) return;
     closed = true;
+    current = null;
     host.remove();
     window.removeEventListener("keydown", onKeyDown, true);
     window.removeEventListener("keyup", onKeyUp, true);
     window.removeEventListener("blur", onBlur);
     document.removeEventListener("visibilitychange", onVisibility);
     clearTimeout(hiddenTimer);
+    clearInterval(focusTimer);
+    send({ type: "switcher-state", open: false });
     previousFocus?.focus?.();
   };
 
@@ -161,32 +187,32 @@ function mount(): void {
   };
   window.addEventListener("blur", onBlur);
   document.addEventListener("visibilitychange", onVisibility);
+  // Clicking the address bar or another browser UI doesn't always fire `blur` on the page (never if
+  // the page didn't have focus when the switcher opened), so also watch the focus itself.
+  let hadFocus = document.hasFocus();
+  const focusTimer = setInterval(() => {
+    if (document.hasFocus()) hadFocus = true;
+    else if (hadFocus && !document.hidden && Date.now() - hiddenAt > 500) close();
+  }, 150);
   wrap.addEventListener("mousedown", (e) => {
     if (!panel.contains(e.target as Node)) close();
   });
 
+  // Hidden until the cards arrive: an empty panel would flash first.
+  wrap.hidden = true;
   document.documentElement.appendChild(host);
-  stylesheet.onload = () => {
-    host.style.visibility = "visible";
-    panel.focus();
-  };
-
-  settingsRepository.get().then((s) => {
-    setLanguage(s.appearance.language);
-    panel.setAttribute("aria-label", t("switcherLabel"));
-    const a = s.appearance;
-    const dark = a.theme === "dark" || (a.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
-    wrap.classList.toggle("light", !dark);
-    wrap.classList.toggle("soft-wrap", s.switcher.softWrap);
-  });
+  panel.focus();
+  send({ type: "switcher-state", open: true });
 
   send({ type: "switcher-tabs" }).then((result) => {
     if (closed) return;
     if (!result || result.length < 2) return close();
-    tabs = result;
-    list.append(...result.map((tab, i) => card(tab, i)));
-    const first = backwards ? result.length - 1 : initialIndex(result.length);
-    select(step(first, result.length, queuedMoves));
+    tabs = overflow === "fit" ? result.slice(0, fitCount(window.innerWidth)) : result;
+    list.append(...tabs.map((tab, i) => card(tab, i)));
+    wrap.hidden = false;
+    const first = backwards ? tabs.length - 1 : initialIndex(tabs.length);
+    index = first;
+    select(step(first, tabs.length, queuedMoves));
     if (released) commit();
   });
 
@@ -228,6 +254,8 @@ function mount(): void {
     });
     return li;
   }
+
+  return { move, commit };
 }
 
 function icon(src: string, className: string): HTMLImageElement {
@@ -237,5 +265,3 @@ function icon(src: string, className: string): HTMLImageElement {
   img.alt = "";
   return img;
 }
-
-start();
