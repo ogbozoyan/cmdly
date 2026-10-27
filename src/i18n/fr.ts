@@ -226,6 +226,11 @@ export const fr: Messages = {
   optIdeaHint: "Proposez une commande ou un outil que vous aimeriez voir dans la barre.",
   optIdeaButton: "Proposer…",
   optBy: "par",
+  optDiag: "Diagnostic",
+  optDiagHint: "Copiez le journal des dernières erreurs à joindre à un rapport de bug. Il ne contient jamais ce que vous saisissez ou visitez, reste sur cet ordinateur et est effacé à la fermeture du navigateur.",
+  optDiagButton: "Copier le journal",
+  optDiagCopied: "Journal copié",
+  optDiagEmpty: "Rien à copier",
   optIssues: "Issues",
   optPrivacy: "Confidentialité",
 };

@@ -2,6 +2,7 @@ import { settingsRepository } from "../shared/settings-repository.ts";
 import { openPalettePageIn } from "./bar-service.ts";
 import { planKeepOpen, type KeepOpenAction, type WindowSnapshot } from "./keep-open-plan.ts";
 import { GUARD_URL, isGuardTab } from "./tab-service.ts";
+import { log } from "../shared/log.ts";
 
 /**
  * Runs the "keep window open" plan whenever tabs or windows change.
@@ -52,7 +53,7 @@ async function reconcile(): Promise<void> {
     // Our own changes fire tab events too; one follow-up pass confirms a stable state.
     if (actions.length) rerun = true;
   } catch (error) {
-    console.error("[cmdly] keep-open failed", error);
+    log.error("keep-open", "failed", error);
   } finally {
     running = false;
     if (rerun) {
@@ -92,7 +93,8 @@ async function apply(action: KeepOpenAction): Promise<void> {
         await chrome.tabs.update(action.tabId, { active: true });
         return;
     }
-  } catch {
+  } catch (error) {
+    log.debug("keep-open", "action skipped", error);
     // The tab or window disappeared in the meantime — the next pass sees the new state.
   }
 }

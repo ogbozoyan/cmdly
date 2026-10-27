@@ -25,6 +25,11 @@ look at a tab, Cmdly takes a small screenshot of it to show in the tab switcher.
 same in-memory session storage, are deleted when the tab closes or the option is turned off, are
 never taken in incognito windows and never leave your browser.
 
+**Diagnostics log**: the last 300 errors and notable events (what failed, where, and the stack trace)
+are kept in the same in-memory session storage and are gone when Chrome quits. The log never contains
+what you type, paste or visit. Nothing is sent anywhere; Settings → Feedback → "Copy log" puts it on your
+clipboard so you can attach it to a bug report if you choose to.
+
 ## Data Cmdly sends
 
 Cmdly has no servers, no analytics, no tracking and no ads. Nothing is ever sent to the developer.

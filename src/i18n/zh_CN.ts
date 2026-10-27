@@ -220,6 +220,11 @@ export const zh_CN: Messages = {
   optIdeaHint: "建议您希望在命令栏中看到的命令或工具。",
   optIdeaButton: "提建议…",
   optBy: "作者",
+  optDiag: "诊断",
+  optDiagHint: "复制最近的错误日志，附在问题报告中。日志不包含您输入或访问的内容，仅保存在本机，关闭浏览器后清除。",
+  optDiagButton: "复制日志",
+  optDiagCopied: "日志已复制",
+  optDiagEmpty: "没有可复制的内容",
   optIssues: "Issues",
   optPrivacy: "隐私",
 };

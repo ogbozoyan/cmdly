@@ -5,8 +5,12 @@
  */
 import { send } from "../shared/messages.ts";
 import { CommandBar } from "../ui/command-bar.ts";
+import { log } from "../shared/log.ts";
+import { initLogging } from "../shared/log-runtime.ts";
 
 const HOST_ID = "cmdly-overlay";
+
+initLogging("overlay");
 
 type HostElement = HTMLElement & { cmdlyClose?: () => void };
 
@@ -74,6 +78,7 @@ function toggleOverlay(): void {
 
   document.documentElement.appendChild(host);
   const bar = new CommandBar(shadow, { overlay: true, close: () => close() });
+  log.debug("overlay", "opened");
   send({ type: "overlay-state", open: true });
 
   stylesheet.onload = () => {

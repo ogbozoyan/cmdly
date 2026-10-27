@@ -5,6 +5,7 @@ import { looksLikeUrl, shortUrl, toUrl } from "../shared/url.ts";
 import { commandTarget, matchCommands } from "./command-service.ts";
 import { score } from "./scoring.ts";
 import { isGuardTab, PALETTE_URL } from "./tab-service.ts";
+import { log } from "../shared/log.ts";
 
 /**
  * Builds the result list for a query, in this order:
@@ -44,7 +45,7 @@ async function safely(source: string, find: () => Promise<ResultItem[]>): Promis
   try {
     return await find();
   } catch (error) {
-    console.error(`[cmdly] ${source} search failed`, error);
+    log.error("search", `${source} search failed`, error);
     return [];
   }
 }

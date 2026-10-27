@@ -621,6 +621,17 @@ try {
     });
   });
 
+  await check("diagnostics log: the worker records itself and a page error reaches the buffer", async () => {
+    const options = await openPage(`chrome-extension://${extensionId}/options.html`);
+    await options.waitForSelector("#copy-log");
+    await options.evaluate(() => setTimeout(() => { throw new Error("e2e-uncaught-probe"); }, 0));
+    await sleep(500);
+    const entries = await inWorker(async () => (await chrome.storage.session.get("log")).log ?? []);
+    expect(entries.some((e) => e.scope === "background"), "no background entry");
+    expect(entries.some((e) => e.scope === "options" && e.level === "error" && e.message.startsWith("uncaught:")), "uncaught error not recorded");
+    await options.close();
+  });
+
   await check("options page renders shortcuts and saves changes", async () => {
     const options = await openPage(`chrome-extension://${extensionId}/options.html`);
     await options.waitForSelector('[data-shortcut="copyUrl"]');

@@ -6,11 +6,16 @@ import { localizePage, setLanguage, t } from "../i18n/index.ts";
 import { UUID_DESCRIPTIONS, isUuidVersion } from "../tools/uuid.ts";
 import { DEFAULT_SETTINGS, fromImportFile, toExportFile, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
-import { bugReportUrl, featureRequestUrl } from "../shared/feedback.ts";
+import { bugReportUrl, describeEnvironment, featureRequestUrl } from "../shared/feedback.ts";
+import { formatReport } from "../shared/log.ts";
+import { send } from "../shared/messages.ts";
 import { IS_MAC } from "../shared/platform.ts";
 import { formatShortcut, isValidShortcut, shortcutFromEvent } from "../shared/shortcuts.ts";
+import { initLogging } from "../shared/log-runtime.ts";
 
 type ShortcutName = keyof Settings["shortcuts"];
+
+initLogging("options");
 
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 
@@ -229,6 +234,13 @@ const environment = {
 $<HTMLAnchorElement>("#report-bug").href = bugReportUrl(environment);
 $<HTMLAnchorElement>("#request-feature").href = featureRequestUrl(environment);
 $("#version").textContent = environment.version;
+
+$("#copy-log").addEventListener("click", async () => {
+  const entries = (await send({ type: "log-get" })) ?? [];
+  if (!entries.length) return flash(t("optDiagEmpty"));
+  await navigator.clipboard.writeText(formatReport(describeEnvironment(environment), entries));
+  flash(t("optDiagCopied"));
+});
 
 // ---------- misc ----------
 

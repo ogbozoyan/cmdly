@@ -2,6 +2,7 @@ import { settingsRepository } from "../shared/settings-repository.ts";
 import { neighbourDirection, recentFirst, thumbnailSize, type SwitcherMessage, type SwitcherTab } from "../shared/switcher.ts";
 import { favicon } from "./search-service.ts";
 import { canInjectInto, isGuardTab, previousTab } from "./tab-service.ts";
+import { log } from "../shared/log.ts";
 
 /**
  * Tab switcher (Arc's Ctrl+Tab). Chrome reserves Ctrl+Tab for itself — pages and extensions never
@@ -70,7 +71,8 @@ async function tell(tabId: number, message: SwitcherMessage): Promise<boolean> {
     try {
       await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
       return await sendIt();
-    } catch {
+    } catch (error) {
+      log.warn("switcher", "content script unreachable", error);
       return false;
     }
   }
@@ -210,7 +212,8 @@ async function captureNow(tab: chrome.tabs.Tab): Promise<void> {
   let shot: string;
   try {
     shot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 85 });
-  } catch {
+  } catch (error) {
+    log.debug("switcher", "screenshot skipped", error);
     return; // window minimized, rate limit (2 per second) or page not capturable
   }
   const tabId = tab.id;
@@ -218,7 +221,8 @@ async function captureNow(tab: chrome.tabs.Tab): Promise<void> {
     const thumb = await downscale(shot);
     thumbs.set(tabId, thumb);
     await chrome.storage.session.set({ [THUMB_PREFIX + tabId]: thumb });
-  } catch {
+  } catch (error) {
+    log.warn("switcher", "thumbnail not stored", error);
     // tab closed meanwhile, or session storage full
   }
 }

@@ -222,6 +222,11 @@ export const de: Messages = {
   optIdeaHint: "Schlagen Sie einen Befehl oder ein Werkzeug für die Leiste vor.",
   optIdeaButton: "Vorschlagen…",
   optBy: "von",
+  optDiag: "Diagnose",
+  optDiagHint: "Kopieren Sie das Protokoll der letzten Fehler für einen Fehlerbericht. Es enthält nie, was Sie eingeben oder besuchen, bleibt auf diesem Computer und wird beim Schließen des Browsers gelöscht.",
+  optDiagButton: "Protokoll kopieren",
+  optDiagCopied: "Protokoll kopiert",
+  optDiagEmpty: "Nichts zu kopieren",
   optIssues: "Issues",
   optPrivacy: "Datenschutz",
 };

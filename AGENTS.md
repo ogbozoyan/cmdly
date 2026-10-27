@@ -168,6 +168,12 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   Not translated on purpose: command keywords (English search aliases), GitHub issue templates.
 - Anything inserted with `innerHTML` must go through `escapeHtml` (`src/ui/highlight.ts`): the bar
   runs inside other people's pages and renders pasted text.
+- **Logging**: use `log.error/warn/info/debug(scope, message, error?)` from `src/shared/log.ts`, never bare
+  `console.*`. Never put user text (queries, pasted data, URLs) in a log message: the log can end up in a public
+  issue. Every entry point calls `initLogging(scope)` (`log-runtime.ts`; the background uses `startLogging()`), which
+  also records uncaught errors and unhandled rejections. Entries go to a 300-entry buffer in
+  `chrome.storage.session` (`background/log-service.ts`); Settings → Feedback → "Copy log" turns it into a report.
+  A fallback that hides an error (`catch {}`) should log at `debug`/`info` with the error.
 - Code comments explain *why*, not *what*. Match the existing style.
 
 ## Testing

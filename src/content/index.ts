@@ -16,8 +16,11 @@ import { setLanguage, t } from "../i18n/index.ts";
 import type { SwitcherMessage } from "../shared/switcher.ts";
 import { handleSwitcherMessage, watchSwitcherSettings } from "./switcher.ts";
 import { showPageToast } from "../ui/toast.ts";
+import { initLogging } from "../shared/log-runtime.ts";
 
 type GuardedWindow = Window & { __cmdlyContent?: boolean; __cmdlyModifierHeld?: boolean };
+
+initLogging("content");
 
 function start(): void {
   // onInstalled re-injects this script into open tabs; don't register twice.

@@ -7,7 +7,12 @@ import { openBar } from "./bar-service.ts";
 import { watchBarState } from "./bar-state-service.ts";
 import { watchKeepOpen } from "./keep-open-service.ts";
 import { route } from "./router.ts";
+import { startLogging } from "./log-service.ts";
 import { openSwitcher, watchTabSwitches } from "./switcher-service.ts";
+import { log } from "../shared/log.ts";
+
+// Diagnostics first: everything below may log, and uncaught errors are recorded from here on.
+startLogging();
 
 // "Keep window open": closing the last tab doesn't close the window.
 watchKeepOpen();
@@ -22,7 +27,7 @@ watchTabSwitches();
 chrome.runtime.onMessage.addListener((request: Request, sender, sendResponse) => {
   if (!sender.tab) return false;
   route(request, sender.tab).then(sendResponse, (error) => {
-    console.error(`[cmdly] ${request.type} failed`, error);
+    log.error("router", `${request.type} failed`, error);
     sendResponse(null);
   });
   return true; // keep the channel open for the async response
@@ -47,6 +52,6 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   for (const tab of tabs) {
     chrome.scripting
       .executeScript({ target: { tabId: tab.id!, allFrames: true }, files: ["content.js"] })
-      .catch(() => {}); // tab closed or restricted page
+      .catch((error) => log.debug("install", "content script not injected", error)); // tab closed or restricted page
   }
 });

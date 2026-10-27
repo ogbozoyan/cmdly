@@ -1,3 +1,4 @@
+import type { LogEntry } from "./log.ts";
 import type { CommandResult, Draft, ResultItem } from "./model.ts";
 import type { SwitcherTab } from "./switcher.ts";
 
@@ -22,7 +23,10 @@ export type Request =
   | { type: "switcher-tabs" }
   | { type: "switch-tab"; tabId: number }
   | { type: "ctrl-state"; held: boolean }
-  | { type: "switcher-state"; open: boolean };
+  | { type: "switcher-state"; open: boolean }
+  | { type: "log"; entry: LogEntry }
+  | { type: "log-get" }
+  | { type: "log-clear" };
 
 /** Response type for each request type. */
 export interface ResponseMap {
@@ -42,6 +46,9 @@ export interface ResponseMap {
   "switch-tab": void;
   "ctrl-state": void;
   "switcher-state": void;
+  log: void;
+  "log-get": LogEntry[];
+  "log-clear": void;
 }
 
 /** Typed wrapper around chrome.runtime.sendMessage. Resolves to null if the background failed. */

@@ -2,6 +2,7 @@ import type { ResultItem } from "../shared/model.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { maySuggest, parseSuggestions, suggestionRows, suggestUrl } from "../shared/suggestions.ts";
 import { favicon } from "./search-service.ts";
+import { log } from "../shared/log.ts";
 
 /**
  * Search suggestions from the engine chosen in Settings. Asked separately from search() so a slow
@@ -26,7 +27,8 @@ export async function suggest(query: string, host: chrome.tabs.Tab): Promise<Res
       });
       if (!response.ok) return [];
       suggestions = parseSuggestions(await response.json());
-    } catch {
+    } catch (error) {
+      log.debug("suggest", "no suggestions", error);
       return []; // offline, timeout, blocked — suggestions are optional
     }
     cache.set(key, suggestions);

@@ -2,6 +2,7 @@ import { setLanguage } from "../i18n/index.ts";
 import type { Request, ResponseMap } from "../shared/messages.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { dismissPalettePage, handleNewTab, openBar } from "./bar-service.ts";
+import { clearLog, readLog, recordLog } from "./log-service.ts";
 import { loadDraft, markOverlay, saveDraft } from "./bar-state-service.ts";
 import { runCommand } from "./command-service.ts";
 import { open } from "./navigation-service.ts";
@@ -16,6 +17,10 @@ import { restoreClosedTab } from "./tab-service.ts";
  * `sender` is the tab the message came from: the page with the overlay or the palette page.
  */
 export async function route(request: Request, sender: chrome.tabs.Tab): Promise<ResponseMap[Request["type"]]> {
+  // The log is answered first: it must work even when settings can't be read.
+  if (request.type === "log") return recordLog(request.entry);
+  if (request.type === "log-get") return readLog();
+  if (request.type === "log-clear") return clearLog();
   // The service worker can restart at any time: apply the chosen UI language on every request.
   setLanguage((await settingsRepository.get()).appearance.language);
   switch (request.type) {
@@ -54,5 +59,7 @@ export async function route(request: Request, sender: chrome.tabs.Tab): Promise<
       return setCtrlState(sender, request.held);
     case "switcher-state":
       return setSwitcherState(sender, request.open);
+    default:
+      return null; // log requests are answered above
   }
 }

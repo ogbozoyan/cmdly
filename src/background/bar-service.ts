@@ -1,6 +1,7 @@
 import { MOD } from "../shared/platform.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { canInjectInto, PALETTE_URL, previousTab } from "./tab-service.ts";
+import { log } from "../shared/log.ts";
 
 /**
  * Opening and closing the command bar.
@@ -42,7 +43,8 @@ export async function openBar(tab: chrome.tabs.Tab | undefined): Promise<void> {
   if (!tab?.id) return;
   try {
     await showOverlay(tab.id);
-  } catch {
+  } catch (error) {
+    log.info("bar", "overlay refused, opening the palette page", error);
     await openPalettePage(tab.index + 1, tab.windowId);
   }
 }
@@ -65,7 +67,8 @@ export async function handleNewTab(newTab: chrome.tabs.Tab): Promise<void> {
       await showOverlay(prev.id);
       if (newTab.id) await chrome.tabs.remove(newTab.id);
       return;
-    } catch {
+    } catch (error) {
+      log.info("bar", "overlay refused on the previous tab, falling back to the palette page", error);
       // Page refused the script (e.g. Web Store) — fall through to the palette page.
     }
   }

@@ -237,6 +237,11 @@ export const en = {
   optIdeaHint: "Suggest a command or a tool you'd like to see in the bar.",
   optIdeaButton: "Suggest…",
   optBy: "by",
+  optDiag: "Diagnostics",
+  optDiagHint: "Copy the log of recent errors to attach to a bug report. It never contains what you type or visit, stays on this computer and is cleared when the browser closes.",
+  optDiagButton: "Copy log",
+  optDiagCopied: "Log copied",
+  optDiagEmpty: "Nothing to copy",
   optIssues: "Issues",
   optPrivacy: "Privacy",
 } as const;

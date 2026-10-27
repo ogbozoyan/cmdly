@@ -1,6 +1,9 @@
 /** Standalone command bar page — used where scripts can't be injected (chrome:// pages). */
 import { send } from "../shared/messages.ts";
 import { CommandBar } from "../ui/command-bar.ts";
+import { initLogging } from "../shared/log-runtime.ts";
+
+initLogging("palette");
 
 const bar = new CommandBar(document.body, {
   overlay: false,
