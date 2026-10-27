@@ -11,9 +11,10 @@ const SPEC = JSON.stringify({
       get: {
         tags: ["pets"],
         summary: "List",
+        parameters: [{ name: "limit", in: "query", required: true, schema: { type: "integer", format: "int32" } }],
         responses: { "200": { description: "ok", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Pet" } } } } } },
       },
-      post: { requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/Pet" } } } }, responses: {} },
+      post: { requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/Pet" } } } }, responses: {} },
     },
   },
   components: {
@@ -27,16 +28,24 @@ const SPEC = JSON.stringify({
   },
 });
 
-test("operations are grouped by tag, schemas are expanded through $ref and cycles terminate", () => {
+test("operations are grouped by tag, parameters get a table and schemas expand through $ref with cycles ending", () => {
   const html = renderOpenApi(parseOpenApi(SPEC)!);
-  assert.match(html, /<h2>pets<\/h2>/);
+  assert.match(html, /<h2 class="tag"><span>pets<\/span>/);
+  assert.match(html, /<h2 class="tag"><span>default<\/span>/);
   assert.match(html, /<details class="op m-get">/);
-  assert.match(html, /<h2>default<\/h2>/);
-  assert.match(html, /<code>name<\/code><b>\*<\/b>/);
-  assert.match(html, /<code>dog<\/code>/);
-  assert.match(html, /<span class="type">Pet<\/span>/);
+  assert.match(html, /class="pname">limit<b class="req">\*<\/b>/);
+  assert.match(html, /integer\(\$int32\)/);
+  assert.match(html, /class="mp">name<b class="req">\*<\/b>/);
+  assert.match(html, /enum: .*dog/);
+  assert.match(html, /<summary>Pet<\/summary>/);
+});
+
+test("a body gets an example built from its schema and the Example/Schema tabs", () => {
+  const html = renderOpenApi(parseOpenApi(SPEC)!);
+  assert.match(html, /<pre class="example">\{\s+&quot;name&quot;: &quot;string&quot;,\s+&quot;friend&quot;: null,\s+&quot;kind&quot;: &quot;cat&quot;/);
+  assert.match(html, /<input type="radio" name="tab1" id="tab1-1" checked>/);
 });
 
 test("spec text is escaped", () => {
-  assert.doesNotMatch(renderOpenApi(parseOpenApi(SPEC)!), /<b>\s*<small>/);
+  assert.match(renderOpenApi(parseOpenApi(SPEC)!), /Pets &lt;b&gt;/);
 });

@@ -1,4 +1,8 @@
-/** OpenAPI 3.x / Swagger 2.0 detection and a Swagger-UI-like HTML rendering. Pure functions, no scripts needed. */
+/**
+ * OpenAPI 3.x / Swagger 2.0 detection and a rendering modelled on Swagger UI / Swagger Editor
+ * (https://editor.swagger.io). Pure functions; the preview runs no scripts, so the
+ * "Example Value | Schema" tabs are radio buttons styled in openapi-style.ts.
+ */
 import { t, tp } from "../i18n/index.ts";
 import { escapeHtml as esc } from "../shared/escape.ts";
 import { log } from "../shared/log.ts";
@@ -55,6 +59,12 @@ function servers(spec: Obj): string[] {
   return [];
 }
 
+interface Ctx {
+  spec: Obj;
+  /** Numbers the tab groups: radio buttons of one group share a name. */
+  tabs: number;
+}
+
 /** Follows local `$ref`s ("#/components/schemas/X"); remote refs are not fetched. */
 function deref(spec: Obj, schema: unknown): Obj | undefined {
   let s = schema as Obj | undefined;
@@ -68,15 +78,17 @@ function deref(spec: Obj, schema: unknown): Obj | undefined {
   return s && typeof s === "object" ? s : undefined;
 }
 
-function schemaType(schema: Obj | undefined): string {
+/** "string($date-time)", "array[Pet]", "Pet": how Swagger UI names a type. */
+function typeLabel(schema: Obj | undefined): string {
   if (!schema || typeof schema !== "object") return "";
   if (schema.$ref) return String(schema.$ref).split("/").pop() ?? "";
-  if (schema.type === "array") return `${schemaType(schema.items) || "any"}[]`;
+  if (schema.type === "array") return `array[${typeLabel(schema.items) || "any"}]`;
   const type = schema.type ?? (schema.oneOf ? "oneOf" : schema.anyOf ? "anyOf" : "object");
-  return schema.format ? `${type} <${schema.format}>` : String(type);
+  return schema.format ? `${type}($${schema.format})` : String(type);
 }
 
-const MAX_DEPTH = 5;
+const MAX_DEPTH = 6;
+const CONSTRAINTS = ["minimum", "maximum", "minLength", "maxLength", "pattern", "minItems", "maxItems", "default"];
 
 /** Properties of an object schema with `allOf` flattened; bounded, since specs can be recursive. */
 function properties(spec: Obj, schema: unknown, depth = 0): { props: Record<string, Obj>; required: string[] } {
@@ -93,108 +105,172 @@ function properties(spec: Obj, schema: unknown, depth = 0): { props: Record<stri
   return out;
 }
 
-/** Nested list of the fields of a schema; a `$ref` already being expanded is shown by name only. */
-function schemaTree(spec: Obj, schema: unknown, depth = 0, seen: string[] = []): string {
+/** What Swagger UI shows as "Example Value" when the spec has none: placeholders by type. */
+function sample(spec: Obj, schema: unknown, depth = 0, seen: string[] = []): unknown {
   const ref = typeof (schema as Obj)?.$ref === "string" ? (schema as Obj).$ref : "";
-  if (ref && seen.includes(ref)) return "";
   const s = deref(spec, schema);
-  if (!s || depth >= MAX_DEPTH) return "";
+  if (!s || depth > MAX_DEPTH || (ref && seen.includes(ref))) return null;
+  if (s.example !== undefined) return s.example;
+  if (s.default !== undefined) return s.default;
+  if (Array.isArray(s.enum) && s.enum.length) return s.enum[0];
   const nextSeen = ref ? [...seen, ref] : seen;
-  if (s.type === "array") return schemaTree(spec, s.items, depth, nextSeen);
-  const { props, required } = properties(spec, s);
-  const names = Object.keys(props);
-  if (!names.length) return "";
-  const items = names.map((name) => {
-    const p = props[name];
-    const d = deref(spec, p) ?? {};
-    const values = Array.isArray(d.enum) ? ` <span class="enum">${d.enum.map((v: unknown) => `<code>${text(v)}</code>`).join(" ")}</span>` : "";
-    return (
-      `<li><code>${text(name)}</code>${required.includes(name) ? "<b>*</b>" : ""} ` +
-      `<span class="type">${text(schemaType(p))}</span>` +
-      (d.description ? ` <span class="muted">${text(d.description)}</span>` : "") +
-      values +
-      schemaTree(spec, p, depth + 1, nextSeen) +
-      `</li>`
-    );
-  });
-  return `<ul class="props">${items.join("")}</ul>`;
+  const first = s.oneOf?.[0] ?? s.anyOf?.[0];
+  if (first) return sample(spec, first, depth + 1, nextSeen);
+  const { props } = properties(spec, s);
+  if (s.type === "array") return [sample(spec, s.items, depth + 1, nextSeen)];
+  if (s.type === "object" || Object.keys(props).length) {
+    return Object.fromEntries(Object.entries(props).map(([k, p]) => [k, sample(spec, p, depth + 1, nextSeen)]));
+  }
+  switch (s.type) {
+    case "integer":
+    case "number":
+      return 0;
+    case "boolean":
+      return true;
+    default:
+      return { "date-time": "2024-01-01T00:00:00Z", date: "2024-01-01", uuid: "3fa85f64-5717-4562-b3fc-2c963f66afa6", email: "user@example.com" }[s.format as string] ?? "string";
+  }
 }
 
-function example(spec: Obj, media: Obj): string {
-  const first = media.examples && typeof media.examples === "object" ? Object.values<Obj>(media.examples)[0]?.value : undefined;
-  const value = media.example ?? first ?? deref(spec, media.schema)?.example;
-  if (value === undefined) return "";
+/** Limits and allowed values under a field, in the spec's own words (they are the spec's keywords, not UI text). */
+function facts(d: Obj): string {
+  const lines = CONSTRAINTS.filter((k) => d[k] !== undefined && typeof d[k] !== "object").map((k) => `${k}: <code>${text(d[k])}</code>`);
+  if (Array.isArray(d.enum)) lines.push(`enum: ${d.enum.map((v: unknown) => `<code>${text(JSON.stringify(v))}</code>`).join(" ")}`);
+  if (d.example !== undefined && typeof d.example !== "object") lines.push(`example: <code>${text(d.example)}</code>`);
+  return lines.map((l) => `<div class="facts">${l}</div>`).join("");
+}
+
+/** The rows of an object schema, nested objects and arrays of objects expanded; a `$ref` being expanded is shown by name only. */
+function modelRows(ctx: Ctx, schema: unknown, depth = 0, seen: string[] = []): string {
+  const ref = typeof (schema as Obj)?.$ref === "string" ? (schema as Obj).$ref : "";
+  if (ref && seen.includes(ref)) return "";
+  const s = deref(ctx.spec, schema);
+  if (!s || depth >= MAX_DEPTH) return "";
+  const nextSeen = ref ? [...seen, ref] : seen;
+  if (s.type === "array") return modelRows(ctx, s.items, depth, nextSeen);
+  const { props, required } = properties(ctx.spec, s);
+  const rows = Object.entries(props).map(([name, p]) => {
+    const d = deref(ctx.spec, p) ?? {};
+    const inner = modelRows(ctx, p, depth + 1, nextSeen);
+    const array = d.type === "array";
+    return (
+      `<tr><td class="mp">${text(name)}${required.includes(name) ? '<b class="req">*</b>' : ""}</td><td>` +
+      `<span class="mtype">${text(typeLabel(p))}</span>` +
+      (p.description ?? d.description ? ` <span class="mdesc">${text(p.description ?? d.description)}</span>` : "") +
+      facts(d) +
+      (inner ? `<div class="model nested"><span class="br">${array ? "[" : "{"}</span>${inner}<span class="br">${array ? "]" : "}"}</span></div>` : "") +
+      `</td></tr>`
+    );
+  });
+  return rows.length ? `<table class="mt"><tbody>${rows.join("")}</tbody></table>` : "";
+}
+
+function model(ctx: Ctx, schema: unknown): string {
+  const s = deref(ctx.spec, schema);
+  const rows = modelRows(ctx, schema);
+  const label = text(typeLabel(schema as Obj));
+  if (!rows) return `<div class="model"><span class="mtype">${label}</span>${s ? facts(s) : ""}</div>`;
+  const array = s?.type === "array";
+  return `<div class="model"><span class="mname">${label}</span> <span class="br">${array ? "[" : "{"}</span>${rows}<span class="br">${array ? "]" : "}"}</span></div>`;
+}
+
+/** Two tabs without scripts: radio buttons, panes shown by `:checked` (see openapi-style.ts). */
+function tabs(ctx: Ctx, example: string, schema: string): string {
+  const n = ++ctx.tabs;
+  const input = (i: number, label: string) =>
+    `<input type="radio" name="tab${n}" id="tab${n}-${i}"${i === 1 ? " checked" : ""}><label for="tab${n}-${i}">${esc(label)}</label>`;
+  return `<div class="tabs">${input(1, t("markupExample"))}${input(2, t("markupSchema"))}<div class="pane">${example}</div><div class="pane">${schema}</div></div>`;
+}
+
+function examplePre(value: unknown): string {
   try {
     const json = typeof value === "string" ? value : JSON.stringify(value, null, 2);
-    return `<pre>${text(json.length > 2000 ? `${json.slice(0, 2000)}…` : json)}</pre>`;
+    return `<pre class="example">${text(json.length > 4000 ? `${json.slice(0, 4000)}…` : json)}</pre>`;
   } catch (e) {
     log.debug("openapi", "example is not serializable", e);
     return "";
   }
 }
 
-/** One block per media type: its name, the schema type, the fields and an example. */
-function media(spec: Obj, content: Obj | undefined, schema?: Obj): string {
-  const entries: [string, Obj][] = content && typeof content === "object" ? Object.entries<Obj>(content) : schema ? [["", { schema }]] : [];
-  return entries
-    .map(([mime, m]) => {
-      const head = [mime && `<code>${text(mime)}</code>`, m?.schema && `<span class="type">${text(schemaType(m.schema))}</span>`].filter(Boolean).join(" ");
-      return `<div class="media">${head && `<div class="media-head">${head}</div>`}${schemaTree(spec, m?.schema)}${example(spec, m ?? {})}</div>`;
-    })
-    .join("");
+/** One block per media type: its name and the Example Value | Schema tabs. */
+function mediaBlock(ctx: Ctx, mime: string, m: Obj | undefined): string {
+  const schema = m?.schema;
+  if (!schema && m?.example === undefined) return mime ? `<div class="mime">${text(mime)}</div>` : "";
+  const named = m?.examples && typeof m.examples === "object" ? Object.values<Obj>(m.examples)[0]?.value : undefined;
+  const value = m?.example ?? named ?? sample(ctx.spec, schema);
+  return `<div class="media">${mime ? `<div class="mime">${text(mime)}</div>` : ""}${tabs(ctx, examplePre(value), schema ? model(ctx, schema) : "")}</div>`;
 }
 
-function section(title: string, body: string): string {
-  return body ? `<h4>${esc(title)}</h4>${body}` : "";
+function media(ctx: Ctx, content: Obj | undefined, schema?: Obj): string {
+  if (content && typeof content === "object") return Object.entries<Obj>(content).map(([mime, m]) => mediaBlock(ctx, mime, m)).join("");
+  return schema ? mediaBlock(ctx, "", { schema }) : "";
 }
 
-function parameters(params: Obj[]): string {
+function sectionHead(title: string, extra = ""): string {
+  return `<div class="sec-head"><h4>${esc(title)}</h4>${extra}</div>`;
+}
+
+function parameters(ctx: Ctx, params: Obj[]): string {
   const rows = params
-    .filter((p) => p && typeof p === "object")
+    .map((raw) => deref(ctx.spec, raw))
+    .filter((p): p is Obj => !!p && p.in !== "body")
     .map((p) => {
-      const type = schemaType(p.schema) || p.type;
+      const schema = p.schema ?? p;
       return (
-        `<tr><td><code>${text(p.name ?? p.$ref)}</code>${p.required ? "<b>*</b>" : ""}</td>` +
-        `<td>${text(p.in)}</td><td class="type">${text(type)}</td><td>${text(p.description)}</td></tr>`
+        `<tr><td class="pn"><div class="pname">${text(p.name)}${p.required ? '<b class="req">*</b>' : ""}</div>` +
+        (p.required ? `<div class="reqtext">${esc(t("markupRequired"))}</div>` : "") +
+        `<div class="ptype">${text(typeLabel(schema))}</div><div class="pin">(${text(p.in)})</div></td>` +
+        `<td>${p.description ? `<p>${text(p.description)}</p>` : ""}${facts(deref(ctx.spec, schema) ?? {})}</td></tr>`
       );
     })
     .join("");
-  return rows ? `<table><tbody>${rows}</tbody></table>` : "";
+  if (!rows) return "";
+  return (
+    sectionHead(t("markupParameters")) +
+    `<table class="grid"><thead><tr><th>${esc(t("markupName"))}</th><th>${esc(t("markupDescription"))}</th></tr></thead><tbody>${rows}</tbody></table>`
+  );
 }
 
-function requestBody(spec: Obj, op: Obj, params: Obj[]): string {
-  if (op.requestBody) return media(spec, deref(spec, op.requestBody)?.content);
-  // Swagger 2.0: the body is a parameter with `in: body`.
-  const body = params.map((p) => deref(spec, p)).find((p) => p?.in === "body");
-  const types: string[] = Array.isArray(op.consumes) ? op.consumes : Array.isArray(spec.consumes) ? spec.consumes : [];
-  if (body?.schema) return media(spec, Object.fromEntries((types.length ? types : [""]).map((c) => [c, { schema: body.schema }])));
-  return types.map((c) => `<code>${text(c)}</code>`).join(" ");
+function requestBody(ctx: Ctx, op: Obj, params: Obj[]): string {
+  const { spec } = ctx;
+  const declared = op.requestBody ? deref(spec, op.requestBody) : undefined;
+  let body = declared ? media(ctx, declared.content) : "";
+  if (!op.requestBody) {
+    // Swagger 2.0: the body is a parameter with `in: body`.
+    const param = params.map((p) => deref(spec, p)).find((p) => p?.in === "body");
+    const types: string[] = Array.isArray(op.consumes) ? op.consumes : Array.isArray(spec.consumes) ? spec.consumes : [];
+    if (param?.schema) body = (types.length ? types : [""]).map((c) => mediaBlock(ctx, c, { schema: param.schema })).join("");
+  }
+  const required = declared?.required ? `<span class="reqtext">* ${esc(t("markupRequired"))}</span>` : "";
+  return body ? sectionHead(t("markupRequestBody"), required) + `<div class="sec-body">${body}</div>` : "";
 }
 
-function responses(spec: Obj, op: Obj): string {
+function responses(ctx: Ctx, op: Obj): string {
   const rows = Object.entries<Obj>(op.responses ?? {})
     .map(([code, raw]) => {
-      const r = deref(spec, raw) ?? {};
-      const body = r.content ? media(spec, r.content) : r.schema ? media(spec, undefined, r.schema) : "";
-      return `<tr><td><code class="code-${text(code)[0] ?? ""}">${text(code)}</code></td><td>${text(r.description)}${body}</td></tr>`;
+      const r = deref(ctx.spec, raw) ?? {};
+      const body = r.content ? media(ctx, r.content) : r.schema ? media(ctx, undefined, r.schema) : "";
+      return `<tr><td class="rc">${text(code)}</td><td>${r.description ? `<p>${text(r.description)}</p>` : ""}${body}</td></tr>`;
     })
     .join("");
-  return rows ? `<table><tbody>${rows}</tbody></table>` : "";
+  if (!rows) return "";
+  return (
+    sectionHead(t("markupResponses")) +
+    `<table class="grid"><thead><tr><th>${esc(t("markupCode"))}</th><th>${esc(t("markupDescription"))}</th></tr></thead><tbody>${rows}</tbody></table>`
+  );
 }
 
-function operation({ method, path, op, shared }: Operation, spec: Obj): string {
+function operation(ctx: Ctx, { method, path, op, shared }: Operation): string {
   const params = [...shared, ...(Array.isArray(op.parameters) ? op.parameters : [])];
-  const plain = params.filter((p) => deref(spec, p)?.in !== "body");
   return (
     `<details class="op m-${method}${op.deprecated ? " deprecated" : ""}">` +
-    `<summary><span class="method">${method.toUpperCase()}</span><code class="path">${text(path)}</code>` +
-    `${op.deprecated ? ` <em>${esc(t("markupDeprecated"))}</em>` : ""}` +
-    `<span class="summary">${text(op.summary)}</span></summary>` +
+    `<summary><span class="method">${method.toUpperCase()}</span><span class="path">${text(path)}</span>` +
+    `${op.deprecated ? `<em>${esc(t("markupDeprecated"))}</em>` : ""}<span class="sum">${text(op.summary)}</span></summary>` +
     `<div class="op-body">` +
-    (op.description && op.description !== op.summary ? para(op.description, "muted") : "") +
-    section(t("markupParameters"), parameters(plain)) +
-    section(t("markupRequestBody"), requestBody(spec, op, params)) +
-    section(t("markupResponses"), responses(spec, op)) +
+    (op.description && op.description !== op.summary ? para(op.description, "opdesc") : "") +
+    parameters(ctx, params) +
+    requestBody(ctx, op, params) +
+    responses(ctx, op) +
     `</div></details>`
   );
 }
@@ -212,24 +288,40 @@ function groups(spec: Obj, ops: Operation[]): [string, Operation[]][] {
   return [...map].filter(([, list]) => list.length);
 }
 
+/** The "Schemas" block at the end, like Swagger Editor's: every component, collapsed. */
+function schemas(ctx: Ctx): string {
+  const all = ctx.spec.components?.schemas ?? ctx.spec.definitions;
+  if (!all || typeof all !== "object") return "";
+  const items = Object.entries<Obj>(all).map(
+    ([name, schema]) => `<details class="sch"><summary>${text(name)}</summary><div class="sch-body">${model(ctx, schema)}</div></details>`,
+  );
+  return items.length ? `<h2 class="tag"><span>${esc(t("markupSchemas"))}</span></h2>${items.join("")}` : "";
+}
+
 export function renderOpenApi(doc: OpenApiDoc): string {
   const { spec } = doc;
+  const ctx: Ctx = { spec, tabs: 0 };
   const info: Obj = spec.info ?? {};
   const urls = servers(spec);
-  let html = `<h1>${text(info.title ?? "API")} <small>${text(info.version)}</small></h1>`;
-  html += para(info.description);
+  const oas = `${spec.openapi ? "OAS" : "Swagger"} ${doc.version.split(".").slice(0, 2).join(".")}`;
+  let html =
+    `<h1>${text(info.title ?? "API")}` +
+    (info.version ? ` <span class="pill">${text(info.version)}</span>` : "") +
+    ` <span class="pill oas">${text(oas)}</span></h1>` +
+    para(info.description, "desc");
   if (urls.length) {
-    html += `<p><b>${esc(t("markupServers"))}</b> ${urls.map((u) => `<code>${text(u)}</code>`).join(" ")}</p>`;
+    html += `<div class="servers"><span class="lbl">${esc(t("markupServers"))}</span>${urls.map((u) => `<div class="srv">${text(u)}</div>`).join("")}</div>`;
   }
 
   const ops = operations(spec);
-  if (!ops.length) return html + para(t("markupNoOperations"), "muted");
+  if (!ops.length) return `<div class="oas">${html}${para(t("markupNoOperations"), "muted")}</div>`;
   const described = new Map<string, unknown>((Array.isArray(spec.tags) ? spec.tags : []).map((x: Obj) => [String(x?.name), x?.description]));
   for (const [tag, list] of groups(spec, ops)) {
-    html += `<h2>${text(tag || t("markupDefaultGroup"))}</h2>${para(described.get(tag), "muted")}`;
-    html += list.map((o) => operation(o, spec)).join("");
+    const description = described.get(tag);
+    html += `<h2 class="tag"><span>${text(tag || t("markupDefaultGroup"))}</span>${description ? `<small>${text(description)}</small>` : ""}</h2>`;
+    html += list.map((o) => operation(ctx, o)).join("");
   }
-  return html;
+  return `<div class="oas">${html}${schemas(ctx)}</div>`;
 }
 
 export function describeOpenApi(doc: OpenApiDoc): string {
