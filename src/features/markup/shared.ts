@@ -9,8 +9,8 @@ interface MarkupSpec {
   id: string;
   kind: MarkupKind;
   triggers: string[];
-  /** Does this pasted text look like the format? Checked in registry order, the first one wins. */
-  detect(text: string): boolean;
+  /** How sure we are that the text is this format, 0..1 (see Recognizer.score). */
+  score(text: string): number;
   theme: ModeTheme;
 }
 
@@ -23,7 +23,7 @@ export function markupFeature(spec: MarkupSpec): Feature {
     group: "markup",
     enabled: (features) => features.markup,
     triggers: spec.triggers,
-    recognizer: { rows: (text, ctx) => (spec.detect(text) ? rows(text, ctx) : []) },
+    recognizer: { score: spec.score, rows },
     presentation: { label: () => markupLabel(spec.kind), theme: spec.theme, hint: "previewHintMode", rows },
     tab: [enterOnTrigger(spec.id, spec.triggers), togglePanel],
   };

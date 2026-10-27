@@ -23,11 +23,16 @@ const MARKERS: RegExp[] = [
   /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/m,
 ];
 
-export function looksLikeMarkdown(text: string): boolean {
+/**
+ * How sure we are that the text is Markdown, 0..1. One line is never certain ("# todo" may be a shell comment),
+ * so it stays below the bar for unprompted detection, but is enough after an explicit "md " prefix.
+ */
+export function markdownScore(text: string): number {
   const t = text.trim();
-  if (!t.includes("\n")) return false;
-  if (/^\s*```/m.test(t) || /^#{1,6}\s+\S/m.test(t)) return true;
-  return MARKERS.filter((m) => m.test(t)).length >= 2;
+  const found = MARKERS.filter((m) => m.test(t)).length;
+  if (!t.includes("\n")) return found ? 0.4 : 0;
+  if (/^\s*```/m.test(t) || /^#{1,6}\s+\S/m.test(t)) return 0.9;
+  return found >= 2 ? Math.min(0.5 + 0.1 * (found - 2), 0.8) : found ? 0.3 : 0;
 }
 
 export function renderMarkdown(source: string, options: MarkdownOptions = {}): string {

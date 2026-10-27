@@ -93,7 +93,8 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   Markdown/OpenAPI renderers escape everything first — never pass raw pasted HTML through them.
 - **Features and Tab** (`src/features/`): the bar is in `common` state or inside one feature
   (`BarState`). A `Feature` is assembled from strategies, not inherited: a `Recognizer` (notices the
-  format in the text and offers a row), an optional `Presentation` (palette, chip, hint, rows once
+  format in the text and offers a row; its optional `score` 0..1 says how sure it is: `registry.recognize` shows a row
+  from `AUTO_MIN`, after the feature's own trigger word from `PREFIX_MIN`, and keeps only the most sure member of a group), an optional `Presentation` (palette, chip, hint, rows once
   entered: only the pasted text is shown) and `TabBehavior[]` (what Tab does; the first that applies
   runs: `enterOnTrigger`, `togglePanel`, `cycleVariant`). `bar-state.ts` is a pure reducer
   (key event → state + effects); `CommandBar` only feeds it and runs the effects. Features: `markup/`

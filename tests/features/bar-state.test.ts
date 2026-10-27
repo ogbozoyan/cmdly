@@ -39,6 +39,13 @@ test("pasted text is recognized, a prefix forces the format, and the setting tur
   assert.equal(registry.recognize("<h1>Hi</h1><p>x</p>", ctx)[0]?.feature, "html");
   assert.equal(registry.recognize("md # Title\n\ntext", ctx)[0]?.feature, "markdown");
   assert.deepEqual(registry.recognize("just words", ctx), []);
+  // A trigger word alone is not enough: the rest has to be able to be that format.
+  for (const query of ["html to pdf", "md file", "swagger ui", "md hello world"]) assert.deepEqual(registry.recognize(query, ctx), [], query);
+  assert.equal(registry.recognize("html <b>hi</b>", ctx)[0]?.feature, "html");
+  assert.equal(registry.recognize("md # Title", ctx)[0]?.feature, "markdown");
+  assert.deepEqual(registry.recognize("# todo", ctx), []); // one line is not certain enough without the prefix
+  const spec = JSON.stringify({ openapi: "3.0.0", paths: {} });
+  assert.equal(registry.recognize(spec, ctx).filter((r) => r.feature === "openapi" || r.feature === "html").length, 1);
   const off = createRegistry({ ...DEFAULT_SETTINGS.features, markup: false });
   assert.deepEqual(off.recognize("<h1>Hi</h1><p>x</p>", ctx), []);
 });

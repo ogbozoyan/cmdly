@@ -30,6 +30,12 @@ export interface FeatureContext {
 
 /** Common state: looks at the typed or pasted text and offers rows (e.g. "Markdown preview"). */
 export interface Recognizer {
+  /**
+   * How sure we are that the text is this feature's format, 0..1. Optional: without it the feature is
+   * binary (it has rows or it doesn't). The registry shows a row only above a bar (AUTO_MIN, or the lower
+   * PREFIX_MIN after the feature's own trigger word) and, inside a group, only the highest score.
+   */
+  score?(text: string): number;
   rows(text: string, ctx: FeatureContext): ResultItem[];
 }
 
