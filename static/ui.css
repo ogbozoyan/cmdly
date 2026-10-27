@@ -304,30 +304,13 @@ li.active .icon.glyph svg { color: var(--chip-text); }
 .wrap.light .tok-bool, .wrap.light .tok-null { color: #0000ff; }
 .wrap.light .tok-comment { color: #008000; }
 
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 20px;
-  border-radius: 8px;
-  background: rgba(30, 30, 35, 0.95);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.4;
-  animation: fade-in 0.3s ease;
-}
-
-.toast[hidden] { display: none; }
-
 /* Shared motion (same as options.css): a soft fade for text, a small pop for the bar. */
 @keyframes fade-in { from { opacity: 0; } }
 
 @keyframes pop { from { opacity: 0; transform: translateX(-50%) translateY(4px) scale(0.98); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .bar, .toast { animation: none; }
+  .bar { animation: none; }
 }
 
 /* ---------- paste mode chip & rendered preview ---------- */

@@ -311,13 +311,15 @@ try {
     expect(saved === "v7", `saved version: ${saved}`);
 
     await page.keyboard.press("Enter");
-    await page.waitForFunction(() => document.getElementById("cmdly-overlay")?.shadowRoot.querySelector(".toast:not([hidden])"));
-    const toast = await page.evaluate(() => document.getElementById("cmdly-overlay").shadowRoot.querySelector(".toast").textContent);
+    await page.waitForFunction(() => document.getElementById("cmdly-toasts")?.shadowRoot.querySelector(".toast"));
+    const toast = await page.evaluate(() => document.getElementById("cmdly-toasts").shadowRoot.querySelector(".toast").textContent);
     expect(toast === `Copied ${shown}`, `toast: ${toast} vs ${shown}`);
     await page.waitForFunction(() => !document.getElementById("cmdly-overlay"));
 
     // Next time the bar remembers v7; restore the default for the other checks.
     await openOverlay(page);
+    // The toast is independent of the bar: opening it right after a copy neither closes it nor is blocked by it.
+    expect(await page.evaluate(() => !!document.getElementById("cmdly-toasts")), "toast removed when the bar reopened");
     await typeInBar(page, "uuid");
     expect((await chip()) === "v7 ⇥", `remembered: ${await chip()}`);
     await page.keyboard.press("Tab");
@@ -502,8 +504,8 @@ try {
     await page.keyboard.press("KeyC");
     await page.keyboard.up("Shift");
     await page.keyboard.up("Meta");
-    await page.waitForSelector("#cmdly-toast", { timeout: 2000 });
-    const text = await page.evaluate(() => document.getElementById("cmdly-toast").shadowRoot.querySelector("div").textContent);
+    await page.waitForSelector("#cmdly-toasts", { timeout: 2000 });
+    const text = await page.evaluate(() => document.getElementById("cmdly-toasts").shadowRoot.querySelector(".toast").textContent);
     expect(text === "URL copied", `toast: ${text}`);
   });
 

@@ -70,7 +70,7 @@ Think of it as a small backend + frontend in one package:
 ⌘T ─▶ newtab.html ─▶ background.handleNewTab ─▶ inject overlay.js into previous tab
                                                   └─ (chrome:// page) ─▶ palette.html tab
 overlay.js / palette.js ─▶ CommandBar (src/ui) ──send()──▶ router ─▶ search / command / navigation service
-chrome command "copy-url" ─▶ background ─▶ message to content.js (top frame) ─▶ copy + toast
+chrome command "copy-url" ─▶ background ─▶ message to content.js (top frame) ─▶ copy + toast (ui/toast.ts: own stack, independent of the bar)
 content.js (every page) ─▶ ⇧⌘C copy URL · ⌘Z reopen tab · custom "open bar" shortcut
 "tab-switcher" command / Chrome's Ctrl+Tab ─▶ switcher-service ─▶ message "switcher-show" to content.js (cards, release Ctrl → switch)
 tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add/remove pinned guard, open bar

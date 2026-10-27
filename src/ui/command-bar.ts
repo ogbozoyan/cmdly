@@ -13,6 +13,7 @@ import { copyText } from "./clipboard.ts";
 import { escapeHtml, highlight } from "./highlight.ts";
 import { ARROW_ICON, EXPAND_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
 import { withWebSearch } from "./results.ts";
+import { showPageToast } from "./toast.ts";
 
 export interface CommandBarOptions {
   /** true = drawn over a web page (shadow DOM), false = standalone palette page. */
@@ -21,10 +22,10 @@ export interface CommandBarOptions {
   close: () => void;
 }
 
-const TOAST_MS = 1100;
+const TOAST_MS = 1800;
 
 /**
- * The command bar UI: input + result list + preview panel + toast.
+ * The command bar UI: input + result list + preview panel.
  * Results come from two places: localResults() (instant, computed right here)
  * and the background "search" request (tabs, bookmarks, history, commands).
  * Rows with a `preview` (JSON, YAML, JWT) can be expanded into a viewer with Tab.
@@ -45,7 +46,6 @@ export class CommandBar {
   private readonly panel: HTMLElement;
   private readonly list: HTMLUListElement;
   private readonly previewPanel: HTMLElement;
-  private readonly toast: HTMLElement;
   private readonly chip: HTMLButtonElement;
   private readonly options: CommandBarOptions;
 
@@ -89,15 +89,13 @@ export class CommandBar {
           <iframe class="frame" sandbox="" referrerpolicy="no-referrer" hidden></iframe>
           <div class="preview-notes"></div>
         </div>
-      </div>
-      <div class="toast" hidden></div>`;
+      </div>`;
     container.appendChild(this.root);
 
     this.panel = this.root.querySelector(".bar")!;
     this.input = this.root.querySelector("input")!;
     this.list = this.root.querySelector(".results")!;
     this.previewPanel = this.root.querySelector(".preview")!;
-    this.toast = this.root.querySelector(".toast")!;
     this.chip = this.root.querySelector(".mode-chip")!;
 
     this.bindEvents();
@@ -460,10 +458,12 @@ export class CommandBar {
     this.root.style.setProperty("--width", `${a.width}px`);
   }
 
+  /** The toast is not part of the bar: the overlay closes at once (⌘T works right away), the toast stays. */
   private showToast(text: string): void {
+    showPageToast(text, TOAST_MS);
+    if (this.options.overlay) return this.options.close();
+    // The palette page is a tab of its own: it has to stay open until the toast is gone.
     this.panel.hidden = true;
-    this.toast.textContent = text;
-    this.toast.hidden = false;
     setTimeout(this.options.close, TOAST_MS);
   }
 

@@ -15,7 +15,7 @@ import { copyText } from "../ui/clipboard.ts";
 import { setLanguage, t } from "../i18n/index.ts";
 import type { SwitcherMessage } from "../shared/switcher.ts";
 import { handleSwitcherMessage, watchSwitcherSettings } from "./switcher.ts";
-import { showPageToast } from "./toast.ts";
+import { showPageToast } from "../ui/toast.ts";
 
 type GuardedWindow = Window & { __cmdlyContent?: boolean; __cmdlyModifierHeld?: boolean };
 
