@@ -31,6 +31,7 @@ function applyLanguage(language: string): void {
     if (isUuidVersion(option.value)) option.textContent = `${option.value} — ${t(UUID_DESCRIPTIONS[option.value])}`;
   });
   renderNativeShortcut();
+  if (find.value) applyFilter(); // texts changed language
 }
 
 let settings: Settings;
@@ -40,8 +41,8 @@ let recording: { name: ShortcutName; button: HTMLButtonElement } | null = null;
 
 const fields = [...document.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-path]")];
 
-function getPath(path: string): unknown {
-  return path.split(".").reduce<any>((obj, key) => obj[key], settings);
+function getPath(path: string, from: Settings = settings): unknown {
+  return path.split(".").reduce<any>((obj, key) => obj[key], from);
 }
 
 function setPath(path: string, value: unknown): void {
@@ -76,6 +77,7 @@ function fillForm(): void {
     row.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-path]").forEach((el) => (el.disabled = !on));
   }
   $("#width-value").textContent = `${settings.appearance.width}px`;
+  $("#radius-value").textContent = `${settings.appearance.radius}px`;
   fillShortcuts();
 }
 
@@ -93,6 +95,87 @@ for (const el of fields) {
     persist();
   });
 }
+
+// ---------- navigation, search, section reset ----------
+
+const panels = [...document.querySelectorAll<HTMLElement>(".panel")];
+const navLinks = [...document.querySelectorAll<HTMLAnchorElement>("[data-nav]")];
+const find = $<HTMLInputElement>("#find");
+
+function showPanel(): void {
+  const id = location.hash.slice(1);
+  const current = panels.some((p) => p.id === id) ? id : panels[0].id;
+  for (const panel of panels) panel.hidden = panel.id !== current;
+  for (const link of navLinks) link.classList.toggle("active", link.dataset.nav === current);
+}
+
+/** Everything a row says, in the shown language, plus the values of its selects. */
+function rowText(row: HTMLElement): string {
+  return row.textContent!.toLowerCase();
+}
+
+function applyFilter(): void {
+  const query = find.value.trim().toLowerCase();
+  document.body.classList.toggle("searching", !!query);
+  if (!query) {
+    document.querySelectorAll<HTMLElement>(".row, .card, h3, .note, .panel-foot").forEach((el) => (el.hidden = false));
+    showPanel();
+    $("#no-matches").hidden = true;
+    renderNativeShortcut();
+    return;
+  }
+  let found = 0;
+  for (const panel of panels) {
+    let inPanel = 0;
+    for (const card of panel.querySelectorAll<HTMLElement>(".card")) {
+      const rows = [...card.querySelectorAll<HTMLElement>(".row")];
+      const hits = rows.filter((row) => rowText(row).includes(query));
+      rows.forEach((row) => (row.hidden = !hits.includes(row)));
+      card.hidden = !hits.length;
+      const heading = card.previousElementSibling;
+      if (heading?.tagName === "H3") (heading as HTMLElement).hidden = !hits.length;
+      inPanel += hits.length;
+    }
+    panel.querySelectorAll<HTMLElement>(".banner, .note, .panel-foot").forEach((el) => (el.hidden = true));
+    panel.hidden = !inPanel;
+    found += inPanel;
+  }
+  const empty = $("#no-matches");
+  empty.hidden = found > 0;
+  empty.textContent = t("optNoMatches", find.value.trim());
+}
+
+window.addEventListener("hashchange", () => !find.value && showPanel());
+find.addEventListener("input", applyFilter);
+document.addEventListener("keydown", (e) => {
+  const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
+  if (e.key === "/" && !typing && !recording) {
+    e.preventDefault();
+    find.focus();
+  } else if (e.key === "Escape" && e.target === find) {
+    find.value = "";
+    applyFilter();
+    find.blur();
+  }
+});
+showPanel();
+
+/** Restores only what this panel shows: its fields and shortcuts. */
+document.querySelectorAll<HTMLButtonElement>("[data-reset-section]").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (!confirm(t("optResetSectionConfirm"))) return;
+    const panel = button.closest(".panel")!;
+    for (const el of panel.querySelectorAll<HTMLElement>("[data-path]")) {
+      setPath(el.dataset.path!, getPath(el.dataset.path!, DEFAULT_SETTINGS));
+    }
+    for (const el of panel.querySelectorAll<HTMLElement>("[data-shortcut]")) {
+      const name = el.dataset.shortcut as ShortcutName;
+      settings.shortcuts[name] = DEFAULT_SETTINGS.shortcuts[name];
+    }
+    stopRecording();
+    persist(t("optResetDone"));
+  });
+});
 
 // ---------- shortcuts ----------
 
@@ -170,7 +253,7 @@ async function renderNativeShortcut(): Promise<void> {
   const assigned = commands.find((c) => c.name === "open-bar")?.shortcut ?? "";
   const key = IS_MAC ? "⌘T" : "Ctrl+T";
   const banner = $("#native-shortcut");
-  banner.hidden = false;
+  banner.hidden = document.body.classList.contains("searching");
   banner.classList.toggle("ok", !!assigned);
   $("#chrome-shortcuts").textContent = t(assigned ? "optBannerChange" : "optBannerOpen");
   $(".banner-title").textContent = assigned ? t("optBannerOkTitle", assigned) : t("optBannerSetupTitle", key);

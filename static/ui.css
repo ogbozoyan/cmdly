@@ -9,6 +9,7 @@
   --chip-text: #1e1e1e;
   --accent: #6c8cff;
   --width: 760px;
+  --radius: 14px;
 }
 
 .wrap.light {
@@ -50,7 +51,7 @@
   width: min(var(--width), 92vw);
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius);
   padding: 6px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
   animation: pop 0.16s ease-out;

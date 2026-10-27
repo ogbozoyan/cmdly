@@ -581,7 +581,7 @@ try {
   });
 
   await check("⌘T assigned in Chrome: no flash setup, + opens the bar in the new tab", async () => {
-    const options = await openPage(`chrome-extension://${extensionId}/options.html`);
+    const options = await openPage(`chrome-extension://${extensionId}/options.html#shortcuts`);
     await sleep(500);
     const before = await options.$eval(".banner-title", (el) => el.textContent);
     expect(/one-time setup/.test(before), `banner before: ${before}`);
@@ -622,7 +622,7 @@ try {
   });
 
   await check("diagnostics log: the worker records itself and a page error reaches the buffer", async () => {
-    const options = await openPage(`chrome-extension://${extensionId}/options.html`);
+    const options = await openPage(`chrome-extension://${extensionId}/options.html#about`);
     await options.waitForSelector("#copy-log");
     await options.evaluate(() => setTimeout(() => { throw new Error("e2e-uncaught-probe"); }, 0));
     await sleep(500);
@@ -633,7 +633,7 @@ try {
   });
 
   await check("options page renders shortcuts and saves changes", async () => {
-    const options = await openPage(`chrome-extension://${extensionId}/options.html`);
+    const options = await openPage(`chrome-extension://${extensionId}/options.html#shortcuts`);
     await options.waitForSelector('[data-shortcut="copyUrl"]');
     await sleep(300);
     const label = await options.$eval('[data-shortcut="copyUrl"]', (el) => el.textContent);
@@ -656,6 +656,35 @@ try {
     const saved = await inWorker(async () => (await chrome.storage.sync.get("settings")).settings?.shortcuts?.copyUrl);
     expect(saved === "", `copyUrl after "Off": ${JSON.stringify(saved)}`);
     await options.click('[data-shortcut-reset="copyUrl"]');
+    await options.close();
+  });
+
+  await check("options page: sections, search and per-section reset", async () => {
+    const options = await openPage(`chrome-extension://${extensionId}/options.html#appearance`);
+    await options.waitForSelector('[data-path="appearance.radius"]');
+    const visible = () => options.evaluate(() => [...document.querySelectorAll(".panel")].filter((p) => !p.hidden).map((p) => p.id));
+    expect((await visible()).join() === "appearance", `panels: ${await visible()}`);
+
+    // search crosses sections and hides everything else
+    await options.type("#find", "ctrl+tab");
+    const hits = await options.evaluate(() => [...document.querySelectorAll(".row")].filter((r) => !r.hidden).length);
+    expect((await visible()).join() === "switcher" && hits === 1, `search: ${await visible()} / ${hits} rows`);
+    if (SCREENSHOTS) await shot(options, "options-search");
+    await options.type("#find", "zzzz-nothing");
+    expect(await options.$eval("#no-matches", (el) => !el.hidden), "empty-search message missing");
+    await options.$eval("#find", (el) => { el.value = ""; el.dispatchEvent(new Event("input")); });
+    expect((await visible()).join() === "appearance", "panel not restored after clearing search");
+
+    // reset of one section restores only its fields
+    options.on("dialog", (d) => d.accept());
+    await options.$eval('[data-path="appearance.radius"]', (el) => { el.value = "4"; el.dispatchEvent(new Event("input")); });
+    await options.$eval('[data-path="limits.tabs"]', (el) => { el.value = "9"; el.dispatchEvent(new Event("change")); });
+    await sleep(300);
+    await options.click("#appearance [data-reset-section]");
+    await sleep(400);
+    const s = await inWorker(async () => (await chrome.storage.sync.get("settings")).settings);
+    expect(s.appearance.radius === 14 && s.limits.tabs === 9, `after section reset: radius ${s.appearance.radius}, tabs ${s.limits.tabs}`);
+    await inWorker(() => chrome.storage.sync.clear());
     await options.close();
   });
 } finally {

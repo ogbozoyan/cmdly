@@ -53,3 +53,11 @@ test("the old soft-wrap switch becomes overflow = wrap, bad values fall back", (
   assert.equal(mergeSettings({ switcher: { softWrap: true, overflow: "scroll" } }).switcher.overflow, "scroll");
   assert.equal(mergeSettings({ switcher: { overflow: "sideways" } }).switcher.overflow, "fit");
 });
+
+test("numbers outside the UI range are clamped", () => {
+  const s = mergeSettings({ switcher: { maxCards: 99 }, appearance: { radius: -5, width: 5000 }, limits: { tabs: 0 } });
+  assert.equal(s.switcher.maxCards, 8);
+  assert.equal(s.appearance.radius, 0);
+  assert.equal(s.appearance.width, 1000);
+  assert.equal(s.limits.tabs, 1);
+});

@@ -1,4 +1,5 @@
 import type { Draft } from "../shared/model.ts";
+import { settingsRepository } from "../shared/settings-repository.ts";
 import { hasOverlay, showOverlay } from "./bar-service.ts";
 
 /**
@@ -41,6 +42,7 @@ export async function markOverlay(tab: chrome.tabs.Tab, open: boolean): Promise<
 export function watchBarState(): void {
   chrome.tabs.onUpdated.addListener(async (tabId, change, tab) => {
     if (change.status !== "complete") return;
+    if (!(await settingsRepository.get()).bar.reopenAfterReload) return;
     const bars = await openBars();
     const url = bars[tabId];
     if (!url) return;
