@@ -174,7 +174,7 @@ export const de: Messages = {
   markupResponses: "Antworten",
   markupDeprecated: "veraltet",
   markupNoOperations: "Keine Operationen",
-  optMarkup: "HTML-/Markdown-/OpenAPI-Vorschau",
+  markupDefaultGroup: "Standard",  optMarkup: "HTML-/Markdown-/OpenAPI-Vorschau",
   optMarkupHint: "Fügen Sie HTML, Markdown oder eine Swagger/OpenAPI-Spezifikation ein, um sie gerendert zu sehen. <code>html</code>, <code>md</code> oder <code>swagger</code> + <code>Tab</code> startet einen Einfügemodus. Skripte laufen nie.",
   optMarkupRemote: "Externe Bilder und Stile laden",
   optMarkupRemoteHint: "Aus: Die Vorschau stellt keine Netzwerkanfragen. An: Eingefügtes HTML darf referenzierte Bilder, Schriften und Stile laden.",
