@@ -26,6 +26,7 @@
         <a href="#appearance" data-nav="appearance" data-i18n="optAppearance">Appearance</a>
         <a href="#experimental" data-nav="experimental"><span data-i18n="optNavExperimental">Experimental</span> <span class="badge" data-i18n="optExperimentalBadge">beta</span></a>
         <a href="#backup" data-nav="backup" data-i18n="optBackup">Backup</a>
+        <a href="#diagnostics" data-nav="diagnostics" data-i18n="optNavDiagnostics" hidden>Diagnostics</a>
         <a href="#about" data-nav="about" data-i18n="optNavAbout">About &amp; feedback</a>
       </nav>
       <p class="sub" data-i18n="optSubtitle">Command bar settings. Changes are saved automatically.</p>
@@ -331,6 +332,34 @@
       </div>
       </div>
     </section>
+    <section class="panel" id="diagnostics" hidden>
+      <h2 data-i18n="optNavDiagnostics">Diagnostics</h2>
+      <div class="card">
+      <label class="row">
+        <span><b data-i18n="optLogVerbose">Detailed log</b><small data-i18n="optLogVerboseHint">Also record what Cmdly did step by step.</small></span>
+        <input type="checkbox" data-path="logs.verbose">
+      </label>
+      <label class="row">
+        <span><b data-i18n="optLogSize">Stored log, KB</b><small data-i18n="optLogSizeHint">The oldest entries are dropped beyond it.</small></span>
+        <input type="number" min="16" max="4096" step="16" data-path="logs.maxKb">
+      </label>
+      </div>
+      <div class="log-toolbar">
+        <span id="log-status" class="log-status" data-i18n="optLogLive">Live</span>
+        <select id="log-level" aria-label="Level">
+          <option value="debug" data-i18n="optLogLevelAll">All levels</option>
+          <option value="info" data-i18n="optLogLevelInfo">Info and above</option>
+          <option value="warn" data-i18n="optLogLevelWarn">Warnings and errors</option>
+        </select>
+        <input id="log-filter" type="search" data-i18n-placeholder="optLogFilter" placeholder="Filter">
+        <button id="log-pause" data-i18n="optLogPause">Pause</button>
+        <button id="log-clear" data-i18n="optDiagClear">Clear</button>
+        <button id="log-copy" data-i18n="optDiagButton">Copy log</button>
+        <button id="log-save" data-i18n="optDiagSave">Save to file…</button>
+      </div>
+      <div id="log-view" class="log-view" role="log" tabindex="0"></div>
+      <p class="note" data-i18n="optLogViewNote">Shows the last 16 KB as it happens; Copy and Save take the whole stored log.</p>
+    </section>
     <section class="panel" id="about" hidden>
       <h2 data-i18n="optNavAbout">About &amp; feedback</h2>
       <h3 data-i18n="optFeedback">Feedback</h3>
@@ -344,9 +373,16 @@
         <a id="request-feature" class="button" target="_blank" rel="noopener" data-i18n="optIdeaButton">Suggest…</a>
       </div>
       <div class="row">
-        <span><b data-i18n="optDiag">Diagnostics</b><small data-i18n="optDiagHint">Copy the log of recent errors to attach to a bug report. It never contains what you type or visit, stays on this computer and is cleared when the browser closes.</small></span>
-        <button id="copy-log" data-i18n="optDiagButton">Copy log</button>
+        <span><b data-i18n="optDiag">Diagnostics</b><small data-i18n="optDiagHint">The log of recent errors and, if detailed, of what Cmdly did — to attach to a bug report. It never contains what you type or visit, stays on this computer and is cleared when the browser closes.</small></span>
+        <span class="pair">
+          <button id="copy-log" data-i18n="optDiagButton">Copy log</button>
+          <button id="save-log" data-i18n="optDiagSave">Save to file…</button>
+        </span>
       </div>
+      <label class="row">
+        <span><b data-i18n="optLogPanel">Diagnostics section</b><small data-i18n="optLogPanelHint">Shows a Diagnostics section with the log updating live, for chasing a bug as it happens.</small></span>
+        <input type="checkbox" data-path="logs.panel">
+      </label>
       </div>
     </section>
 

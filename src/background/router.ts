@@ -1,6 +1,7 @@
 import { setLanguage } from "../i18n/index.ts";
 import type { Request, ResponseMap } from "../shared/messages.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
+import { kv, log } from "../shared/log.ts";
 import { dismissPalettePage, handleNewTab, openBar } from "./bar-service.ts";
 import { clearLog, readLog, recordLog } from "./log-service.ts";
 import { loadDraft, markOverlay, saveDraft } from "./bar-state-service.ts";
@@ -17,7 +18,24 @@ import { restoreClosedTab } from "./tab-service.ts";
  * Maps each request type (see src/shared/messages.ts) to a service call.
  * `sender` is the tab the message came from: the page with the overlay or the palette page.
  */
+/** Requests sent on every keystroke or by the log itself: tracing them would drown everything else. */
+const QUIET = new Set<Request["type"]>(["log", "log-get", "log-clear", "draft-save", "draft-get"]);
+
+/** Every request with the tab it came from, how long it took and whether it failed. */
 export async function route(request: Request, sender: chrome.tabs.Tab): Promise<ResponseMap[Request["type"]]> {
+  if (QUIET.has(request.type)) return dispatch(request, sender);
+  const started = performance.now();
+  try {
+    const result = await dispatch(request, sender);
+    log.debug("router", `${request.type} ${kv({ tab: sender.id, win: sender.windowId, ms: Math.round(performance.now() - started) })}`);
+    return result;
+  } catch (error) {
+    log.debug("router", `${request.type} failed ${kv({ tab: sender.id, ms: Math.round(performance.now() - started) })}`);
+    throw error;
+  }
+}
+
+async function dispatch(request: Request, sender: chrome.tabs.Tab): Promise<ResponseMap[Request["type"]]> {
   // The log is answered first: it must work even when settings can't be read.
   if (request.type === "log") return recordLog(request.entry);
   if (request.type === "log-get") return readLog();

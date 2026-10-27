@@ -185,8 +185,13 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 - **Logging**: use `log.error/warn/info/debug(scope, message, error?)` from `src/shared/log.ts`, never bare
   `console.*`. Never put user text (queries, pasted data, URLs) in a log message: the log can end up in a public
   issue. Every entry point calls `initLogging(scope)` (`log-runtime.ts`; the background uses `startLogging()`), which
-  also records uncaught errors and unhandled rejections. Entries go to a 300-entry buffer in
-  `chrome.storage.session` (`background/log-service.ts`); Settings → Feedback → "Copy log" turns it into a report.
+  also records uncaught errors and unhandled rejections. Entries go to a size-limited `LogRing` (`Settings.logs.maxKb`,
+  1 MB by default) flushed to `chrome.storage.session` in batches (`background/log-service.ts`); "Copy log" / "Save
+  to file…" turn it into a report. `debug` is the trace — entering a service, which branch was taken, with facts as
+  `kv({ tab, win, state })`: ids, counts, states, never text. It is kept only with `logs.verbose`. The router traces
+  every request with its duration; `window-watch-service.ts` logs window state changes (fullscreen ↔ normal) at
+  `info`. Settings → Diagnostics (`logs.panel`) follows the log live through the `log-tail` port
+  (`pages/log-view.ts`): the view keeps `LIVE_VIEW_KB` on screen and disconnects when hidden.
   A fallback that hides an error (`catch {}`) should log at `debug`/`info` with the error.
 - Code comments explain *why*, not *what*. Match the existing style.
 

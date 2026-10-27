@@ -1,6 +1,7 @@
 import type { Draft } from "../shared/model.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { hasOverlay, showOverlay } from "./bar-service.ts";
+import { kv, log } from "../shared/log.ts";
 
 /**
  * Keeps the command bar alive across interruptions, like Arc:
@@ -52,7 +53,8 @@ export function watchBarState(): void {
     delete bars[tabId];
     await chrome.storage.session.set({ [OPEN_KEY]: bars });
     // Same address = reload: bring the bar back. Another address = the user went somewhere else.
-    if (tab.url === url) showOverlay(tabId).catch(() => {});
+    log.debug("bar-state", `page loaded with the bar open before ${kv({ tab: tabId, reopen: tab.url === url })}`);
+    if (tab.url === url) showOverlay(tabId).catch((error) => log.debug("bar-state", "reopen refused", error));
   });
   chrome.tabs.onRemoved.addListener(async (tabId) => {
     const bars = await openBars();

@@ -7,7 +7,8 @@ import { UUID_DESCRIPTIONS, isUuidVersion } from "../tools/uuid.ts";
 import { DEFAULT_SETTINGS, fromImportFile, toExportFile, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { bugReportUrl, describeEnvironment, featureRequestUrl } from "../shared/feedback.ts";
-import { formatReport } from "../shared/log.ts";
+import { formatReport, logFileName } from "../shared/log.ts";
+import { LogView } from "./log-view.ts";
 import { send } from "../shared/messages.ts";
 import { IS_MAC } from "../shared/platform.ts";
 import { formatShortcut, isValidShortcut, shortcutFromEvent } from "../shared/shortcuts.ts";
@@ -77,6 +78,9 @@ function fillForm(): void {
     row.classList.toggle("off", !on);
     row.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-path]").forEach((el) => (el.disabled = !on));
   }
+  $("[data-nav=diagnostics]").hidden = !settings.logs.panel;
+  if (!settings.logs.panel && location.hash === "#diagnostics") location.hash = "#about";
+  logView.setActive(notices.currentPanel === "diagnostics" && settings.logs.panel);
   $("#width-value").textContent = `${settings.appearance.width}px`;
   $("#radius-value").textContent = `${settings.appearance.radius}px`;
   fillShortcuts();
@@ -98,6 +102,14 @@ for (const el of fields) {
     persist();
   });
 }
+
+const logView = new LogView({
+  view: $("#log-view"),
+  status: $("#log-status"),
+  level: $<HTMLSelectElement>("#log-level"),
+  filter: $<HTMLInputElement>("#log-filter"),
+  pause: $<HTMLButtonElement>("#log-pause"),
+});
 
 // ---------- navigation, search, section reset ----------
 
@@ -123,6 +135,7 @@ function showPanel(): void {
   for (const link of navLinks) link.classList.toggle("active", link.dataset.nav === current);
   panels.find((p) => p.id === current)!.querySelector("h2")!.after($("#notices"));
   notices.currentPanel = current;
+  logView.setActive(current === "diagnostics" && !!settings?.logs.panel);
   updateNotices();
 }
 
@@ -358,7 +371,24 @@ $("#clear-learned").addEventListener("click", async () => {
   flash(t("toastLearnedCleared"));
 });
 
+/** A file survives what the clipboard doesn't: long logs, and attaching to an issue later. */
+async function saveLog(): Promise<void> {
+  const entries = (await send({ type: "log-get" })) ?? [];
+  if (!entries.length) return flash(t("optDiagEmpty"));
+  const blob = new Blob([formatReport(describeEnvironment(environment), entries)], { type: "text/plain" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = logFileName(Date.now());
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
+  flash(t("optDiagSaved"));
+}
+
 $("#copy-log").addEventListener("click", copyLog);
+$("#log-copy").addEventListener("click", copyLog);
+$("#log-save").addEventListener("click", saveLog);
+$("#log-clear").addEventListener("click", () => send({ type: "log-clear" }));
+$("#save-log").addEventListener("click", saveLog);
 $("#log-notice-copy").addEventListener("click", copyLog);
 $("#log-notice-clear").addEventListener("click", async () => {
   await send({ type: "log-clear" });

@@ -17,6 +17,7 @@ import type { SwitcherMessage } from "../shared/switcher.ts";
 import { handleSwitcherMessage, watchSwitcherSettings } from "./switcher.ts";
 import { showPageToast } from "../ui/toast.ts";
 import { initLogging } from "../shared/log-runtime.ts";
+import { kv, log } from "../shared/log.ts";
 
 type GuardedWindow = Window & { __cmdlyContent?: boolean; __cmdlyModifierHeld?: boolean };
 
@@ -43,6 +44,12 @@ function start(): void {
     if (message?.type === "switcher-show" || message?.type === "switcher-release") handleSwitcherMessage(message as SwitcherMessage);
   });
   if (window === window.top) watchSwitcherSettings();
+  // Diagnostics: a page (video, game) entering or leaving fullscreen, next to what Cmdly did at that moment.
+  if (window === window.top) {
+    document.addEventListener("fullscreenchange", () => {
+      log.info("content", `page fullscreen ${kv({ on: !!document.fullscreenElement, element: document.fullscreenElement?.tagName.toLowerCase() })}`);
+    });
+  }
 
   trackModifiers(w);
 
@@ -53,12 +60,14 @@ function start(): void {
     // Cmd+T never reaches web pages, so only a custom open shortcut is handled here.
     if (shortcuts.openBar !== `${MOD}+KeyT` && matchesShortcut(e, shortcuts.openBar)) {
       claim(e);
+      log.debug("content", `shortcut openBar ${kv({ pageFullscreen: !!document.fullscreenElement })}`);
       send({ type: "open-bar" });
       return;
     }
 
     if (matchesShortcut(e, shortcuts.copyUrl)) {
       claim(e);
+      log.debug("content", "shortcut copyUrl");
       copyPageUrl();
       return;
     }
@@ -67,6 +76,7 @@ function start(): void {
       // Decide after the page has handled the key: apps with their own undo
       // (Figma, Miro, Google Docs) call preventDefault and are left alone.
       setTimeout(() => {
+        log.debug("content", `shortcut undoClose ${kv({ pageHandledIt: e.defaultPrevented })}`);
         if (!e.defaultPrevented) send({ type: "restore-tab" });
       }, 0);
     }

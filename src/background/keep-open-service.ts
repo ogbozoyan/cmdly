@@ -2,7 +2,7 @@ import { settingsRepository } from "../shared/settings-repository.ts";
 import { openPalettePageIn } from "./bar-service.ts";
 import { planKeepOpen, type KeepOpenAction, type WindowSnapshot } from "./keep-open-plan.ts";
 import { GUARD_URL, isGuardTab } from "./tab-service.ts";
-import { log } from "../shared/log.ts";
+import { kv, log } from "../shared/log.ts";
 
 /**
  * Runs the "keep window open" plan whenever tabs or windows change.
@@ -49,6 +49,7 @@ async function reconcile(): Promise<void> {
   try {
     const { windows } = await settingsRepository.get();
     const actions = planKeepOpen(await snapshot(), windows.keepOpen);
+    if (actions.length) log.debug("keep-open", `plan ${kv({ mode: windows.keepOpen, actions: actions.map((a) => a.type).join(",") })}`);
     for (const action of actions) await apply(action);
     // Our own changes fire tab events too; one follow-up pass confirms a stable state.
     if (actions.length) rerun = true;
@@ -78,6 +79,7 @@ async function snapshot(): Promise<WindowSnapshot[]> {
 }
 
 async function apply(action: KeepOpenAction): Promise<void> {
+  log.debug("keep-open", kv({ ...action }));
   try {
     switch (action.type) {
       case "create-guard":

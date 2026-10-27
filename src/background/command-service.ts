@@ -5,6 +5,7 @@ import { t, tp, type MessageKey } from "../i18n/index.ts";
 import type { Candidate } from "../shared/ranking.ts";
 import { CHROME_PAGES } from "./chrome-pages.ts";
 import { score } from "./scoring.ts";
+import { kv, log } from "../shared/log.ts";
 import { previousTab, restoreClosedTab } from "./tab-service.ts";
 
 /**
@@ -197,11 +198,16 @@ function commandRow(command: Command, title: string): ResultItem {
 
 export async function runCommand(id: string, host: chrome.tabs.Tab, overlay: boolean): Promise<CommandResult> {
   const command = COMMANDS.find((c) => c.id === id);
-  if (!command) return {};
+  if (!command) {
+    log.warn("command", `unknown command ${kv({ id })}`);
+    return {};
+  }
   const target = await commandTarget(host, overlay);
+  log.debug("command", `run ${kv({ id, overlay, host: host.id, target: target?.id })}`);
   if (command.needsTab && !target) return { toast: t("toastNoTab"), closePalette: !overlay };
 
   const { focusMoved, ...result } = (await command.run({ target: target!, host })) ?? {};
+  log.debug("command", `done ${kv({ id, focusMoved: !!focusMoved, toast: !!result.toast, copy: !!result.copy })}`);
   if (overlay) return result;
 
   // Palette page: if the UI will show a toast, it closes the page itself afterwards.

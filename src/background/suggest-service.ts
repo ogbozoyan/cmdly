@@ -2,7 +2,7 @@ import type { ResultItem } from "../shared/model.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { maySuggest, parseSuggestions, suggestionRows, suggestUrl } from "../shared/suggestions.ts";
 import { favicon } from "./search-service.ts";
-import { log } from "../shared/log.ts";
+import { kv, log } from "../shared/log.ts";
 
 /**
  * Search suggestions from the engine chosen in Settings. Asked separately from search() so a slow
@@ -15,7 +15,10 @@ export async function suggest(query: string, host: chrome.tabs.Tab): Promise<Res
   const { sources, suggest, limits } = await settingsRepository.get();
   const q = query.trim();
   // Incognito typing stays private, like Chrome's own omnibox with suggestions off.
-  if (!sources.suggestions || host.incognito || !maySuggest(q)) return [];
+  if (!sources.suggestions || host.incognito || !maySuggest(q)) {
+    log.debug("suggest", `skipped ${kv({ enabled: sources.suggestions, incognito: !!host.incognito, allowed: maySuggest(q) })}`);
+    return [];
+  }
 
   const key = `${suggest.engine}:${q.toLowerCase()}`;
   let suggestions = cache.get(key);
@@ -25,12 +28,16 @@ export async function suggest(query: string, host: chrome.tabs.Tab): Promise<Res
         credentials: "omit", // no cookies: the engine can't tie suggestions to the user's account
         signal: AbortSignal.timeout(1500),
       });
-      if (!response.ok) return [];
+      if (!response.ok) {
+        log.debug("suggest", `engine answered ${kv({ engine: suggest.engine, status: response.status })}`);
+        return [];
+      }
       suggestions = parseSuggestions(await response.json());
     } catch (error) {
       log.debug("suggest", "no suggestions", error);
       return []; // offline, timeout, blocked — suggestions are optional
     }
+    log.debug("suggest", `fetched ${kv({ engine: suggest.engine, count: suggestions.length })}`);
     cache.set(key, suggestions);
     if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
   }

@@ -14,6 +14,7 @@ import { escapeHtml, highlight } from "./highlight.ts";
 import { ARROW_ICON, EXPAND_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
 import { withWebSearch } from "./results.ts";
 import { showPageToast } from "./toast.ts";
+import { kv, log } from "../shared/log.ts";
 
 export interface CommandBarOptions {
   /** true = drawn over a web page (shadow DOM), false = standalone palette page. */
@@ -475,6 +476,7 @@ export class CommandBar {
   private async choose(item: ResultItem | undefined, inBackground: boolean): Promise<void> {
     const text = this.input.value.trim();
     if (!item && !text) return;
+    log.debug("bar", `choose ${kv({ kind: item?.kind ?? "typed", row: item ? this.items.indexOf(item) : -1, feature: item?.feature, background: inBackground, overlay: this.options.overlay })}`);
 
     if (item?.enters) return this.enter({ kind: "feature", id: item.enters }, true);
 

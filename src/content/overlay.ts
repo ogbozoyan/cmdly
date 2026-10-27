@@ -5,19 +5,20 @@
  */
 import { send } from "../shared/messages.ts";
 import { CommandBar } from "../ui/command-bar.ts";
-import { log } from "../shared/log.ts";
+import { kv, log } from "../shared/log.ts";
 import { initLogging } from "../shared/log-runtime.ts";
 
 const HOST_ID = "cmdly-overlay";
 
 initLogging("overlay");
 
-type HostElement = HTMLElement & { cmdlyClose?: () => void };
+type HostElement = HTMLElement & { cmdlyClose?: (reason: string) => void };
 
 function toggleOverlay(): void {
   const existing = document.getElementById(HOST_ID) as HostElement | null;
   if (existing) {
-    existing.cmdlyClose?.();
+    log.debug("overlay", "injected again: toggle off");
+    existing.cmdlyClose?.("toggle");
     return;
   }
 
@@ -39,9 +40,10 @@ function toggleOverlay(): void {
   }
 
   let closed = false;
-  const close = (restoreFocus = true) => {
+  const close = (restoreFocus = true, reason = "bar") => {
     if (closed) return;
     closed = true;
+    log.debug("overlay", `closed ${kv({ reason, pageFullscreen: !!document.fullscreenElement, hidden: document.hidden })}`);
     host.remove();
     clearInterval(focusTimer);
     window.removeEventListener("blur", onBlur);
@@ -51,14 +53,14 @@ function toggleOverlay(): void {
     // Not when the user went to the address bar: that would pull the focus back from it.
     if (restoreFocus) previousFocus?.focus?.();
   };
-  host.cmdlyClose = () => close();
+  host.cmdlyClose = (reason) => close(true, reason);
 
   // Clicking the address bar or other browser UI leaves the page without any click on it. Only
   // counts once the page had focus: the bar may be opened while the address bar still holds it.
   let hadFocus = document.hasFocus();
   const checkFocus = () => {
     if (document.hasFocus()) hadFocus = true;
-    else if (hadFocus && !document.hidden) close(false);
+    else if (hadFocus && !document.hidden) close(false, "focus-left-page");
   };
   const onBlur = () => setTimeout(checkFocus, 50);
   // Switching to another tab ends the bar's session: coming back must not show a stale bar. Only once
@@ -70,7 +72,7 @@ function toggleOverlay(): void {
   const onVisibility = () => {
     clearTimeout(hiddenTimer);
     if (!document.hidden) seenVisible = true;
-    else if (seenVisible) hiddenTimer = setTimeout(() => document.hidden && close(false), 150);
+    else if (seenVisible) hiddenTimer = setTimeout(() => document.hidden && close(false, "page-hidden"), 150);
   };
   document.addEventListener("visibilitychange", onVisibility);
   const focusTimer = setInterval(checkFocus, 150);
@@ -78,7 +80,13 @@ function toggleOverlay(): void {
 
   document.documentElement.appendChild(host);
   const bar = new CommandBar(shadow, { overlay: true, close: () => close() });
-  log.debug("overlay", "opened");
+  log.debug("overlay", `opened ${kv({
+    pageFullscreen: !!document.fullscreenElement,
+    // Window fullscreen can't be read from a page; a viewport as tall as the screen is a hint.
+    screenHigh: window.innerHeight >= screen.height,
+    visible: !document.hidden,
+    focused: document.hasFocus(),
+  })}`);
   send({ type: "overlay-state", open: true });
 
   stylesheet.onload = () => {

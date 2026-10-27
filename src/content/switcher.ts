@@ -57,7 +57,7 @@ async function quickSwitch(): Promise<void> {
 
 function mount(backwards: boolean): OpenSwitcher {
   // The command bar and the switcher are never on screen together (and the bar would end up in previews).
-  (document.getElementById("cmdly-overlay") as (HTMLElement & { cmdlyClose?: () => void }) | null)?.cmdlyClose?.();
+  (document.getElementById("cmdly-overlay") as (HTMLElement & { cmdlyClose?: (reason: string) => void }) | null)?.cmdlyClose?.("switcher");
   const previousFocus = document.activeElement as HTMLElement | null;
   const host = document.createElement("div");
   host.id = HOST_ID;

@@ -25,10 +25,11 @@ look at a tab, Cmdly takes a small screenshot of it to show in the tab switcher.
 same in-memory session storage, are deleted when the tab closes or the option is turned off, are
 never taken in incognito windows and never leave your browser.
 
-**Diagnostics log**: the last 300 errors and notable events (what failed, where, and the stack trace)
-are kept in the same in-memory session storage and are gone when Chrome quits. The log never contains
-what you type, paste or visit. Nothing is sent anywhere; Settings → Feedback → "Copy log" puts it on your
-clipboard so you can attach it to a bug report if you choose to.
+**Diagnostics log**: recent errors and notable events (what failed, where, and the stack trace) and, with
+"Detailed log" on, the steps Cmdly took (which action ran, tab and window ids, window states such as
+fullscreen) are kept in the same in-memory session storage, up to the size set in Settings (1 MB by default),
+and are gone when Chrome quits. The log never contains what you type, paste or visit. Nothing is sent
+anywhere; "Copy log" or "Save to file…" gives it to you so you can attach it to a bug report if you choose to.
 
 **Learned choices** (off by default, Settings → Experimental → "Learn from my choices"): the text you
 typed (first 20 characters) and the row you picked (a command id or the page URL) are kept in

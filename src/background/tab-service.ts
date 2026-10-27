@@ -1,5 +1,6 @@
 /** Tab helpers used by several services. */
 import { pageKind } from "../shared/page-kind.ts";
+import { kv, log } from "../shared/log.ts";
 
 export const PALETTE_URL = chrome.runtime.getURL("palette.html");
 
@@ -33,6 +34,7 @@ export async function restoreClosedTab(): Promise<void> {
   const sessions = await chrome.sessions.getRecentlyClosed({ maxResults: 25 });
   const entry = sessions.find((s) => s.window || (s.tab && !isCmdlyTab(s.tab)));
   const sessionId = entry?.tab?.sessionId ?? entry?.window?.sessionId;
+  log.debug("tabs", `reopen closed ${kv({ recent: sessions.length, found: entry ? (entry.window ? "window" : "tab") : "none" })}`);
   if (sessionId) await chrome.sessions.restore(sessionId);
 }
 

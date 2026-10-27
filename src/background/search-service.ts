@@ -8,7 +8,7 @@ import { choiceKey, learnedBoost } from "./choice-service.ts";
 import { commandCandidates, commandTarget, matchCommands } from "./command-service.ts";
 import { score } from "./scoring.ts";
 import { isGuardTab, PALETTE_URL } from "./tab-service.ts";
-import { log } from "../shared/log.ts";
+import { kv, log } from "../shared/log.ts";
 
 /**
  * Builds the result list for a query, in this order:
@@ -20,7 +20,10 @@ export async function search(query: string, host: chrome.tabs.Tab, overlay: bool
   const settings = await settingsRepository.get();
   if (query && settings.experimental.scopes && settings.features.commands) {
     const { scope, rest } = parseScope(query);
-    if (scope) return scopedSearch(scope, rest, query, host, overlay, settings);
+    if (scope) {
+      log.debug("search", `scope ${kv({ scope, chars: rest.length })}`);
+      return scopedSearch(scope, rest, query, host, overlay, settings);
+    }
   }
   if (query && settings.experimental.ranking) return rankedSearch(query, host, overlay, settings);
   const { sources, limits, features } = settings;
@@ -75,6 +78,7 @@ async function rankedSearch(query: string, host: chrome.tabs.Tab, overlay: boole
     const learned = await learnedBoost(query);
     for (const c of candidates) c.learned = learned(choiceKey(c.item) ?? "");
   }
+  log.debug("search", `ranking ${kv({ chars: query.length, candidates: candidates.length })}`);
   const ranked = rank(query, candidates, { cyrillicLayout: uiLanguage(settings).startsWith("ru") });
   const limit: Partial<Record<ResultItem["kind"], number>> = { tab: limits.tabs, bookmark: limits.bookmarks, history: limits.history };
   const shown = new Map<string, number>();
@@ -94,6 +98,7 @@ async function rankedSearch(query: string, host: chrome.tabs.Tab, overlay: boole
     const typed: ResultItem = { kind: "url", title: shortUrl(url), url, icon: favicon(url), action: t("actionOpen") };
     return [typed, ...rows.items.filter((r) => r.url !== url), webSearch];
   }
+  log.debug("search", `ranked ${kv({ shown: rows.items.length, topHit: top?.kind ?? "web-search" })}`);
   if (top) return [top, webSearch, ...rows.items.slice(1)];
   return [webSearch, ...rows.items];
 }

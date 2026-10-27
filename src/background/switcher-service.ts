@@ -2,7 +2,7 @@ import { settingsRepository } from "../shared/settings-repository.ts";
 import { neighbourDirection, recentFirst, thumbnailSize, type SwitcherMessage, type SwitcherTab } from "../shared/switcher.ts";
 import { favicon } from "./search-service.ts";
 import { canInjectInto, isGuardTab, previousTab } from "./tab-service.ts";
-import { log } from "../shared/log.ts";
+import { kv, log } from "../shared/log.ts";
 
 /**
  * Tab switcher (Arc's Ctrl+Tab). Chrome reserves Ctrl+Tab for itself — pages and extensions never
@@ -102,6 +102,7 @@ async function onTabActivated({ tabId, windowId }: { tabId: number; windowId: nu
   const count = all.length;
   const direction = neighbourDirection(a.index, b.index, count);
   if (!direction) return;
+  log.debug("switcher", `Ctrl+Tab taken back ${kv({ from, to: tabId, direction })}`);
 
   await chrome.tabs.update(from, { active: true });
   hijackedIn = from;
@@ -120,6 +121,7 @@ async function onTabActivated({ tabId, windowId }: { tabId: number; windowId: nu
 /** `delta` -1 is the "back" command (Ctrl+Shift+Q): starts from the oldest tab, or steps back if already open. */
 export async function openSwitcher(tab: chrome.tabs.Tab | undefined, delta: 1 | -1 = 1): Promise<void> {
   if (!tab?.id) return;
+  log.debug("switcher", `open ${kv({ tab: tab.id, delta, injectable: canInjectInto(tab) })}`);
   // chrome:// pages, the Web Store: no UI possible — behave like a quick tap.
   if (!canInjectInto(tab) || !(await tell(tab.id, { type: "switcher-show", delta }))) return switchToPrevious(tab);
 }
@@ -166,6 +168,7 @@ export async function switcherTabs(sender: chrome.tabs.Tab): Promise<SwitcherTab
 }
 
 export async function switchTab(tabId: number): Promise<void> {
+  log.debug("switcher", `switch ${kv({ tab: tabId })}`);
   const tab = await chrome.tabs.update(tabId, { active: true });
   if (tab) await chrome.windows.update(tab.windowId, { focused: true });
 }

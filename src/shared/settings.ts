@@ -1,6 +1,7 @@
 import { t } from "../i18n/index.ts";
 import { MOD } from "./platform.ts";
 import type { SuggestEngine } from "./suggestions.ts";
+import { DEFAULT_LOG_KB } from "./log.ts";
 
 /** What "keep window open" protects: nothing, the last remaining window, or every window. */
 export type KeepOpenMode = "off" | "last" | "every";
@@ -69,6 +70,15 @@ export interface Settings {
     engine: SuggestEngine;
     /** Suggestions arrive late: at the bottom they never push the user's own tabs and history down. */
     position: "bottom" | "top";
+  };
+  /** Diagnostics log (background/log-service.ts). */
+  logs: {
+    /** Buffer size; the oldest entries are dropped beyond it. */
+    maxKb: number;
+    /** Keep the trace too (debug entries: which service ran, which branch, ids and window states). */
+    verbose: boolean;
+    /** Show the Diagnostics section in Settings (live log). */
+    panel: boolean;
   };
   /** Opt-in features that may change or go away (Settings → Experimental). */
   experimental: {
@@ -143,6 +153,11 @@ export const DEFAULT_SETTINGS: Settings = {
     engine: "google",
     position: "bottom",
   },
+  logs: {
+    maxKb: DEFAULT_LOG_KB,
+    verbose: true,
+    panel: false,
+  },
   experimental: {
     ranking: false,
     learned: false,
@@ -170,6 +185,7 @@ export const RANGES = {
   "limits.bookmarks": [1, 20],
   "limits.history": [1, 20],
   "limits.suggestions": [1, 10],
+  "logs.maxKb": [16, 4096],
   "switcher.maxCards": [2, 8],
   "appearance.width": [520, 1000],
   "appearance.radius": [0, 24],

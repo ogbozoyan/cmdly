@@ -210,7 +210,7 @@ input[type="checkbox"]::after {
 input[type="checkbox"]:checked { background: var(--accent); }
 input[type="checkbox"]:checked::after { transform: translateX(14px); }
 
-input[type="number"], select, button {
+input[type="number"], input[type="search"], select, button {
   font: inherit;
   color: var(--text);
   background: color-mix(in srgb, var(--text) 7%, transparent);
@@ -343,3 +343,27 @@ button.link:hover { background: none; color: var(--text); }
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
+
+/* Settings → Diagnostics: live log, like a terminal tail */
+.log-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 8px; }
+.log-toolbar input[type="search"] { flex: 1; min-width: 120px; }
+.log-toolbar select { max-width: 190px; }
+.log-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-right: auto; }
+.log-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #3fb950; }
+.log-status.paused::before { background: var(--muted); }
+.log-status.offline::before { background: #d29922; }
+.log-view {
+  height: 420px;
+  overflow: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 70%, black);
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.log-view .line.hidden { display: none; }
+.log-view .debug { color: var(--muted); }
+.log-view .warn { color: #d29922; }
+.log-view .error { color: #f85149; }

@@ -10,10 +10,14 @@ import { watchKeepOpen } from "./keep-open-service.ts";
 import { route } from "./router.ts";
 import { startLogging } from "./log-service.ts";
 import { openSwitcher, watchTabSwitches } from "./switcher-service.ts";
-import { log } from "../shared/log.ts";
+import { kv, log } from "../shared/log.ts";
+import { watchWindows, windowState } from "./window-watch-service.ts";
 
 // Diagnostics first: everything below may log, and uncaught errors are recorded from here on.
 startLogging();
+
+// Diagnostics: window states and tab switches, to see what Chrome did after each action.
+watchWindows();
 
 // "Keep window open": closing the last tab doesn't close the window.
 watchKeepOpen();
@@ -35,8 +39,12 @@ chrome.runtime.onMessage.addListener((request: Request, sender, sendResponse) =>
 });
 
 // Toolbar button and the optional shortcut from chrome://extensions/shortcuts.
-chrome.action.onClicked.addListener(openBar);
+chrome.action.onClicked.addListener((tab) => {
+  log.debug("action", `toolbar button ${kv({ tab: tab.id, win: tab.windowId, state: windowState(tab.windowId) })}`);
+  openBar(tab);
+});
 chrome.commands.onCommand.addListener((command, tab) => {
+  log.debug("command", `${command} ${kv({ tab: tab?.id, win: tab?.windowId, state: windowState(tab?.windowId) })}`);
   if (command === "open-bar") openBar(tab);
   if (command === "tab-switcher") openSwitcher(tab);
   if (command === "tab-switcher-back") openSwitcher(tab, -1);
@@ -45,6 +53,7 @@ chrome.commands.onCommand.addListener((command, tab) => {
 });
 
 chrome.runtime.onInstalled.addListener(async ({ reason }) => {
+  log.info("background", `installed ${kv({ reason })}`);
   // First install: the settings page explains the one-time ⌘T setup that removes the new tab flash.
   if (reason === chrome.runtime.OnInstalledReason.INSTALL) chrome.runtime.openOptionsPage();
   await injectIntoOpenTabs();
