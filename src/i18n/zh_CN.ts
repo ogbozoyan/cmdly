@@ -251,7 +251,7 @@ export const zh_CN: Messages = {
   optDiagCopied: "日志已复制",
   optDiagEmpty: "没有可复制的内容",
   optDiagClear: "清除",
-  optLogNoticeTitle: "日志中的错误：$1",
+  optLogNoticeTitle: "日志中的警告和错误：$1",
   optLogNoticeText: "复制日志并附在错误报告中。其中不包含你输入或访问的内容。",
   optIssues: "Issues",
   optPrivacy: "隐私",

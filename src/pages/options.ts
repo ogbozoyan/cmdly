@@ -288,10 +288,10 @@ $("#switcher-shortcut").addEventListener("click", () => chrome.tabs.create({ url
 window.addEventListener("focus", renderNativeShortcut);
 renderNativeShortcut();
 
-/** Errors (not warnings) in the log get a notice on every panel, so the report is one click away. */
+/** Warnings and errors in the log get a notice on every panel, so the report is one click away (info/debug are routine). */
 async function renderLogNotice(): Promise<void> {
   const entries = (await send({ type: "log-get" })) ?? [];
-  notices.errors = entries.filter((e) => e.level === "error").length;
+  notices.errors = entries.filter((e) => e.level === "warn" || e.level === "error").length;
   $("#log-notice .banner-title").textContent = t("optLogNoticeTitle", notices.errors);
   updateNotices();
 }

@@ -1,4 +1,5 @@
 /** Tab helpers used by several services. */
+import { pageKind } from "../shared/page-kind.ts";
 
 export const PALETTE_URL = chrome.runtime.getURL("palette.html");
 
@@ -19,7 +20,9 @@ export async function previousTab(tab: chrome.tabs.Tab): Promise<chrome.tabs.Tab
 
 /** Pages where Chrome forbids extension scripts (chrome://, Web Store…). */
 export function canInjectInto(tab: chrome.tabs.Tab | undefined): boolean {
-  return !!tab && /^(https?|file):/.test(tab.url ?? "");
+  if (!tab) return false;
+  const kind = pageKind(tab.url ?? "");
+  return kind === "web" || kind === "file";
 }
 
 /**

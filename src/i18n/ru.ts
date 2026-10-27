@@ -261,7 +261,7 @@ export const ru: Messages = {
   optDiagCopied: "Журнал скопирован",
   optDiagEmpty: "Журнал пуст",
   optDiagClear: "Очистить",
-  optLogNoticeTitle: "Ошибок в журнале: $1",
+  optLogNoticeTitle: "Предупреждений и ошибок в журнале: $1",
   optLogNoticeText: "Скопируйте журнал и приложите к сообщению об ошибке. В нём нет того, что вы вводите или посещаете.",
   optIssues: "Issues",
   optPrivacy: "Конфиденциальность",
