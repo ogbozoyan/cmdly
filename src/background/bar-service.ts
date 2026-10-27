@@ -41,6 +41,8 @@ async function openPalettePage(index: number, windowId: number): Promise<void> {
 /** Toolbar button, chrome://extensions/shortcuts command, or a custom shortcut from the content script. */
 export async function openBar(tab: chrome.tabs.Tab | undefined): Promise<void> {
   if (!tab?.id) return;
+  // chrome://, the Web Store and our own pages (options) never accept scripts: go straight to the palette.
+  if (!canInjectInto(tab)) return openPalettePage(tab.index + 1, tab.windowId);
   try {
     await showOverlay(tab.id);
   } catch (error) {
