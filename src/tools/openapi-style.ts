@@ -16,6 +16,8 @@ export const OPENAPI_CSS = `
   .op { --c: 97, 175, 254; margin: 0 0 12px; border: 1px solid rgb(var(--c)); border-radius: 4px; background: rgba(var(--c), .1); box-shadow: 0 0 3px rgba(0,0,0,.19); }
   .m-post { --c: 73, 204, 144; } .m-put { --c: 252, 161, 48; } .m-delete { --c: 249, 62, 62; } .m-patch { --c: 80, 227, 194; }
   .m-head { --c: 144, 18, 254; } .m-options { --c: 13, 90, 167; } .m-trace { --c: 110, 119, 129; }
+  /* AsyncAPI: the application receives (publish) or sends (subscribe). */
+  .m-pub { --c: 73, 204, 144; } .m-sub { --c: 97, 175, 254; }
   .op.deprecated { --c: 160, 160, 160; opacity: .6; }
   .op.deprecated .path { text-decoration: line-through; }
   .op summary { display: flex; align-items: center; gap: 12px; padding: 5px; cursor: pointer; list-style: none; }
@@ -65,6 +67,13 @@ export const OPENAPI_CSS = `
   .mdesc { color: #6b6b6b; }
   .facts { color: #6b6b6b; font-size: 11px; }
   .facts code { font-size: 11px; background: #f0f0f0; }
+
+  .srv b { margin-right: 8px; font-family: -apple-system, system-ui, sans-serif; }
+  .srv small { margin-left: 10px; color: #6b6b6b; font: 12px -apple-system, system-ui, sans-serif; }
+  .chan { font-family: ui-monospace, Menlo, monospace; font-size: 16px; }
+  .msg + .msg { margin-top: 14px; border-top: 1px dashed rgba(59,65,81,.3); }
+  .msg-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; font-size: 14px; }
+  .msg-head .mime { margin: 0; }
 
   .sch { margin: 0 0 8px; border: 1px solid rgba(59,65,81,.2); border-radius: 4px; background: #fff; }
   .sch summary { padding: 8px 14px; font-size: 14px; font-weight: 700; cursor: pointer; }

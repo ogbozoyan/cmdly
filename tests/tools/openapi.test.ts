@@ -46,6 +46,74 @@ test("a body gets an example built from its schema and the Example/Schema tabs",
   assert.match(html, /<input type="radio" name="tab1" id="tab1-1" checked>/);
 });
 
+const ASYNC = `
+asyncapi: '2.6.0'
+info:
+  title: Streetlights Kafka API
+  version: '1.0.0'
+  description: |
+    Manage the city lights.
+
+    * Turn a light on/off
+servers:
+  scram:
+    url: test.mykafkacluster.org:18092
+    protocol: kafka-secure
+    description: Test broker
+defaultContentType: application/json
+channels:
+  smartylighting.streetlights.1.0.action.{streetlightId}.dim:
+    parameters:
+      streetlightId:
+        $ref: '#/components/parameters/streetlightId'
+    subscribe:
+      operationId: dimLight
+      message:
+        $ref: '#/components/messages/dimLight'
+components:
+  messages:
+    dimLight:
+      name: dimLight
+      title: Dim light
+      traits:
+        - $ref: '#/components/messageTraits/commonHeaders'
+      payload:
+        $ref: "#/components/schemas/dimLightPayload"
+  schemas:
+    dimLightPayload:
+      type: object
+      properties:
+        percentage: { type: integer, minimum: 0, maximum: 100 }
+        sentAt: { type: string, format: date-time }
+  parameters:
+    streetlightId:
+      description: The ID of the streetlight.
+      schema:
+        type: string
+  messageTraits:
+    commonHeaders:
+      headers:
+        type: object
+        properties:
+          my-app-header: { type: integer }
+`;
+
+test("an AsyncAPI document is recognized and rendered: channels, parameters, message payload and headers from traits", () => {
+  const doc = parseOpenApi(ASYNC)!;
+  assert.equal(doc.kind, "asyncapi");
+  assert.equal(doc.operations, 1);
+  const html = renderOpenApi(doc);
+  assert.match(html, /AsyncAPI 2\.6/);
+  assert.match(html, /<span class="chan">smartylighting\.<wbr>streetlights\.<wbr>1\.<wbr>0\.<wbr>action\.<wbr>\{streetlightId\}\.<wbr>dim<\/span>/);
+  assert.match(html, /<span class="path">dimLight<\/span>/);
+  assert.match(html, /<span class="method">SUB<\/span>/);
+  assert.match(html, /kafka-secure:\/\/test\.mykafkacluster\.org:18092/);
+  assert.match(html, /class="pname">streetlightId</);
+  assert.match(html, /class="mp">percentage</);
+  assert.match(html, /class="mp">my-app-header</);
+  assert.match(html, /<pre class="example">\{\s+&quot;percentage&quot;: 0/);
+});
+
 test("spec text is escaped", () => {
   assert.match(renderOpenApi(parseOpenApi(SPEC)!), /Pets &lt;b&gt;/);
 });

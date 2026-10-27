@@ -90,7 +90,7 @@ export function markupPreview(kind: MarkupKind, text: string, options: MarkupOpt
   const remote = !!options.remote;
   if (kind === "openapi") {
     const doc = parseOpenApi(text);
-    return doc && { language: "html", label: markupLabel(kind), content: bodyDocument(renderOpenApi(doc), OPENAPI_CSS) };
+    return doc && { language: "html", label: doc.kind === "asyncapi" ? "AsyncAPI" : markupLabel(kind), content: bodyDocument(renderOpenApi(doc), OPENAPI_CSS) };
   }
   const content =
     kind === "html"
@@ -103,9 +103,10 @@ export function markupResult(kind: MarkupKind, text: string, options: MarkupOpti
   const bytes = new TextEncoder().encode(text).length;
   const doc = kind === "openapi" ? parseOpenApi(text) : null;
   const meta = doc ? describeOpenApi(doc) : markupLabel(kind);
+  const title = doc?.kind === "asyncapi" ? t("markupAsyncApi") : t(TITLES[kind]);
   const row = (preview?: Preview, extra = ""): ResultItem => ({
     kind: "tool",
-    title: t(TITLES[kind]),
+    title,
     meta: `${meta} · ${formatSize(text)}${extra}`,
     copy: text,
     glyph: kind === "openapi" ? "braces" : "code",

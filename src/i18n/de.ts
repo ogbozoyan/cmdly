@@ -181,7 +181,12 @@ export const de: Messages = {
   markupExample: "Beispielwert",
   markupSchema: "Schema",
   markupSchemas: "Schemas",
-  markupRequired: "erforderlich",  optMarkup: "HTML-/Markdown-/OpenAPI-Vorschau",
+  markupRequired: "erforderlich",
+  markupPayload: "Nutzlast",
+  markupHeaders: "Header",
+  markupAsyncApi: "AsyncAPI-Vorschau",
+
+  optMarkup: "HTML-/Markdown-/OpenAPI-Vorschau",
   optMarkupHint: "Fügen Sie HTML, Markdown oder eine Swagger/OpenAPI-Spezifikation ein, um sie gerendert zu sehen. <code>html</code>, <code>md</code> oder <code>swagger</code> + <code>Tab</code> startet einen Einfügemodus. Skripte laufen nie.",
   optMarkupRemote: "Externe Bilder und Stile laden",
   optMarkupRemoteHint: "Aus: Die Vorschau stellt keine Netzwerkanfragen. An: Eingefügtes HTML darf referenzierte Bilder, Schriften und Stile laden.",

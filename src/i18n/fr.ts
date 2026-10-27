@@ -185,7 +185,12 @@ export const fr: Messages = {
   markupExample: "Exemple",
   markupSchema: "Schéma",
   markupSchemas: "Schémas",
-  markupRequired: "obligatoire",  optMarkup: "Aperçu HTML / Markdown / OpenAPI",
+  markupRequired: "obligatoire",
+  markupPayload: "Contenu du message",
+  markupHeaders: "En-têtes",
+  markupAsyncApi: "Aperçu AsyncAPI",
+
+  optMarkup: "Aperçu HTML / Markdown / OpenAPI",
   optMarkupHint: "Collez du HTML, du Markdown ou une spécification Swagger/OpenAPI pour la voir rendue. <code>html</code>, <code>md</code> ou <code>swagger</code> + <code>Tab</code> lance un mode de collage. Les scripts ne s’exécutent jamais.",
   optMarkupRemote: "Charger les images et styles externes",
   optMarkupRemoteHint: "Désactivé : l’aperçu n’effectue aucune requête réseau. Activé : le HTML collé peut charger les images, polices et styles référencés.",

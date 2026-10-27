@@ -196,7 +196,12 @@ export const en = {
   markupExample: "Example Value",
   markupSchema: "Schema",
   markupSchemas: "Schemas",
-  markupRequired: "required",  optMarkup: "HTML / Markdown / OpenAPI preview",
+  markupRequired: "required",
+  markupPayload: "Payload",
+  markupHeaders: "Headers",
+  markupAsyncApi: "AsyncAPI preview",
+
+  optMarkup: "HTML / Markdown / OpenAPI preview",
   optMarkupHint: "Paste HTML, Markdown or a Swagger/OpenAPI spec to see it rendered. <code>html</code>, <code>md</code> or <code>swagger</code> + <code>Tab</code> starts a paste mode. Scripts never run.",
   optMarkupRemote: "Load external images and styles",
   optMarkupRemoteHint: "Off: the preview makes no network requests. On: pasted HTML may fetch images, fonts and styles it references.",

@@ -189,7 +189,12 @@ export const ru: Messages = {
   markupExample: "Пример",
   markupSchema: "Схема",
   markupSchemas: "Схемы",
-  markupRequired: "обязательно",  optMarkup: "Превью HTML / Markdown / OpenAPI",
+  markupRequired: "обязательно",
+  markupPayload: "Тело сообщения",
+  markupHeaders: "Заголовки",
+  markupAsyncApi: "Превью AsyncAPI",
+
+  optMarkup: "Превью HTML / Markdown / OpenAPI",
   optMarkupHint: "Вставьте HTML, Markdown или спецификацию Swagger/OpenAPI, чтобы увидеть её отрендеренной. <code>html</code>, <code>md</code> или <code>swagger</code> + <code>Tab</code> включает режим вставки. Скрипты не выполняются.",
   optMarkupRemote: "Загружать внешние картинки и стили",
   optMarkupRemoteHint: "Выкл.: превью не делает сетевых запросов. Вкл.: вставленный HTML может загружать картинки, шрифты и стили, на которые ссылается.",

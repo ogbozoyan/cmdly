@@ -5,7 +5,7 @@ import { markupFeature } from "./shared.ts";
 export const openApiFeature = markupFeature({
   id: "openapi",
   kind: "openapi",
-  triggers: ["swagger", "openapi", "api"],
+  triggers: ["swagger", "openapi", "asyncapi", "api"],
   score: (text) => (parseOpenApi(text) ? 1 : 0),
   theme: {
     dark: { panel: "#173647", text: "#e6f0f5", muted: "#8aa7b6", rowActive: "#21485f", chip: "#89bf04", chipText: "#10242f", accent: "#89bf04", border: "rgba(137,191,4,0.28)", divider: "rgba(255,255,255,0.09)" },
