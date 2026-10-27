@@ -21,13 +21,12 @@ export interface Registry {
   get(id: FeatureId): Feature | undefined;
   /** Features entered by this word ("md"). */
   byTrigger(word: string): Feature[];
-  /** Common state: rows offered for the text; a forced prefix ("md # Title") beats detection. */
+  /** Common state: rows offered for the text. Modes are entered with a trigger word + Tab or from a hint row. */
   recognize(text: string, ctx: FeatureContext): ResultItem[];
 }
 
-/** Unprompted detection needs this much certainty; a feature's own trigger word lowers the bar to PREFIX_MIN. */
+/** A feature is offered for pasted text only when it is at least this sure. */
 export const AUTO_MIN = 0.5;
-export const PREFIX_MIN = 0.3;
 
 /** Only the features the settings leave on. */
 export function createRegistry(flags: Features, all: Feature[] = FEATURES): Registry {
@@ -40,18 +39,6 @@ export function createRegistry(flags: Features, all: Feature[] = FEATURES): Regi
     get: (id) => features.find((f) => f.id === id),
     byTrigger,
     recognize(text, ctx) {
-      // "md # Title": the trigger word says what is meant, but only if the rest can be that format at all.
-      // Otherwise it is an ordinary query that happens to start with the word ("html to pdf").
-      const prefixed = /^(\S+)\s+([\s\S]+)$/.exec(text.trim());
-      if (prefixed) {
-        const best = byTrigger(prefixed[1])
-          .filter((f) => f.presentation)
-          .map((f) => ({ f, score: score(f, prefixed[2]) }))
-          .filter((c) => c.score >= PREFIX_MIN)
-          .sort((a, b) => b.score - a.score)[0];
-        if (best) return best.f.presentation!.rows(prefixed[2], ctx);
-      }
-
       const candidates: { feature: Feature; rows: ResultItem[]; score: number }[] = [];
       for (const feature of features) {
         const sure = score(feature, text);

@@ -163,6 +163,7 @@ export const de: Messages = {
   markupLabelHtml: "HTML",
   markupLabelMarkdown: "Markdown",
   markupLabelOpenApi: "OpenAPI",
+  markupEnterMode: "Im Modus $1 öffnen",
   markupPlaceholder: "$1 einfügen — Tab für Vorschau",
   markupTooLarge: "zu groß für die Vorschau",
   markupOperations_one: "$1 Operation",

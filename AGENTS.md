@@ -86,10 +86,11 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 - Instant results (calculator, UUID, encoders, JWT, JSON/YAML) are computed in the UI by
   `src/tools/local-results.ts`; tabs/bookmarks/history/commands come from `search-service.ts`.
   Tool rows go first, but the regular results (web search, tabs, history) are always shown below them.
-- **Markup preview** (`tools/markup.ts`, `markdown.ts`, `openapi.ts`): pasted HTML / Markdown / OpenAPI gets a row whose
-  `Preview.language` is `"html"` — `content` is a complete document shown in `<iframe sandbox="" srcdoc>` (no scripts,
-  CSP `default-src 'none'`; `features.markupRemote` opens img/font/style over http(s)). `html`/`md`/`swagger` + Tab
-  sets `CommandBar.markupMode` (chip in the input row): `localResults` then returns only that format's row.
+- **Markup preview** (`tools/markup.ts`, `markdown.ts`, `openapi.ts`): the rendered preview exists only inside a mode
+  (`html`/`md`/`swagger` + Tab, or Tab/Enter on the hint row "Open in … mode" that a recognized paste produces; the
+  text is kept). The row's `Preview.language` is `"html"` — `content` is a complete document shown in
+  `<iframe sandbox="" srcdoc>` (no scripts, CSP `default-src 'none'`; `features.markupRemote` opens img/font/style
+  over http(s)). A paste never gets a preview in the ordinary list, only the hint.
   Markdown/OpenAPI renderers escape everything first — never pass raw pasted HTML through them.
 - **Features and Tab** (`src/features/`): the bar is in `common` state or inside one feature
   (`BarState`). A `Feature` is assembled from strategies, not inherited: a `Recognizer` (notices the

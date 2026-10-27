@@ -178,6 +178,7 @@ export const en = {
   markupLabelHtml: "HTML",
   markupLabelMarkdown: "Markdown",
   markupLabelOpenApi: "OpenAPI",
+  markupEnterMode: "Open in $1 mode",
   markupPlaceholder: "Paste $1 — Tab to preview",
   markupTooLarge: "too large to preview",
   markupOperations_one: "$1 operation",

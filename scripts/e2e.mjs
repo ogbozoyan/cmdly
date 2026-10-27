@@ -221,11 +221,13 @@ try {
     expect((await previewText(page)) === null, "Esc collapses the viewer first");
   });
 
-  await check("HTML paste: sandboxed iframe preview; md mode via Tab + chip", async () => {
+  await check("HTML paste: hint → Tab enters the mode with a sandboxed preview; md mode via Tab + chip", async () => {
     await typeInBar(page, "");
     await pasteInBar(page, "<h1>Hello</h1><script>document.title='x'</script>");
-    expect((await rowTitles(page))[0] === "HTML preview", "HTML preview row is first");
+    // Pasted text is only hinted at: no preview in the list, Tab on the hint enters the mode and keeps the text.
+    expect((await rowTitles(page))[0] === "Open in HTML mode", `hint row is first: ${(await rowTitles(page))[0]}`);
     await page.keyboard.press("Tab");
+    await sleep(300);
     const frame = await page.evaluate(() => {
       const f = document.getElementById("cmdly-overlay").shadowRoot.querySelector("iframe.frame");
       return { hidden: f.hidden, sandbox: f.getAttribute("sandbox"), doc: f.srcdoc };

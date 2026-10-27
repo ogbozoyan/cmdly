@@ -161,6 +161,7 @@ export const zh_CN: Messages = {
   markupLabelHtml: "HTML",
   markupLabelMarkdown: "Markdown",
   markupLabelOpenApi: "OpenAPI",
+  markupEnterMode: "以 $1 模式打开",
   markupPlaceholder: "粘贴 $1 — 按 Tab 预览",
   markupTooLarge: "太大，无法预览",
   markupOperations_one: "$1 个操作",

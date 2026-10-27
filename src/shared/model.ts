@@ -49,6 +49,8 @@ export interface ResultItem {
   preview?: Preview;
   /** The feature (src/features) this row belongs to; decides what Tab does on it. */
   feature?: string;
+  /** A hint row: Enter or Tab enters this feature's mode and keeps the text (see features/tab/enter-feature.ts). */
+  enters?: string;
   /** If set, Tab switches this row to the next variant and remembers it (e.g. UUID version). */
   variant?: Variant;
 }

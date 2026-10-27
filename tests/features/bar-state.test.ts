@@ -35,17 +35,14 @@ test("Backspace on an empty input leaves the feature, on a filled one it is left
   assert.equal(reduce(inMarkdown, { type: "backspace", input: "a" }, registry).handled, false);
 });
 
-test("pasted text is recognized, a prefix forces the format, and the setting turns it off", () => {
-  assert.equal(registry.recognize("<h1>Hi</h1><p>x</p>", ctx)[0]?.feature, "html");
-  assert.equal(registry.recognize("md # Title\n\ntext", ctx)[0]?.feature, "markdown");
-  assert.deepEqual(registry.recognize("just words", ctx), []);
-  // A trigger word alone is not enough: the rest has to be able to be that format.
-  for (const query of ["html to pdf", "md file", "swagger ui", "md hello world"]) assert.deepEqual(registry.recognize(query, ctx), [], query);
-  assert.equal(registry.recognize("html <b>hi</b>", ctx)[0]?.feature, "html");
-  assert.equal(registry.recognize("md # Title", ctx)[0]?.feature, "markdown");
-  assert.deepEqual(registry.recognize("# todo", ctx), []); // one line is not certain enough without the prefix
+test("pasted text is only hinted at; Tab on the hint enters the mode, a trigger word alone is not detection", () => {
+  const hint = registry.recognize("<h1>Hi</h1><p>x</p>", ctx)[0];
+  assert.deepEqual([hint?.feature, hint?.enters, hint?.preview], ["html", "html", undefined]);
+  const row = { feature: "html", enters: true, hasPreview: false, hasVariant: false };
+  assert.deepEqual(reduce(COMMON, { type: "tab", input: "<h1>Hi</h1><p>x</p>", row }, registry).state, { kind: "feature", id: "html" });
+  for (const query of ["html to pdf", "md file", "md # Title", "html <b>hi</b>", "<p>", "# todo", "just words"]) assert.deepEqual(registry.recognize(query, ctx), [], query);
   const spec = JSON.stringify({ openapi: "3.0.0", paths: {} });
-  assert.equal(registry.recognize(spec, ctx).filter((r) => r.feature === "openapi" || r.feature === "html").length, 1);
+  assert.deepEqual(registry.recognize(spec, ctx).filter((r) => r.enters).map((r) => r.enters), ["openapi"]); // the most sure member of the group
   const off = createRegistry({ ...DEFAULT_SETTINGS.features, markup: false });
   assert.deepEqual(off.recognize("<h1>Hi</h1><p>x</p>", ctx), []);
 });

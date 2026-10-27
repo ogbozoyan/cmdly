@@ -17,13 +17,13 @@ export const MAX_MARKUP_BYTES = 512 * 1024;
 const HTML_TAG =
   /<(?:!doctype|html|head|body|div|span|p|a|h[1-6]|ul|ol|li|table|tr|td|th|img|br|hr|pre|code|form|input|button|section|article|nav|header|footer|main|style|script|svg|b|i|em|strong|label|select|textarea)\b[^>]*>/i;
 
-/** How sure we are that the text is HTML, 0..1: a document or several tags is certain, a lone tag less so. */
+/** How sure we are that the text is HTML, 0..1: a document or several tags is certain, a lone tag ("<p>") is not a document. */
 export function htmlScore(text: string): number {
   const s = text.trim();
   if (!s.startsWith("<") || !HTML_TAG.test(s) || /^<https?:\/\/[^>\s]*>$/i.test(s)) return 0;
   if (/^<(?:!doctype|html)\b/i.test(s)) return 1;
   const tags = s.match(new RegExp(HTML_TAG.source, "gi"))?.length ?? 0;
-  return tags >= 2 ? 0.9 : 0.6;
+  return tags >= 2 ? 0.9 : 0.4;
 }
 
 const BASE_CSS = `

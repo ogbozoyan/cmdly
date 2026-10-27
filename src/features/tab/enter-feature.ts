@@ -8,3 +8,12 @@ export function enterOnTrigger(id: FeatureId, triggers: string[]): TabBehavior {
     run: () => ({ state: { kind: "feature", id } }),
   };
 }
+
+/** Tab on a hint row ("Open in HTML mode") enters the feature; the UI keeps the text. */
+export function enterOnRow(id: FeatureId): TabBehavior {
+  return {
+    id: `enter-row:${id}`,
+    applies: ({ state, row }) => state.kind === "common" && !!row?.enters && row.feature === id,
+    run: () => ({ state: { kind: "feature", id } }),
+  };
+}

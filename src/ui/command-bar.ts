@@ -293,12 +293,13 @@ export class CommandBar {
   }
 
   /** Moves into a feature (empty input) or back to the common bar; leaving keeps the text. */
-  private enter(next: BarState): void {
+  private enter(next: BarState, keepText = false): void {
     const inside = next.kind === "feature";
     this.state = next;
     const feature = this.feature();
     this.previewOpen = false;
-    if (inside) {
+    // A typed trigger word starts an empty mode; a hint row carries the text it noticed into the mode.
+    if (inside && !keepText) {
       this.input.value = "";
       this.pasted = null;
       this.clearDraft();
@@ -341,13 +342,13 @@ export class CommandBar {
 
   private rowInfo(): RowInfo | null {
     const row = this.items[this.active];
-    return row ? { feature: row.feature, hasPreview: !!row.preview, hasVariant: !!row.variant } : null;
+    return row ? { feature: row.feature, enters: !!row.enters, hasPreview: !!row.preview, hasVariant: !!row.variant } : null;
   }
 
   private dispatch(event: BarEvent): Step {
     const step = reduce(this.state, event, this.registry);
     const changed = step.state.kind !== this.state.kind || (step.state.kind === "feature" && this.state.kind === "feature" && step.state.id !== this.state.id);
-    if (changed) this.enter(step.state);
+    if (changed) this.enter(step.state, event.type === "tab" && !!event.row?.enters);
     for (const effect of step.effects) {
       if (effect.type === "toggle-preview") this.togglePreview();
       else if (effect.type === "cycle-variant") this.cycleVariant();
@@ -472,6 +473,8 @@ export class CommandBar {
   private async choose(item: ResultItem | undefined, inBackground: boolean): Promise<void> {
     const text = this.input.value.trim();
     if (!item && !text) return;
+
+    if (item?.enters) return this.enter({ kind: "feature", id: item.enters }, true);
 
     this.clearDraft(); // the work is done — next time the bar opens empty
     if (item?.kind === "command") return this.runCommand(item);

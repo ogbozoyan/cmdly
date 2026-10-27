@@ -252,7 +252,7 @@ try {
     }
   });
 
-  // Paste first: the bar recognizes the format and offers a preview under a rule; Tab opens it.
+  // Paste first: the bar only hints at the format ("Open in HTML mode"); Tab enters the mode with the text kept.
   await record("paste-preview", async () => {
     await openBar();
     await clearInput();
@@ -260,7 +260,7 @@ try {
       await paste(sample);
       await sleep(900);
       await press("Tab", "⇥ tab", 1800);
-      await press("Tab", "⇥ tab", 500);
+      await press("Escape", "esc", 900);
       await clearInput();
     }
   });

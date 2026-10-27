@@ -51,6 +51,8 @@ export interface Presentation {
 
 export interface RowInfo {
   feature?: FeatureId;
+  /** A hint row that offers the feature's mode. */
+  enters?: boolean;
   hasPreview: boolean;
   hasVariant: boolean;
 }

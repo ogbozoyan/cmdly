@@ -58,9 +58,9 @@ you actually navigate somewhere.
       <img src="docs/demo/modes.gif" alt="html, md and swagger paste modes with their own colors">
     </td>
     <td width="50%" valign="top">
-      <b>Preview of a paste</b><br>
-      <sub>Paste HTML, Markdown or an OpenAPI spec: the bar offers a preview, <kbd>Tab</kbd> opens it under a rule.</sub><br><br>
-      <img src="docs/demo/paste-preview.gif" alt="Paste HTML, Markdown and OpenAPI, Tab opens the rendered preview">
+      <b>Hint on a paste</b><br>
+      <sub>Paste HTML, Markdown or an OpenAPI spec: the bar offers “Open in … mode”, <kbd>Tab</kbd> or <kbd>Enter</kbd> enters it with the text kept.</sub><br><br>
+      <img src="docs/demo/paste-preview.gif" alt="Paste HTML, Markdown and OpenAPI, Tab enters the mode with the rendered preview">
     </td>
   </tr>
 </table>

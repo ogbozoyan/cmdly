@@ -169,6 +169,7 @@ export const ru: Messages = {
   markupLabelHtml: "HTML",
   markupLabelMarkdown: "Markdown",
   markupLabelOpenApi: "OpenAPI",
+  markupEnterMode: "Открыть в режиме $1",
   markupPlaceholder: "Вставьте $1 — Tab для превью",
   markupTooLarge: "слишком большой для превью",
   markupOperations_one: "$1 операция",
