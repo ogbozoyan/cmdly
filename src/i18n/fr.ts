@@ -178,7 +178,7 @@ export const fr: Messages = {
   markupResponses: "Réponses",
   markupDeprecated: "obsolète",
   markupNoOperations: "Aucune opération",
-  optMarkup: "Aperçu HTML / Markdown / OpenAPI",
+  markupDefaultGroup: "Par défaut",  optMarkup: "Aperçu HTML / Markdown / OpenAPI",
   optMarkupHint: "Collez du HTML, du Markdown ou une spécification Swagger/OpenAPI pour la voir rendue. <code>html</code>, <code>md</code> ou <code>swagger</code> + <code>Tab</code> lance un mode de collage. Les scripts ne s’exécutent jamais.",
   optMarkupRemote: "Charger les images et styles externes",
   optMarkupRemoteHint: "Désactivé : l’aperçu n’effectue aucune requête réseau. Activé : le HTML collé peut charger les images, polices et styles référencés.",

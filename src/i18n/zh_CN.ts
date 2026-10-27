@@ -172,7 +172,7 @@ export const zh_CN: Messages = {
   markupResponses: "响应",
   markupDeprecated: "已弃用",
   markupNoOperations: "没有操作",
-  optMarkup: "HTML / Markdown / OpenAPI 预览",
+  markupDefaultGroup: "默认",  optMarkup: "HTML / Markdown / OpenAPI 预览",
   optMarkupHint: "粘贴 HTML、Markdown 或 Swagger/OpenAPI 规范即可查看渲染结果。<code>html</code>、<code>md</code> 或 <code>swagger</code> + <code>Tab</code> 进入粘贴模式。脚本不会运行。",
   optMarkupRemote: "加载外部图片和样式",
   optMarkupRemoteHint: "关闭：预览不发起任何网络请求。开启：粘贴的 HTML 可以加载其引用的图片、字体和样式。",
