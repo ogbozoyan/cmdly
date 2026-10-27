@@ -47,6 +47,8 @@ export interface ResultItem {
   suggestion?: boolean;
   /** If set, the row can be expanded into a viewer panel. */
   preview?: Preview;
+  /** The feature (src/features) this row belongs to; decides what Tab does on it. */
+  feature?: string;
   /** If set, Tab switches this row to the next variant and remembers it (e.g. UUID version). */
   variant?: Variant;
 }
