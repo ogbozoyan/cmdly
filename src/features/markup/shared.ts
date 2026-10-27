@@ -20,6 +20,7 @@ export function markupFeature(spec: MarkupSpec): Feature {
 
   return {
     id: spec.id,
+    group: "markup",
     enabled: (features) => features.markup,
     triggers: spec.triggers,
     recognizer: { rows: (text, ctx) => (spec.detect(text) ? rows(text, ctx) : []) },

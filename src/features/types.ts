@@ -12,7 +12,7 @@
 import type { MessageKey } from "../i18n/index.ts";
 import type { ResultItem } from "../shared/model.ts";
 import type { ModeTheme } from "../shared/palette.ts";
-import type { Features } from "../shared/settings.ts";
+import type { Features, Settings } from "../shared/settings.ts";
 
 export type FeatureId = string;
 
@@ -24,6 +24,8 @@ export const COMMON: BarState = { kind: "common" };
 /** What the features may read from the settings. */
 export interface FeatureContext {
   features: Features;
+  /** Remembered tool choices, e.g. the UUID version. */
+  tools: Settings["tools"];
 }
 
 /** Common state: looks at the typed or pasted text and offers rows (e.g. "Markdown preview"). */
@@ -75,6 +77,8 @@ export interface TabBehavior {
 
 export interface Feature {
   id: FeatureId;
+  /** Features of one group don't stack: when one recognizes the text, the rest of the group stays quiet. */
+  group?: string;
   enabled(features: Features): boolean;
   /** Words that enter the feature on Tab ("md"); also forced prefixes ("md # Title"). */
   triggers: string[];

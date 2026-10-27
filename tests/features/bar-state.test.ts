@@ -6,7 +6,7 @@ import { COMMON, type BarState } from "../../src/features/types.ts";
 import { DEFAULT_SETTINGS } from "../../src/shared/settings.ts";
 
 const registry = createRegistry(DEFAULT_SETTINGS.features);
-const ctx = { features: DEFAULT_SETTINGS.features };
+const ctx = { features: DEFAULT_SETTINGS.features, tools: DEFAULT_SETTINGS.tools };
 const inMarkdown: BarState = { kind: "feature", id: "markdown" };
 const row = { hasPreview: true, hasVariant: false };
 
@@ -16,10 +16,10 @@ test("Tab on a trigger word enters the feature, Esc goes back", () => {
   assert.deepEqual(reduce(inMarkdown, { type: "escape", input: "# x", row, previewOpen: true }, registry).state, COMMON);
 });
 
-test("Tab on rows: preview folds, a variant cycles, nothing else happens", () => {
+test("Tab on rows: a preview folds, nothing else happens", () => {
   assert.deepEqual(reduce(COMMON, { type: "tab", input: "x", row }, registry).effects, [{ type: "toggle-preview" }]);
-  const variant = { hasPreview: false, hasVariant: true };
-  assert.deepEqual(reduce(COMMON, { type: "tab", input: "uuid", row: variant }, registry).effects, [{ type: "cycle-variant" }]);
+  const orphan = { hasPreview: false, hasVariant: true };
+  assert.deepEqual(reduce(COMMON, { type: "tab", input: "uuid", row: orphan }, registry).effects, []); // a variant needs its feature
   assert.deepEqual(reduce(COMMON, { type: "tab", input: "x", row: null }, registry).effects, []);
 });
 
@@ -41,4 +41,14 @@ test("pasted text is recognized, a prefix forces the format, and the setting tur
   assert.deepEqual(registry.recognize("just words", ctx), []);
   const off = createRegistry({ ...DEFAULT_SETTINGS.features, markup: false });
   assert.deepEqual(off.recognize("<h1>Hi</h1><p>x</p>", ctx), []);
+});
+
+test("data and UUID rows belong to their features; an OpenAPI spec keeps the JSON rows too", () => {
+  const json = registry.recognize('{"a":1}', ctx);
+  assert.deepEqual(new Set(json.map((r) => r.feature)), new Set(["json"]));
+  const uuid = registry.recognize("uuid", ctx)[0];
+  assert.equal(uuid.feature, "uuid");
+  assert.deepEqual(reduce(COMMON, { type: "tab", input: "uuid", row: { feature: "uuid", hasPreview: false, hasVariant: true } }, registry).effects, [{ type: "cycle-variant" }]);
+  const spec = registry.recognize('{"openapi":"3.0.0","info":{"title":"T","version":"1"},"paths":{}}', ctx).map((r) => r.feature);
+  assert.ok(spec.includes("openapi") && spec.includes("json"));
 });

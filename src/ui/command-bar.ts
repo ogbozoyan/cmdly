@@ -151,7 +151,7 @@ export class CommandBar {
   }
 
   private featureContext(): FeatureContext {
-    return { features: this.settings.features };
+    return { features: this.settings.features, tools: this.settings.tools };
   }
 
   /** The feature the bar is inside, if any. */
@@ -173,7 +173,7 @@ export class CommandBar {
     }
     // Tool rows (calculator, JSON/YAML, JWT…) come first; web search, tabs and history always follow.
     const query = this.input.value.trim();
-    const local = [...this.registry.recognize(raw, this.featureContext()), ...localResults(raw, this.settings.features, this.settings.tools)];
+    const local = [...this.registry.recognize(raw, this.featureContext()), ...localResults(raw, this.settings.features)];
     // Text that a tool understood (JSON, JWT, math…) is never sent to the search engine.
     const suggestions = local.length ? null : this.suggest(query, id);
     const remote = (await send({ type: "search", query, overlay: this.options.overlay })) ?? [];
