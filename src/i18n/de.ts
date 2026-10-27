@@ -245,6 +245,9 @@ export const de: Messages = {
   optDiagButton: "Protokoll kopieren",
   optDiagCopied: "Protokoll kopiert",
   optDiagEmpty: "Nichts zu kopieren",
+  optDiagClear: "Leeren",
+  optLogNoticeTitle: "Fehler im Protokoll: $1",
+  optLogNoticeText: "Kopiere das Protokoll und hänge es an eine Fehlermeldung an. Es enthält nie, was du eingibst oder besuchst.",
   optIssues: "Issues",
   optPrivacy: "Datenschutz",
 };

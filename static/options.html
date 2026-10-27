@@ -31,6 +31,24 @@
     </aside>
 
     <main>
+    <!-- options.ts moves it under the title of the open panel -->
+    <div id="notices">
+      <div id="native-shortcut" class="banner" hidden>
+        <div>
+          <b class="banner-title"></b>
+          <p class="banner-text"></p>
+        </div>
+        <button id="chrome-shortcuts" data-i18n="optBannerOpen">Open Chrome shortcuts</button>
+      </div>
+      <div id="log-notice" class="banner error" hidden>
+        <div>
+          <b class="banner-title"></b>
+          <p class="banner-text" data-i18n="optLogNoticeText">Copy the log and attach it to a bug report. It never contains what you type or visit.</p>
+        </div>
+        <button id="log-notice-copy" data-i18n="optDiagButton">Copy log</button>
+        <button id="log-notice-clear" class="link" data-i18n="optDiagClear">Clear</button>
+      </div>
+    </div>
     <section class="panel" id="general" hidden>
       <h2 data-i18n="optNavGeneral">General</h2>
       <div class="card">
@@ -76,13 +94,6 @@
     </section>
     <section class="panel" id="shortcuts" hidden>
       <h2 data-i18n="optShortcuts">Keyboard shortcuts</h2>
-      <div id="native-shortcut" class="banner" hidden>
-        <div>
-          <b class="banner-title"></b>
-          <p class="banner-text"></p>
-        </div>
-        <button id="chrome-shortcuts" data-i18n="optBannerOpen">Open Chrome shortcuts</button>
-      </div>
       <div class="card">
       <div class="row">
         <span><b data-i18n="optOpenBar">Open command bar</b><small data-i18n="optOpenBarHint">Fallback shortcut handled on web pages. For an instant ⌘T use the Chrome setup above.</small></span>

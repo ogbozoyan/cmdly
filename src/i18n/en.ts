@@ -260,6 +260,9 @@ export const en = {
   optDiagButton: "Copy log",
   optDiagCopied: "Log copied",
   optDiagEmpty: "Nothing to copy",
+  optDiagClear: "Clear",
+  optLogNoticeTitle: "Errors in the log: $1",
+  optLogNoticeText: "Copy the log and attach it to a bug report. It never contains what you type or visit.",
   optIssues: "Issues",
   optPrivacy: "Privacy",
 } as const;

@@ -249,6 +249,9 @@ export const fr: Messages = {
   optDiagButton: "Copier le journal",
   optDiagCopied: "Journal copié",
   optDiagEmpty: "Rien à copier",
+  optDiagClear: "Effacer",
+  optLogNoticeTitle: "Erreurs dans le journal : $1",
+  optLogNoticeText: "Copiez le journal et joignez-le à un rapport de bug. Il ne contient jamais ce que vous saisissez ou visitez.",
   optIssues: "Issues",
   optPrivacy: "Confidentialité",
 };

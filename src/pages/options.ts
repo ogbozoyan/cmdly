@@ -31,6 +31,7 @@ function applyLanguage(language: string): void {
     if (isUuidVersion(option.value)) option.textContent = `${option.value} — ${t(UUID_DESCRIPTIONS[option.value])}`;
   });
   renderNativeShortcut();
+  renderLogNotice();
   if (find.value) applyFilter(); // texts changed language
 }
 
@@ -102,11 +103,25 @@ const panels = [...document.querySelectorAll<HTMLElement>(".panel")];
 const navLinks = [...document.querySelectorAll<HTMLAnchorElement>("[data-nav]")];
 const find = $<HTMLInputElement>("#find");
 
+/** What the notices under a panel title say; filled in by renderNativeShortcut and renderLogNotice. */
+const notices = { currentPanel: "", shortcutAssigned: null as boolean | null, errors: 0 };
+
+/** "Make ⌘T instant" nags on every panel until done, then stays as a confirmation only under Shortcuts. */
+function updateNotices(): void {
+  const searching = document.body.classList.contains("searching");
+  const { shortcutAssigned, errors, currentPanel } = notices;
+  $("#native-shortcut").hidden = searching || shortcutAssigned === null || (shortcutAssigned && currentPanel !== "shortcuts");
+  $("#log-notice").hidden = searching || !errors;
+}
+
 function showPanel(): void {
   const id = location.hash.slice(1);
   const current = panels.some((p) => p.id === id) ? id : panels[0].id;
   for (const panel of panels) panel.hidden = panel.id !== current;
   for (const link of navLinks) link.classList.toggle("active", link.dataset.nav === current);
+  panels.find((p) => p.id === current)!.querySelector("h2")!.after($("#notices"));
+  notices.currentPanel = current;
+  updateNotices();
 }
 
 /** Everything a row says, in the shown language, plus the values of its selects. */
@@ -121,9 +136,9 @@ function applyFilter(): void {
     document.querySelectorAll<HTMLElement>(".row, .card, h3, .note, .panel-foot").forEach((el) => (el.hidden = false));
     showPanel();
     $("#no-matches").hidden = true;
-    renderNativeShortcut();
     return;
   }
+  updateNotices();
   let found = 0;
   for (const panel of panels) {
     let inPanel = 0;
@@ -136,7 +151,7 @@ function applyFilter(): void {
       if (heading?.tagName === "H3") (heading as HTMLElement).hidden = !hits.length;
       inPanel += hits.length;
     }
-    panel.querySelectorAll<HTMLElement>(".banner, .note, .panel-foot").forEach((el) => (el.hidden = true));
+    panel.querySelectorAll<HTMLElement>(".note, .panel-foot").forEach((el) => (el.hidden = true));
     panel.hidden = !inPanel;
     found += inPanel;
   }
@@ -252,12 +267,12 @@ async function renderNativeShortcut(): Promise<void> {
   const commands = await chrome.commands.getAll();
   const assigned = commands.find((c) => c.name === "open-bar")?.shortcut ?? "";
   const key = IS_MAC ? "⌘T" : "Ctrl+T";
-  const banner = $("#native-shortcut");
-  banner.hidden = document.body.classList.contains("searching");
-  banner.classList.toggle("ok", !!assigned);
+  $("#native-shortcut").classList.toggle("ok", !!assigned);
+  notices.shortcutAssigned = !!assigned;
+  updateNotices();
   $("#chrome-shortcuts").textContent = t(assigned ? "optBannerChange" : "optBannerOpen");
-  $(".banner-title").textContent = assigned ? t("optBannerOkTitle", assigned) : t("optBannerSetupTitle", key);
-  $(".banner-text").textContent = assigned ? t("optBannerOkText") : t("optBannerSetupText", key);
+  $("#native-shortcut .banner-title").textContent = assigned ? t("optBannerOkTitle", assigned) : t("optBannerSetupTitle", key);
+  $("#native-shortcut .banner-text").textContent = assigned ? t("optBannerOkText") : t("optBannerSetupText", key);
 
   // The tab switcher exists only as a Chrome command (Ctrl+Tab is reserved), so its key lives there too.
   const switcher = commands.find((c) => c.name === "tab-switcher")?.shortcut ?? "";
@@ -272,6 +287,17 @@ $("#switcher-shortcut").addEventListener("click", () => chrome.tabs.create({ url
 // Re-check when the user comes back from chrome://extensions/shortcuts.
 window.addEventListener("focus", renderNativeShortcut);
 renderNativeShortcut();
+
+/** Errors (not warnings) in the log get a notice on every panel, so the report is one click away. */
+async function renderLogNotice(): Promise<void> {
+  const entries = (await send({ type: "log-get" })) ?? [];
+  notices.errors = entries.filter((e) => e.level === "error").length;
+  $("#log-notice .banner-title").textContent = t("optLogNoticeTitle", notices.errors);
+  updateNotices();
+}
+
+window.addEventListener("focus", renderLogNotice);
+renderLogNotice();
 
 // ---------- export / import / reset ----------
 
@@ -318,11 +344,18 @@ $<HTMLAnchorElement>("#report-bug").href = bugReportUrl(environment);
 $<HTMLAnchorElement>("#request-feature").href = featureRequestUrl(environment);
 $("#version").textContent = environment.version;
 
-$("#copy-log").addEventListener("click", async () => {
+async function copyLog(): Promise<void> {
   const entries = (await send({ type: "log-get" })) ?? [];
   if (!entries.length) return flash(t("optDiagEmpty"));
   await navigator.clipboard.writeText(formatReport(describeEnvironment(environment), entries));
   flash(t("optDiagCopied"));
+}
+
+$("#copy-log").addEventListener("click", copyLog);
+$("#log-notice-copy").addEventListener("click", copyLog);
+$("#log-notice-clear").addEventListener("click", async () => {
+  await send({ type: "log-clear" });
+  renderLogNotice();
 });
 
 // ---------- misc ----------
