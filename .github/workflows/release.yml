@@ -1,10 +1,16 @@
 name: Release
 
-# Two ways to release — the version always goes up automatically:
-#  - GitHub UI: Actions → Release → Run workflow → pick patch / minor / major.
-#    The job bumps the version, commits "Release vX.Y.Z" to main, tags it and publishes.
-#  - Locally: `npm run release [patch|minor|major]` bumps, tags and pushes; the tag triggers this workflow.
+# Every commit pushed to main is released: a minor bump, a "Release vX.Y.Z" commit, a tag and a GitHub
+# release whose notes list the commits since the previous release (the changelog).
+# Other ways, the version always goes up automatically:
+#  - GitHub UI: Actions → Release → Run workflow → pick patch / minor / major (same job, other bump).
+#  - Locally: `npm run release [patch|minor|major]` bumps, tags and pushes; the tag triggers this workflow
+#    (its "Release vX.Y.Z" commit on main is skipped, otherwise it would release itself).
+# The release commit is pushed with GITHUB_TOKEN, which doesn't start another run, so there is no loop.
 on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
   workflow_dispatch:
     inputs:
       bump:
@@ -12,8 +18,6 @@ on:
         type: choice
         options: [patch, minor, major]
         default: patch
-  push:
-    tags: ["v*.*.*"]
 
 permissions:
   contents: write # push the version commit/tag and create the release
@@ -26,11 +30,13 @@ jobs:
   release:
     name: Build and publish
     runs-on: ubuntu-latest
+    # A push to main that only carries a release commit (made by npm run release) is already released by its tag.
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || !startsWith(github.event.head_commit.message, 'Release v')
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # tags and history for release notes
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.ref }}
+          ref: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || 'main' }}
 
       - uses: actions/setup-node@v4
         with:
@@ -39,12 +45,12 @@ jobs:
 
       - run: npm ci
 
-      # Manual run: compute the next version and tag it.
+      # Push to main or manual run: compute the next version (minor unless a manual run says otherwise).
       # A tag pushed with GITHUB_TOKEN doesn't start another workflow run, so this job publishes it too.
-      - name: Bump version (${{ inputs.bump }})
-        if: github.event_name == 'workflow_dispatch'
+      - name: Bump version
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
-          version=$(node scripts/version.mjs "${{ inputs.bump }}")
+          version=$(node scripts/version.mjs "${{ inputs.bump || 'minor' }}")
           if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
             echo "::error::Tag v$version already exists"
             exit 1
@@ -52,7 +58,7 @@ jobs:
           echo "TAG=v$version" >> "$GITHUB_ENV"
 
       - name: Use pushed tag
-        if: github.event_name == 'push'
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: echo "TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       - name: Tag matches manifest version
@@ -71,8 +77,22 @@ jobs:
       - name: Zip
         run: ./scripts/package.sh
 
+      # Changelog = commits since the previous release, without the release commits themselves.
+      # Computed before the new tag exists, so the previous release is the nearest tag.
+      - name: Changelog
+        run: |
+          previous=$(git describe --tags --abbrev=0 --match 'v*.*.*' "$( [ "${GITHUB_REF_TYPE}" = tag ] && echo "${TAG}^" || echo HEAD )" 2>/dev/null || true)
+          range=${previous:+$previous..}HEAD
+          {
+            echo "## What's new"
+            echo
+            git log "$range" --no-merges --invert-grep --grep='^Release v' --pretty='- %s (%h)'
+          } > changelog.md
+          echo "PREVIOUS=$previous" >> "$GITHUB_ENV"
+          cat changelog.md
+
       - name: Commit and tag the new version
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -86,7 +106,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           zip="cmdly-${TAG#v}.zip"
-          cat > notes.md <<EOF
+          cp changelog.md notes.md
+          cat >> notes.md <<EOF
+
           ## Install
 
           1. Download **$zip** below and unzip it.
@@ -96,8 +118,10 @@ jobs:
 
           Updating: unzip the new version over the old folder and click ↻ on the Cmdly card.
           EOF
+          if [ -n "$PREVIOUS" ]; then
+            printf '\n**Full Changelog**: https://github.com/%s/compare/%s...%s\n' "$GITHUB_REPOSITORY" "$PREVIOUS" "$TAG" >> notes.md
+          fi
           gh release create "$TAG" "$zip" \
             --title "Cmdly ${TAG#v}" \
             --notes-file notes.md \
-            --generate-notes \
             --verify-tag
