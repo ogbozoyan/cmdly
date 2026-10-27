@@ -58,6 +58,7 @@ Think of it as a small backend + frontend in one package:
 | └ repository | `settings-repository.ts` | The only code touching `chrome.storage` | `@Repository` |
 | i18n | `src/i18n/` | UI strings: `en.ts` is the source of keys, one file per language | `messages.properties` |
 | Tools | `src/tools/` | Pure functions: calculator, dev tools. No `chrome.*` | utility classes |
+| Features | `src/features/` | What the bar can enter or do on Tab (HTML/Markdown/OpenAPI, …); pure | strategy beans + registry |
 | UI | `src/ui/` | The command bar component (`CommandBar` class) | frontend |
 | Content | `src/content/` | Scripts that run inside web pages | — |
 | Pages | `src/pages/` | Entry scripts of extension pages (options, palette, new tab) | — |
@@ -88,6 +89,14 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   CSP `default-src 'none'`; `features.markupRemote` opens img/font/style over http(s)). `html`/`md`/`swagger` + Tab
   sets `CommandBar.markupMode` (chip in the input row): `localResults` then returns only that format's row.
   Markdown/OpenAPI renderers escape everything first — never pass raw pasted HTML through them.
+- **Features and Tab** (`src/features/`): the bar is in `common` state or inside one feature
+  (`BarState`). A `Feature` is assembled from strategies, not inherited: a `Recognizer` (notices the
+  format in the text and offers a row), an optional `Presentation` (palette, chip, hint, rows once
+  entered: only the pasted text is shown) and `TabBehavior[]` (what Tab does; the first that applies
+  runs: `enterOnTrigger`, `togglePanel`, `cycleVariant`). `bar-state.ts` is a pure reducer
+  (key event → state + effects); `CommandBar` only feeds it and runs the effects. Rows that don't
+  belong to a feature yet (JSON, JWT, UUID) use `FALLBACK_TAB` in `registry.ts`. Esc inside a feature
+  goes back to the ordinary bar and keeps the text.
 - A row with `preview` (see `Preview` in `model.ts`) gets an expand button; <kbd>Tab</kbd> opens the
   viewer panel under the results (`CommandBar.renderPreview`, highlighting in `src/ui/highlight.ts`).
 - **Keep window open**: `keep-open-plan.ts` is a pure planner (windows snapshot → actions), unit-tested;
@@ -124,6 +133,9 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 
 - **Add a browser command** → one entry in `COMMANDS` in `src/background/command-service.ts`.
   Need a new icon? Add it to `GlyphName` (`src/shared/model.ts`) and `GLYPHS` (`src/ui/icons.ts`).
+- **Add a feature** (something with its own view or a Tab action) → a file in its group under
+  `src/features/` built from existing parts (see `markup/shared.ts`), one line in `registry.ts`,
+  palette in the feature file, strings in all 5 languages. `command-bar.ts` stays untouched.
 - **Add a tool** (e.g. a converter) → pure function in `src/tools/`, hook it into
   `localResults()`, add a feature flag to `Settings.features` + defaults + a toggle in
   `static/options.html`, add tests in `tests/tools/`.
