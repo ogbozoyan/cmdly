@@ -204,11 +204,20 @@ function schedule(tabId: number): void {
   );
 }
 
+async function stillActive(tabId: number, windowId: number): Promise<boolean> {
+  const [active] = await chrome.tabs.query({ active: true, windowId }).catch(() => []);
+  return active?.id === tabId && canInjectInto(active);
+}
+
 /** Screenshot → downscaled JPEG in `thumbs`. Skipped while Cmdly's own UI covers the page. */
 async function captureNow(tab: chrome.tabs.Tab): Promise<void> {
   if (!tab.id || tab.incognito || !canInjectInto(tab) || switcherOpenIn.has(tab.id)) return;
   if (!(await settingsRepository.get()).switcher.thumbnails) return;
   if ((await overlayOnPage(tab.id)) !== false) return;
+  const tabId = tab.id;
+  // captureVisibleTab shoots whatever is active *now*; the user may have switched during the awaits above,
+  // and the shot would be stored under the wrong tab.
+  if (!(await stillActive(tabId, tab.windowId))) return;
   let shot: string;
   try {
     shot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 85 });
@@ -216,7 +225,7 @@ async function captureNow(tab: chrome.tabs.Tab): Promise<void> {
     log.debug("switcher", "screenshot skipped", error);
     return; // window minimized, rate limit (2 per second) or page not capturable
   }
-  const tabId = tab.id;
+  if (!(await stillActive(tabId, tab.windowId))) return;
   try {
     const thumb = await downscale(shot);
     thumbs.set(tabId, thumb);
