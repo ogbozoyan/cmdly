@@ -367,7 +367,8 @@ li.active .icon.glyph svg { color: var(--chip-text); }
 }
 
 /* the chip springs out of the typed word, the bar breathes once */
-.wrap.morph .bar { animation: breathe 0.42s cubic-bezier(0.3, 0.7, 0.3, 1); }
+/* pop stays in the list: dropping it with the class would replay it (a blink when .morph is removed) */
+.wrap.morph .bar { animation: pop 0.16s ease-out, breathe 0.42s cubic-bezier(0.3, 0.7, 0.3, 1); }
 .wrap.morph .mode-chip:not([hidden]) {
   transform-origin: left center;
   animation: chip-spring 0.46s cubic-bezier(0.34, 1.56, 0.64, 1);
