@@ -195,6 +195,31 @@ try {
     await shot(page, "commands");
   });
 
+  const setExperimental = (experimental) =>
+    inWorker(async (value) => {
+      const { settings = {} } = await chrome.storage.sync.get("settings");
+      await chrome.storage.sync.set({ settings: { ...settings, experimental: value } });
+    }, experimental);
+
+  await check("experimental ranking: no mid-word command hits; scopes list the catalog", async () => {
+    await typeInBar(page, "mar");
+    const classic = await rowTitles(page);
+    expect(classic.includes("Bookmark Page"), `classic rows: ${JSON.stringify(classic)}`);
+
+    await setExperimental({ ranking: true, learned: false, scopes: true });
+    await typeInBar(page, "mar");
+    const ranked = await rowTitles(page);
+    expect(!ranked.includes("Bookmark Page") && ranked.includes("Copy URL as Markdown"), `ranked rows: ${JSON.stringify(ranked)}`);
+
+    await typeInBar(page, "settings fo");
+    const scoped = await rowTitles(page);
+    expect(scoped[0] === "Settings: Fonts", `settings scope: ${JSON.stringify(scoped)}`);
+
+    await typeInBar(page, ">");
+    expect((await rowTitles(page)).length > 20, "> lists every command");
+    await setExperimental({ ranking: false, learned: false, scopes: false });
+  });
+
   await check("JWT decoder", async () => {
     await typeInBar(page, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MiIsIm5hbWUiOiJBbm4iLCJleHAiOjE3MDAwMDAwMDB9.c2ln");
     const titles = await rowTitles(page);

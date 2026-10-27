@@ -47,6 +47,7 @@ test("suggestions go after the web search row and its commands", () => {
       { kind: "tab", title: "Docs", url: "https://docs.example" },
     ],
     [{ kind: "search", title: "close other tabs chrome", suggestion: true }],
+    "top",
   );
   assert.deepEqual(merged.map((i) => i.title), ["close oth", "Close Other Tabs", "close other tabs chrome", "Docs"]);
 });
@@ -60,6 +61,22 @@ test("suggestions go right under the web search row, without repeats", () => {
     { kind: "search", title: "git", suggestion: true },
     { kind: "search", title: "github desktop", suggestion: true },
     { kind: "url", title: "github.com", url: "https://github.com/", suggestion: true },
-  ]);
+  ], "top");
   assert.deepEqual(merged.map((i) => i.title), ["git", "github desktop", "GitHub"]);
+});
+
+test("at the bottom suggestions never move the rows above", () => {
+  const items: ResultItem[] = [
+    { kind: "search", title: "doc" },
+    { kind: "tab", title: "Docs", url: "https://docs.example" },
+    { kind: "history", title: "Doctor", url: "https://doctor.example" },
+    { kind: "command", title: "Duplicate Tab" },
+  ];
+  const merged = withSuggestions(items, [{ kind: "search", title: "docker", suggestion: true }], "bottom");
+  assert.deepEqual(merged.map((i) => i.title), ["doc", "Docs", "Doctor", "Duplicate Tab", "docker"]);
+  assert.equal(merged.indexOf(items[3]), 3);
+});
+
+test("scoped queries never go to the search engine", () => {
+  assert.equal(maySuggest("> pin"), false);
 });

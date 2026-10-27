@@ -30,6 +30,8 @@ export interface Settings {
     markup: boolean;
     /** Let the preview load images, fonts and styles from the network (off: nothing is requested). */
     markupRemote: boolean;
+    /** Every chrome://settings section as a command (background/chrome-pages.ts). */
+    chromeSettings: boolean;
   };
   bar: {
     /** Keep the typed text when the bar closes or its page reloads, until something is run. */
@@ -65,6 +67,17 @@ export interface Settings {
   /** Engine asked for suggestions; the search itself always uses Chrome's default engine. */
   suggest: {
     engine: SuggestEngine;
+    /** Suggestions arrive late: at the bottom they never push the user's own tabs and history down. */
+    position: "bottom" | "top";
+  };
+  /** Opt-in features that may change or go away (Settings → Experimental). */
+  experimental: {
+    /** One relevance scale for every source, word-start matching, a top hit that owns Enter (shared/ranking.ts). */
+    ranking: boolean;
+    /** Remember which row was picked for a query, locally, to rank it higher next time (shared/learned.ts). */
+    learned: boolean;
+    /** ">" lists every command, "settings" every Chrome settings page. */
+    scopes: boolean;
   };
   limits: {
     tabs: number;
@@ -102,6 +115,7 @@ export const DEFAULT_SETTINGS: Settings = {
     formats: true,
     markup: true,
     markupRemote: false,
+    chromeSettings: true,
   },
   bar: {
     restoreDraft: true,
@@ -127,6 +141,12 @@ export const DEFAULT_SETTINGS: Settings = {
   },
   suggest: {
     engine: "google",
+    position: "bottom",
+  },
+  experimental: {
+    ranking: false,
+    learned: false,
+    scopes: false,
   },
   limits: {
     tabs: 5,

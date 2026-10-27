@@ -70,7 +70,7 @@ you actually navigate somewhere.
 |                       |                                                                                                                                                             |
 |-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Search everything** | Open tabs, bookmarks and history in one list. Search suggestions from Google, Bing, DuckDuckGo or Yandex as you type. Pick an open tab to switch to it instead of opening a duplicate.                                              |
-| **Commands**          | Copy URL, Copy as Markdown, Pin/Unpin, Mute, Duplicate, Close other tabs, Move to new window, Reopen closed tab, Bookmark, open History/Downloads/Settings… |
+| **Commands**          | Copy URL, Copy as Markdown, Pin/Unpin, Mute, Duplicate, Close other tabs, Move to new window, Reopen closed tab, Bookmark, open History/Downloads/Settings, and every Chrome settings page (Passwords, Cookies, Camera…) |
 | **Calculator**        | `2+2`, `200+15%`, `sqrt(16)`, `5!`, `2^10`, `3x4`. Enter copies the result.                                                                                 |
 | **HTML / Markdown / OpenAPI** | Paste HTML, Markdown or a Swagger/OpenAPI/AsyncAPI spec: <kbd>Tab</kbd> shows it rendered. Type `html`, `md` or `swagger` + <kbd>Tab</kbd> for a paste mode. Runs in a sandbox: no scripts, no network unless you allow it in settings. |
 | **JSON / YAML**       | Paste JSON or YAML: format, minify, convert JSON ⇄ YAML. <kbd>Tab</kbd> expands a syntax-highlighted viewer under the results.                              |
@@ -175,6 +175,7 @@ Press <kbd>⌘</kbd> <kbd>T</kbd> and start typing.
 | `github.com`                   | Open the address in a new tab                                                  |
 | `how to ...`                   | Search with your default search engine                                         |
 | `copy`, `pin`, `close`, `mute` | Commands for the current tab                                                   |
+| `passwords`, `cookies`, `camera` | That Chrome settings page                                                    |
 | `200+15%`                      | `= 230` — Enter copies it                                                      |
 | `uuid`, `uuid 5` | Fresh UUID — <kbd>Tab</kbd> switches v4 / v7 / v1 and remembers it; `uuid v7` for a one-off |
 | `b64 hello` / `unb64 aGVsbG8=` | Base64 encode / decode                                                         |

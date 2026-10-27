@@ -7,3 +7,7 @@ dist/
 *.log
 .tmp/
 cmdly-*/
+
+# Local design notes and agent workspaces (not part of the public repo)
+docs/superpowers/
+.superpowers/

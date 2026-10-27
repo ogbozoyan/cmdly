@@ -14,7 +14,7 @@ export type Request =
   | { type: "draft-get" }
   | { type: "overlay-state"; open: boolean }
   | { type: "open"; item?: ResultItem; text: string; inBackground: boolean; overlay: boolean }
-  | { type: "command"; id: string; overlay: boolean }
+  | { type: "command"; id: string; overlay: boolean; query: string }
   | { type: "newtab-opened" }
   | { type: "dismiss-page" }
   | { type: "restore-tab" }
@@ -26,7 +26,8 @@ export type Request =
   | { type: "switcher-state"; open: boolean }
   | { type: "log"; entry: LogEntry }
   | { type: "log-get" }
-  | { type: "log-clear" };
+  | { type: "log-clear" }
+  | { type: "learned-clear" };
 
 /** Response type for each request type. */
 export interface ResponseMap {
@@ -49,6 +50,7 @@ export interface ResponseMap {
   log: void;
   "log-get": LogEntry[];
   "log-clear": void;
+  "learned-clear": void;
 }
 
 /** Typed wrapper around chrome.runtime.sendMessage. Resolves to null if the background failed. */

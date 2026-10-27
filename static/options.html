@@ -24,6 +24,7 @@
         <a href="#tools" data-nav="tools" data-i18n="optNavTools">Tools</a>
         <a href="#switcher" data-nav="switcher" data-i18n="optNavSwitcher">Tab switcher</a>
         <a href="#appearance" data-nav="appearance" data-i18n="optAppearance">Appearance</a>
+        <a href="#experimental" data-nav="experimental"><span data-i18n="optNavExperimental">Experimental</span> <span class="badge" data-i18n="optExperimentalBadge">beta</span></a>
         <a href="#backup" data-nav="backup" data-i18n="optBackup">Backup</a>
         <a href="#about" data-nav="about" data-i18n="optNavAbout">About &amp; feedback</a>
       </nav>
@@ -164,6 +165,13 @@
         </select>
       </label>
       <label class="row" data-requires="sources.suggestions">
+        <span><b data-i18n="optSuggestPosition">Place suggestions</b><small data-i18n="optSuggestPositionHint">They arrive a moment later. At the bottom they never push your tabs and history down.</small></span>
+        <select data-path="suggest.position">
+          <option value="bottom" data-i18n="optSuggestBottom">Below everything</option>
+          <option value="top" data-i18n="optSuggestTop">Under the search row</option>
+        </select>
+      </label>
+      <label class="row" data-requires="sources.suggestions">
         <span><b data-i18n="optSuggestionsMax">Max suggestions</b></span>
         <input type="number" min="1" max="10" data-path="limits.suggestions">
       </label>
@@ -176,6 +184,10 @@
       <label class="row">
         <span><b data-i18n="optCommands">Commands</b><small data-i18n="optCommandsHint">Copy URL, Pin Tab, Close Other Tabs, Open Settings and more.</small></span>
         <input type="checkbox" data-path="features.commands">
+      </label>
+      <label class="row" data-requires="features.commands">
+        <span><b data-i18n="optChromeSettings">Chrome settings</b><small data-i18n="optChromeSettingsHint">Every section of Chrome's settings as a command: Passwords, Cookies, Camera, Appearance and more.</small></span>
+        <input type="checkbox" data-path="features.chromeSettings">
       </label>
       <label class="row">
         <span><b data-i18n="optCalculator">Calculator</b><small><code>2+2</code>, <code>200+15%</code>, <code>sqrt(16)</code>, <code>5!</code></small></span>
@@ -275,6 +287,29 @@
       <label class="row">
         <span><b data-i18n="optAccent">Accent color</b><small data-i18n="optAccentHint">Cursor and text selection</small></span>
         <input type="color" data-path="appearance.accent">
+      </label>
+      </div>
+      <div class="panel-foot"><button class="link" data-reset-section data-i18n="optResetSection">Reset this section</button></div>
+    </section>
+    <section class="panel" id="experimental" hidden>
+      <h2 data-i18n="optNavExperimental">Experimental</h2>
+      <p class="note" data-i18n="optExperimentalNote">These features are being tried out: they may change or disappear in a future version.</p>
+      <div class="card">
+      <label class="row">
+        <span><b data-i18n="optExpRanking">Smart ranking</b><small data-i18n="optExpRankingHint">Tabs, history and commands on one relevance scale; short words match only at the start of a word; a strong match takes the first row.</small></span>
+        <input type="checkbox" data-path="experimental.ranking">
+      </label>
+      <label class="row" data-requires="experimental.ranking">
+        <span><b data-i18n="optExpLearned">Learn from my choices</b><small data-i18n="optExpLearnedHint">Remembers which row you pick for what you type and ranks it higher next time. Stored only on this computer, never in incognito.</small></span>
+        <input type="checkbox" data-path="experimental.learned">
+      </label>
+      <div class="row" data-requires="experimental.ranking">
+        <span><b data-i18n="optClearLearned">Forget learned choices</b></span>
+        <button id="clear-learned" data-i18n="optClearLearnedButton">Clear</button>
+      </div>
+      <label class="row">
+        <span><b data-i18n="optExpScopes">Command scopes</b><small data-i18n="optExpScopesHint">Type &gt; to list every command, or "settings" to list every Chrome settings page.</small></span>
+        <input type="checkbox" data-path="experimental.scopes">
       </label>
       </div>
       <div class="panel-foot"><button class="link" data-reset-section data-i18n="optResetSection">Reset this section</button></div>

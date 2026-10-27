@@ -30,6 +30,11 @@ are kept in the same in-memory session storage and are gone when Chrome quits. T
 what you type, paste or visit. Nothing is sent anywhere; Settings → Feedback → "Copy log" puts it on your
 clipboard so you can attach it to a bug report if you choose to.
 
+**Learned choices** (off by default, Settings → Experimental → "Learn from my choices"): the text you
+typed (first 20 characters) and the row you picked (a command id or the page URL) are kept in
+`chrome.storage.local` on this computer — at most 500 entries, never from incognito windows, never sent
+anywhere. "Clear" in the same section, or turning the option off, deletes them.
+
 ## Data Cmdly sends
 
 Cmdly has no servers, no analytics, no tracking and no ads. Nothing is ever sent to the developer.

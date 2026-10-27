@@ -4,6 +4,7 @@ import { settingsRepository } from "../shared/settings-repository.ts";
 import { dismissPalettePage, handleNewTab, openBar } from "./bar-service.ts";
 import { clearLog, readLog, recordLog } from "./log-service.ts";
 import { loadDraft, markOverlay, saveDraft } from "./bar-state-service.ts";
+import { choiceKey, clearLearned, recordChoice } from "./choice-service.ts";
 import { runCommand } from "./command-service.ts";
 import { open } from "./navigation-service.ts";
 import { search } from "./search-service.ts";
@@ -37,10 +38,14 @@ export async function route(request: Request, sender: chrome.tabs.Tab): Promise<
     // Running something ends the bar's session: a "Reload tab" must not bring it back.
     case "open":
       await markOverlay(sender, false);
+      if (request.item) void recordChoice(request.text, choiceKey(request.item), sender); // off the Enter path
       return open(request, sender);
     case "command":
       await markOverlay(sender, false);
+      void recordChoice(request.query, "cmd:" + request.id, sender);
       return runCommand(request.id, sender, request.overlay);
+    case "learned-clear":
+      return clearLearned();
     case "newtab-opened":
       return handleNewTab(sender);
     case "dismiss-page":

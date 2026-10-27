@@ -93,6 +93,8 @@ for (const el of fields) {
     const value = readField(el);
     if (value === null) return;
     setPath(el.dataset.path!, value);
+    // Turning learning off means "forget": nothing learned stays behind unused.
+    if (el.dataset.path === "experimental.learned" && value === false) send({ type: "learned-clear" });
     persist();
   });
 }
@@ -350,6 +352,11 @@ async function copyLog(): Promise<void> {
   await navigator.clipboard.writeText(formatReport(describeEnvironment(environment), entries));
   flash(t("optDiagCopied"));
 }
+
+$("#clear-learned").addEventListener("click", async () => {
+  await send({ type: "learned-clear" });
+  flash(t("toastLearnedCleared"));
+});
 
 $("#copy-log").addEventListener("click", copyLog);
 $("#log-notice-copy").addEventListener("click", copyLog);

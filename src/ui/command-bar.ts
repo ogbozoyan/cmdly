@@ -186,7 +186,7 @@ export class CommandBar {
     const rows = (await suggestions) ?? [];
     if (id !== this.requestId || !rows.length) return;
     const selected = this.items[this.active];
-    const merged = withSuggestions(this.items, rows);
+    const merged = withSuggestions(this.items, rows, this.settings.suggest.position);
     this.draw(merged, this.active === 0 ? 0 : Math.max(merged.indexOf(selected), 0));
   }
 
@@ -492,7 +492,7 @@ export class CommandBar {
   }
 
   private async runCommand(item: ResultItem): Promise<void> {
-    const result = (await send({ type: "command", id: item.commandId!, overlay: this.options.overlay })) ?? {};
+    const result = (await send({ type: "command", id: item.commandId!, overlay: this.options.overlay, query: this.input.value })) ?? {};
     if (result.copy) await copyText(result.copy, this.root);
     if (result.toast) this.showToast(result.toast);
     else if (this.options.overlay || result.closePalette) this.options.close();

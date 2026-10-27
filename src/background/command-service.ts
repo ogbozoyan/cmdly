@@ -2,6 +2,8 @@ import type { CommandResult, GlyphName, ResultItem } from "../shared/model.ts";
 import { dismissPalettePage } from "./bar-service.ts";
 import { en } from "../i18n/en.ts";
 import { t, tp, type MessageKey } from "../i18n/index.ts";
+import type { Candidate } from "../shared/ranking.ts";
+import { CHROME_PAGES } from "./chrome-pages.ts";
 import { score } from "./scoring.ts";
 import { previousTab, restoreClosedTab } from "./tab-service.ts";
 
@@ -121,6 +123,9 @@ const COMMANDS: Command[] = [
     id: "cmdly-settings", title: "cmdCmdlySettings", keywords: "preferences options configure cmdly", glyph: "gear",
     run: async () => { await chrome.runtime.openOptionsPage(); return { focusMoved: true }; },
   },
+  ...CHROME_PAGES.map((page): Command => ({
+    id: "page-" + page.id, title: page.title, keywords: page.keywords, glyph: page.glyph, run: openPage(page.url),
+  })),
 ];
 
 /** Closes unpinned tabs in the target's window matching `filter`, keeping the target and the bar's own tab. */
@@ -142,26 +147,52 @@ export async function commandTarget(host: chrome.tabs.Tab, overlay: boolean): Pr
   return overlay ? chrome.tabs.get(host.id!) : previousTab(host);
 }
 
-/** Up to 3 commands matching the query, as result rows. */
-export function matchCommands(query: string, target: chrome.tabs.Tab | undefined): ResultItem[] {
-  return COMMANDS.map((command) => {
-    const key = typeof command.title === "function" ? command.title(target) : command.title;
+/** Commands the user can see: the Chrome settings pages are a feature of their own. */
+function available(chromeSettings: boolean): Command[] {
+  return chromeSettings ? COMMANDS : COMMANDS.filter((c) => !c.id.startsWith("page-"));
+}
+
+/** Up to 3 commands matching the query, as result rows (the classic ranking). */
+export function matchCommands(query: string, target: chrome.tabs.Tab | undefined, chromeSettings = true): ResultItem[] {
+  return available(chromeSettings).map((command) => {
+    const key = titleKey(command, target);
     const title = t(key);
     // Localized title, the English one (people often type English commands) and keywords.
-    const relevance = Math.max(score(query, title), score(query, en[key]), score(query, command.keywords) - 1);
+    const relevance = Math.max(score(query, title), score(query, en[key]), score(query, command.keywords) - 1)
+      // "Settings: …" pages all start with the word, which would push "Open Settings" out of its own query.
+      - (command.id.startsWith("page-") ? 1 : 0);
     return { command, title, relevance };
   })
     .filter((x) => x.relevance > 0)
     .sort((a, b) => b.relevance - a.relevance)
     .slice(0, 3)
-    .map(({ command, title }) => ({
-      kind: "command" as const,
-      commandId: command.id,
+    .map(({ command, title }) => commandRow(command, title));
+}
+
+/** Every command as a ranking candidate (shared/ranking.ts), for the experimental ranking. */
+export function commandCandidates(target: chrome.tabs.Tab | undefined, chromeSettings: boolean): Candidate<ResultItem>[] {
+  return available(chromeSettings).map((command) => {
+    const key = titleKey(command, target);
+    const title = t(key);
+    return {
+      item: commandRow(command, title),
+      source: command.id.startsWith("page-") ? "page" : "command",
+      fields: [{ text: title, weight: 1 }, { text: en[key], weight: 1 }, { text: command.keywords, weight: 0.75 }],
+      frecency: 0,
+      learned: 0,
       title,
-      glyph: command.glyph,
-      url: "cmd:" + command.id,
-      action: t("actionRun"),
-    }));
+      recency: 0,
+      id: "cmd:" + command.id,
+    };
+  });
+}
+
+function titleKey(command: Command, target: chrome.tabs.Tab | undefined): MessageKey {
+  return typeof command.title === "function" ? command.title(target) : command.title;
+}
+
+function commandRow(command: Command, title: string): ResultItem {
+  return { kind: "command", commandId: command.id, title, glyph: command.glyph, url: "cmd:" + command.id, action: t("actionRun") };
 }
 
 export async function runCommand(id: string, host: chrome.tabs.Tab, overlay: boolean): Promise<CommandResult> {

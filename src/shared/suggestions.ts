@@ -35,6 +35,7 @@ export function maySuggest(query: string): boolean {
   if (/^eyJ[\w-]*\.[\w-]+\.?/.test(q)) return false; // JWT
   if (/[\w+/=-]{32,}/.test(q)) return false; // token, hash, key, Base64 blob
   if (/^(b64|unb64|url|unurl|uuid|guid)\b/i.test(q)) return false; // tool commands
+  if (q.startsWith(">")) return false; // command scope
   if (/^[\d\s.,+\-*/%^()]+$/.test(q)) return false; // arithmetic
   return true;
 }
@@ -69,13 +70,16 @@ export function suggestionRows(query: string, suggestions: string[], limit: numb
 
 /**
  * Puts suggestion rows after the main web-search row and the commands that follow it
- * (an exact "Close Other Tabs" beats a popular query), before tabs and history.
+ * (an exact "Close Other Tabs" beats a popular query), before tabs and history — or, with
+ * `position: "bottom"` (Settings → Search), after everything.
  */
-export function withSuggestions(items: ResultItem[], rows: ResultItem[]): ResultItem[] {
+export function withSuggestions(items: ResultItem[], rows: ResultItem[], position: "bottom" | "top"): ResultItem[] {
   if (!rows.length) return items;
   const titles = new Set(items.filter((i) => i.kind === "search").map((i) => i.title.toLowerCase()));
   const urls = new Set(items.map((i) => i.url).filter(Boolean));
   const fresh = rows.filter((r) => (r.url ? !urls.has(r.url) : !titles.has(r.title.toLowerCase())));
+  // They arrive after the list is drawn: appended at the end, nothing the user is looking at moves.
+  if (position === "bottom") return [...items, ...fresh];
   const search = items.findIndex((i) => i.kind === "search");
   let at = search === -1 ? items.length : search + 1;
   while (items[at]?.kind === "command") at++;

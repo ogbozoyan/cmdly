@@ -61,3 +61,10 @@ test("numbers outside the UI range are clamped", () => {
   assert.equal(s.appearance.width, 1000);
   assert.equal(s.limits.tabs, 1);
 });
+
+test("experimental flags are off by default and merge one by one", () => {
+  const s = mergeSettings({ experimental: { ranking: true } });
+  assert.deepEqual(s.experimental, { ranking: true, learned: false, scopes: false });
+  assert.equal(DEFAULT_SETTINGS.features.chromeSettings, true);
+  assert.equal(DEFAULT_SETTINGS.suggest.position, "bottom");
+});

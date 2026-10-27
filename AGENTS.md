@@ -126,7 +126,18 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   was open when its page reloaded is injected again (same URL only). `open`/`command` messages clear
   the mark first so "Reload tab" doesn't resurrect the bar.
 - **Search suggestions** are a separate `suggest` message: the UI draws tabs/history first, then
-  merges suggestion rows under the web-search row (`withSuggestions`) when the network answers.
+  merges suggestion rows (`withSuggestions`) when the network answers — at the end of the list by default, or
+  under the web-search row (`Settings.suggest.position`).
+- **Chrome settings commands**: every chrome://settings section is a command built from the data table in
+  `background/chrome-pages.ts` (title keys `pg*`, toggle `features.chromeSettings`).
+- **Experimental** (`Settings.experimental`, options panel "Experimental", all off by default): with every flag
+  off the classic path in `search-service.ts` (`score()`, fixed group order) runs unchanged.
+  `ranking` → `rankedSearch`: all sources become `Candidate`s and `rank()` (`shared/ranking.ts`) puts them on one
+  scale (word-start matching, NFKD, wrong keyboard layout, source priors, frecency, per-source caps); a row with
+  `final ≥ TOP_HIT` goes above web search and owns Enter. `learned` → `choice-service.ts` records "typed text →
+  picked row" in `chrome.storage.local` (pure part `shared/learned.ts`, never incognito, cleared by the button or
+  by turning it off). `scopes` → `parseScope`: `>` ranks every command, `settings …` (any UI language) every
+  settings page.
 - A row with `variant` (see `Variant` in `model.ts`) shows a chip; <kbd>Tab</kbd> calls
   `CommandBar.cycleVariant`, which stores the next value in `Settings.tools` and re-renders.
   Used for the UUID version (`src/tools/uuid.ts`: v4, v7, v1).

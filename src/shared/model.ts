@@ -1,7 +1,9 @@
 /** Names of the monochrome icons drawn by the UI (see src/ui/icons.ts). */
 export type GlyphName =
   | "link" | "close" | "duplicate" | "pin" | "sound" | "reload" | "window" | "restore" | "star"
-  | "incognito" | "history" | "download" | "puzzle" | "gear" | "calc" | "trash" | "key" | "code" | "braces";
+  | "incognito" | "history" | "download" | "puzzle" | "gear" | "calc" | "trash" | "key" | "code" | "braces"
+  | "user" | "shield" | "lock" | "card" | "mapPin" | "sliders" | "camera" | "mic" | "bell" | "image" | "clipboard"
+  | "doc" | "cpu" | "palette" | "text" | "globe" | "power" | "accessibility" | "info" | "cookie" | "search";
 
 /** Content of the expandable panel under the results (Tab to open). */
 export interface Preview {
