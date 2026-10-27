@@ -122,7 +122,7 @@ export class CommandBar {
 
   /** Restored text is selected: typing replaces it, arrows/Enter continue where the user stopped. */
   private restoreDraft(draft: Draft | null): void {
-    if (!draft || this.input.value) return; // the user already started typing
+    if (!draft || !this.settings.bar.restoreDraft || this.input.value) return; // the user already started typing
     this.input.value = draft.text;
     if (draft.pasted) this.pasted = { raw: draft.pasted, shown: draft.text };
     this.input.select();
@@ -132,7 +132,8 @@ export class CommandBar {
     clearTimeout(this.draftTimer);
     this.draftTimer = setTimeout(() => {
       const text = this.input.value;
-      send({ type: "draft-save", draft: text.trim() ? { text, pasted: this.pasted?.raw } : null });
+      const keep = text.trim() && this.settings.bar.restoreDraft;
+      send({ type: "draft-save", draft: keep ? { text, pasted: this.pasted?.raw } : null });
     }, 150);
   }
 
@@ -457,6 +458,7 @@ export class CommandBar {
     this.root.classList.toggle("top", a.position === "top");
     this.root.style.setProperty("--accent", a.accent);
     this.root.style.setProperty("--width", `${a.width}px`);
+    this.root.style.setProperty("--radius", `${a.radius}px`);
   }
 
   /** The toast is not part of the bar: the overlay closes at once (⌘T works right away), the toast stays. */

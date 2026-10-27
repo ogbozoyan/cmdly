@@ -207,7 +207,7 @@ function mount(backwards: boolean): OpenSwitcher {
   send({ type: "switcher-tabs" }).then((result) => {
     if (closed) return;
     if (!result || result.length < 2) return close();
-    tabs = overflow === "fit" ? result.slice(0, fitCount(window.innerWidth)) : result;
+    tabs = overflow === "fit" ? result.slice(0, fitCount(window.innerWidth, s?.switcher.maxCards)) : result;
     list.append(...tabs.map((tab, i) => card(tab, i)));
     wrap.hidden = false;
     const first = backwards ? tabs.length - 1 : initialIndex(tabs.length);

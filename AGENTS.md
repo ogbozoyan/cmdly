@@ -147,7 +147,7 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   `localResults()`, add a feature flag to `Settings.features` + defaults + a toggle in
   `static/options.html`, add tests in `tests/tools/`.
 - **Add a setting** → field in `Settings` and `DEFAULT_SETTINGS` (`src/shared/settings.ts`),
-  a control with `data-path="section.key"` in `static/options.html`. Simple controls need no JS.
+  a control with `data-path="section.key"` inside the matching `<section class="panel">` of `static/options.html` (panels: General, Shortcuts, Search, Tools, Tab switcher, Appearance, Backup, About; the sidebar, settings search and "Reset this section" work off the markup, no JS). Numeric ranges go in `RANGES` (`settings.ts`).
 - **Add a message type** → `Request` + `ResponseMap` in `src/shared/messages.ts`, a `case` in
   `src/background/router.ts`. TypeScript will flag a missing case.
 

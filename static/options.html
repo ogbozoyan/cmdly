@@ -7,34 +7,83 @@
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <main>
-    <header>
-      <img src="icons/128.png" alt="" width="40" height="40">
-      <div>
-        <h1>Cmdly</h1>
-        <p class="sub" data-i18n="optSubtitle">Command bar settings. Changes are saved automatically.</p>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="icons/128.png" alt="" width="36" height="36">
+        <div>
+          <h1>Cmdly</h1>
+          <span id="saved" class="saved" hidden data-i18n="optSaved">Saved</span>
+        </div>
       </div>
-      <span id="saved" class="saved" hidden data-i18n="optSaved">Saved</span>
-      <select class="language" data-path="appearance.language" data-i18n-title="optLanguage" title="Language">
-        <option value="auto" data-i18n="optLanguageAuto">Auto (Chrome language)</option>
-        <option value="en">English</option>
-        <option value="ru">Русский</option>
-        <option value="zh_CN">简体中文</option>
-        <option value="de">Deutsch</option>
-        <option value="fr">Français</option>
-      </select>
-    </header>
+      <input id="find" type="search" autocomplete="off" data-i18n-placeholder="optFind" placeholder="Search settings…">
+      <nav id="nav">
+        <a href="#general" data-nav="general" data-i18n="optNavGeneral">General</a>
+        <a href="#shortcuts" data-nav="shortcuts" data-i18n="optShortcuts">Keyboard shortcuts</a>
+        <a href="#search" data-nav="search" data-i18n="optNavSearch">Search</a>
+        <a href="#tools" data-nav="tools" data-i18n="optNavTools">Tools</a>
+        <a href="#switcher" data-nav="switcher" data-i18n="optNavSwitcher">Tab switcher</a>
+        <a href="#appearance" data-nav="appearance" data-i18n="optAppearance">Appearance</a>
+        <a href="#backup" data-nav="backup" data-i18n="optBackup">Backup</a>
+        <a href="#about" data-nav="about" data-i18n="optNavAbout">About &amp; feedback</a>
+      </nav>
+      <p class="sub" data-i18n="optSubtitle">Command bar settings. Changes are saved automatically.</p>
+    </aside>
 
-    <div id="native-shortcut" class="banner" hidden>
-      <div>
-        <b class="banner-title"></b>
-        <p class="banner-text"></p>
+    <main>
+    <section class="panel" id="general" hidden>
+      <h2 data-i18n="optNavGeneral">General</h2>
+      <div class="card">
+      <label class="row">
+        <span><b data-i18n="optLanguage">Language</b></span>
+        <select data-path="appearance.language">
+          <option value="auto" data-i18n="optLanguageAuto">Auto (Chrome language)</option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="zh_CN">简体中文</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+        </select>
+      </label>
       </div>
-      <button id="chrome-shortcuts" data-i18n="optBannerOpen">Open Chrome shortcuts</button>
-    </div>
-
-    <section>
+      <h3 data-i18n="optBehavior">Behavior</h3>
+      <div class="card">
+      <label class="row">
+        <span><b data-i18n="optOverlay">Open over current page</b><small data-i18n="optOverlayHint">The bar appears on top of the page you're on. When off, it opens in a new tab.</small></span>
+        <input type="checkbox" data-path="features.overlay">
+      </label>
+      <label class="row">
+        <span><b data-i18n="optKeepOpen">Keep window open</b><small data-i18n="optKeepOpenHint">Closing the last tab doesn't close the window — the command bar opens instead. A small pinned tab appears only while the window has one tab.</small></span>
+        <select data-path="windows.keepOpen">
+          <option value="off" data-i18n="optOff">Off</option>
+          <option value="last" data-i18n="optKeepOpenLast">Last window</option>
+          <option value="every" data-i18n="optKeepOpenEvery">Every window</option>
+        </select>
+      </label>
+      </div>
+      <h3 data-i18n="optSubBar">Command bar</h3>
+      <div class="card">
+      <label class="row">
+        <span><b data-i18n="optDraft">Remember typed text</b><small data-i18n="optDraftHint">Typed text survives closing the bar or reloading the page, until you run something. Kept in memory only; forgotten after 10 minutes or when Chrome closes.</small></span>
+        <input type="checkbox" data-path="bar.restoreDraft">
+      </label>
+      <label class="row">
+        <span><b data-i18n="optReopen">Reopen after page reload</b><small data-i18n="optReopenHint">A bar that was open when its page reloaded comes back on the same address.</small></span>
+        <input type="checkbox" data-path="bar.reopenAfterReload">
+      </label>
+      </div>
+      <div class="panel-foot"><button class="link" data-reset-section data-i18n="optResetSection">Reset this section</button></div>
+    </section>
+    <section class="panel" id="shortcuts" hidden>
       <h2 data-i18n="optShortcuts">Keyboard shortcuts</h2>
+      <div id="native-shortcut" class="banner" hidden>
+        <div>
+          <b class="banner-title"></b>
+          <p class="banner-text"></p>
+        </div>
+        <button id="chrome-shortcuts" data-i18n="optBannerOpen">Open Chrome shortcuts</button>
+      </div>
+      <div class="card">
       <div class="row">
         <span><b data-i18n="optOpenBar">Open command bar</b><small data-i18n="optOpenBarHint">Fallback shortcut handled on web pages. For an instant ⌘T use the Chrome setup above.</small></span>
         <span class="pair">
@@ -58,47 +107,61 @@
           <button class="link" data-shortcut-reset="undoClose" data-i18n="optDefault">Default</button>
         </span>
       </div>
-      <div class="row">
-        <span><b data-i18n="optSwitcher">Switch tabs</b><small id="switcher-hint"></small></span>
-        <button id="switcher-shortcut" class="shortcut"></button>
       </div>
-      <label class="row">
-        <span><b data-i18n="optSwitcherCtrlTab">Use Ctrl+Tab</b><small data-i18n="optSwitcherCtrlTabHint">The next tab flashes for a moment.</small></span>
-        <input type="checkbox" data-path="switcher.ctrlTab">
-      </label>
-      <label class="row">
-        <span><b data-i18n="optSwitcherOverflow">When tabs don't fit</b><small data-i18n="optSwitcherOverflowHint">Fit shows the recent tabs that fit in the window.</small></span>
-        <select data-path="switcher.overflow">
-          <option value="fit" data-i18n="optOverflowFit">Fit to window</option>
-          <option value="scroll" data-i18n="optOverflowScroll">Scroll sideways</option>
-          <option value="wrap" data-i18n="optOverflowWrap">Wrap into rows</option>
-        </select>
-      </label>
-      <label class="row">
-        <span><b data-i18n="optSwitcherThumbs">Tab previews in the switcher</b><small data-i18n="optSwitcherThumbsHint">Remembers a small picture of each tab when you look at it.</small></span>
-        <input type="checkbox" data-path="switcher.thumbnails">
-      </label>
       <p class="note" data-i18n="optShortcutsNote">Shortcuts work on regular web pages. Chrome doesn't allow extensions on chrome:// pages and the Web Store.</p>
+      <div class="panel-foot"><button class="link" data-reset-section data-i18n="optResetSection">Reset this section</button></div>
     </section>
-
-    <section>
-      <h2 data-i18n="optBehavior">Behavior</h2>
+    <section class="panel" id="search" hidden>
+      <h2 data-i18n="optNavSearch">Search</h2>
+      <h3 data-i18n="optSources">Search sources</h3>
+      <div class="card">
+      <div class="row">
+        <span><b data-i18n="optTabs">Open tabs</b><small data-i18n="optMaxResults">Max results</small></span>
+        <span class="pair">
+          <input type="number" min="1" max="20" data-path="limits.tabs">
+          <input type="checkbox" data-path="sources.tabs">
+        </span>
+      </div>
+      <div class="row">
+        <span><b data-i18n="optBookmarks">Bookmarks</b><small data-i18n="optMaxResults">Max results</small></span>
+        <span class="pair">
+          <input type="number" min="1" max="20" data-path="limits.bookmarks">
+          <input type="checkbox" data-path="sources.bookmarks">
+        </span>
+      </div>
+      <div class="row">
+        <span><b data-i18n="optHistory">History</b><small data-i18n="optMaxResults">Max results</small></span>
+        <span class="pair">
+          <input type="number" min="1" max="20" data-path="limits.history">
+          <input type="checkbox" data-path="sources.history">
+        </span>
+      </div>
+      </div>
+      <h3 data-i18n="optSuggestions">Search suggestions</h3>
+      <div class="card">
       <label class="row">
-        <span><b data-i18n="optOverlay">Open over current page</b><small data-i18n="optOverlayHint">The bar appears on top of the page you're on. When off, it opens in a new tab.</small></span>
-        <input type="checkbox" data-path="features.overlay">
+        <span><b data-i18n="optSuggestionsShow">Show search suggestions</b><small data-i18n="optSuggestionsHint">Popular queries from the search engine as you type. What you type is sent to it; incognito windows, pasted JSON, tokens and math never are.</small></span>
+        <input type="checkbox" data-path="sources.suggestions">
       </label>
-      <label class="row">
-        <span><b data-i18n="optKeepOpen">Keep window open</b><small data-i18n="optKeepOpenHint">Closing the last tab doesn't close the window — the command bar opens instead. A small pinned tab appears only while the window has one tab.</small></span>
-        <select data-path="windows.keepOpen">
-          <option value="off" data-i18n="optOff">Off</option>
-          <option value="last" data-i18n="optKeepOpenLast">Last window</option>
-          <option value="every" data-i18n="optKeepOpenEvery">Every window</option>
+      <label class="row" data-requires="sources.suggestions">
+        <span><b data-i18n="optSuggestionsFrom">Suggestions from</b><small data-i18n="optSuggestionsFromHint">Enter still searches with Chrome's default search engine.</small></span>
+        <select data-path="suggest.engine">
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+          <option value="yandex">Yandex</option>
         </select>
       </label>
+      <label class="row" data-requires="sources.suggestions">
+        <span><b data-i18n="optSuggestionsMax">Max suggestions</b></span>
+        <input type="number" min="1" max="10" data-path="limits.suggestions">
+      </label>
+      </div>
+      <div class="panel-foot"><button class="link" data-reset-section data-i18n="optResetSection">Reset this section</button></div>
     </section>
-
-    <section>
-      <h2 data-i18n="optFeatures">Features</h2>
+    <section class="panel" id="tools" hidden>
+      <h2 data-i18n="optNavTools">Tools</h2>
+      <div class="card">
       <label class="row">
         <span><b data-i18n="optCommands">Commands</b><small data-i18n="optCommandsHint">Copy URL, Pin Tab, Close Other Tabs, Open Settings and more.</small></span>
         <input type="checkbox" data-path="features.commands">
@@ -139,56 +202,42 @@
         <span><b data-i18n="optMarkupRemote">Load external images and styles</b><small data-i18n="optMarkupRemoteHint">Off: the preview makes no network requests. On: pasted HTML may fetch images, fonts and styles it references.</small></span>
         <input type="checkbox" data-path="features.markupRemote">
       </label>
+      </div>
+      <div class="panel-foot"><button class="link" data-reset-section data-i18n="optResetSection">Reset this section</button></div>
     </section>
-
-    <section>
-      <h2 data-i18n="optSources">Search sources</h2>
+    <section class="panel" id="switcher" hidden>
+      <h2 data-i18n="optNavSwitcher">Tab switcher</h2>
+      <div class="card">
       <div class="row">
-        <span><b data-i18n="optTabs">Open tabs</b><small data-i18n="optMaxResults">Max results</small></span>
-        <span class="pair">
-          <input type="number" min="1" max="20" data-path="limits.tabs">
-          <input type="checkbox" data-path="sources.tabs">
-        </span>
+        <span><b data-i18n="optSwitcher">Switch tabs</b><small id="switcher-hint"></small></span>
+        <button id="switcher-shortcut" class="shortcut"></button>
       </div>
-      <div class="row">
-        <span><b data-i18n="optBookmarks">Bookmarks</b><small data-i18n="optMaxResults">Max results</small></span>
-        <span class="pair">
-          <input type="number" min="1" max="20" data-path="limits.bookmarks">
-          <input type="checkbox" data-path="sources.bookmarks">
-        </span>
-      </div>
-      <div class="row">
-        <span><b data-i18n="optHistory">History</b><small data-i18n="optMaxResults">Max results</small></span>
-        <span class="pair">
-          <input type="number" min="1" max="20" data-path="limits.history">
-          <input type="checkbox" data-path="sources.history">
-        </span>
-      </div>
-    </section>
-
-    <section>
-      <h2 data-i18n="optSuggestions">Search suggestions</h2>
       <label class="row">
-        <span><b data-i18n="optSuggestionsShow">Show search suggestions</b><small data-i18n="optSuggestionsHint">Popular queries from the search engine as you type. What you type is sent to it; incognito windows, pasted JSON, tokens and math never are.</small></span>
-        <input type="checkbox" data-path="sources.suggestions">
+        <span><b data-i18n="optSwitcherCtrlTab">Use Ctrl+Tab</b><small data-i18n="optSwitcherCtrlTabHint">The next tab flashes for a moment.</small></span>
+        <input type="checkbox" data-path="switcher.ctrlTab">
       </label>
-      <label class="row" data-requires="sources.suggestions">
-        <span><b data-i18n="optSuggestionsFrom">Suggestions from</b><small data-i18n="optSuggestionsFromHint">Enter still searches with Chrome's default search engine.</small></span>
-        <select data-path="suggest.engine">
-          <option value="google">Google</option>
-          <option value="bing">Bing</option>
-          <option value="duckduckgo">DuckDuckGo</option>
-          <option value="yandex">Yandex</option>
+      <label class="row">
+        <span><b data-i18n="optSwitcherOverflow">When tabs don't fit</b><small data-i18n="optSwitcherOverflowHint">Fit shows the recent tabs that fit in the window.</small></span>
+        <select data-path="switcher.overflow">
+          <option value="fit" data-i18n="optOverflowFit">Fit to window</option>
+          <option value="scroll" data-i18n="optOverflowScroll">Scroll sideways</option>
+          <option value="wrap" data-i18n="optOverflowWrap">Wrap into rows</option>
         </select>
       </label>
-      <label class="row" data-requires="sources.suggestions">
-        <span><b data-i18n="optSuggestionsMax">Max suggestions</b></span>
-        <input type="number" min="1" max="10" data-path="limits.suggestions">
+      <label class="row">
+        <span><b data-i18n="optMaxCards">Most tabs shown</b><small data-i18n="optMaxCardsHint">For “Fit to window”. Never more than fit on the screen.</small></span>
+        <input type="number" min="2" max="8" data-path="switcher.maxCards">
       </label>
+      <label class="row">
+        <span><b data-i18n="optSwitcherThumbs">Tab previews in the switcher</b><small data-i18n="optSwitcherThumbsHint">Remembers a small picture of each tab when you look at it.</small></span>
+        <input type="checkbox" data-path="switcher.thumbnails">
+      </label>
+      </div>
+      <div class="panel-foot"><button class="link" data-reset-section data-i18n="optResetSection">Reset this section</button></div>
     </section>
-
-    <section>
+    <section class="panel" id="appearance" hidden>
       <h2 data-i18n="optAppearance">Appearance</h2>
+      <div class="card">
       <label class="row">
         <span><b data-i18n="optTheme">Theme</b></span>
         <select data-path="appearance.theme">
@@ -209,13 +258,19 @@
         <input type="range" min="520" max="1000" step="20" data-path="appearance.width">
       </label>
       <label class="row">
+        <span><b data-i18n="optRadius">Corner roundness</b><small id="radius-value"></small></span>
+        <input type="range" min="0" max="24" step="2" data-path="appearance.radius">
+      </label>
+      <label class="row">
         <span><b data-i18n="optAccent">Accent color</b><small data-i18n="optAccentHint">Cursor and text selection</small></span>
         <input type="color" data-path="appearance.accent">
       </label>
+      </div>
+      <div class="panel-foot"><button class="link" data-reset-section data-i18n="optResetSection">Reset this section</button></div>
     </section>
-
-    <section>
+    <section class="panel" id="backup" hidden>
       <h2 data-i18n="optBackup">Backup</h2>
+      <div class="card">
       <div class="row">
         <span><b data-i18n="optExportImport">Export / import settings</b><small data-i18n="optExportImportHint">Save settings to a JSON file or load them on another computer.</small></span>
         <span class="pair">
@@ -228,10 +283,12 @@
         <span><b data-i18n="optReset">Reset</b><small data-i18n="optResetHint">Restore all settings to defaults.</small></span>
         <button id="reset" class="danger" data-i18n="optResetButton">Reset…</button>
       </div>
+      </div>
     </section>
-
-    <section>
-      <h2 data-i18n="optFeedback">Feedback</h2>
+    <section class="panel" id="about" hidden>
+      <h2 data-i18n="optNavAbout">About &amp; feedback</h2>
+      <h3 data-i18n="optFeedback">Feedback</h3>
+      <div class="card">
       <div class="row">
         <span><b data-i18n="optBug">Found a bug?</b><small data-i18n="optBugHint">Leave an issue on GitHub — Cmdly, Chrome and OS versions are filled in for you.</small></span>
         <a id="report-bug" class="button" target="_blank" rel="noopener" data-i18n="optBugButton">Report a bug…</a>
@@ -244,17 +301,21 @@
         <span><b data-i18n="optDiag">Diagnostics</b><small data-i18n="optDiagHint">Copy the log of recent errors to attach to a bug report. It never contains what you type or visit, stays on this computer and is cleared when the browser closes.</small></span>
         <button id="copy-log" data-i18n="optDiagButton">Copy log</button>
       </div>
+      </div>
     </section>
 
-    <footer class="credits">
-      <span>Cmdly <span id="version"></span> · <span data-i18n="optBy">by</span> <a href="https://github.com/ogbozoyan" target="_blank" rel="noopener">ogbozoyan</a></span>
-      <span>
-        <a href="https://github.com/ogbozoyan/cmdly" target="_blank" rel="noopener">GitHub</a> ·
-        <a href="https://github.com/ogbozoyan/cmdly/issues" target="_blank" rel="noopener" data-i18n="optIssues">Issues</a> ·
-        <a href="https://github.com/ogbozoyan/cmdly/blob/main/PRIVACY.md" target="_blank" rel="noopener" data-i18n="optPrivacy">Privacy</a>
-      </span>
-    </footer>
-  </main>
+      <p id="no-matches" class="empty" hidden></p>
+
+      <footer class="credits">
+        <span>Cmdly <span id="version"></span> · <span data-i18n="optBy">by</span> <a href="https://github.com/ogbozoyan" target="_blank" rel="noopener">ogbozoyan</a></span>
+        <span>
+          <a href="https://github.com/ogbozoyan/cmdly" target="_blank" rel="noopener">GitHub</a> ·
+          <a href="https://github.com/ogbozoyan/cmdly/issues" target="_blank" rel="noopener" data-i18n="optIssues">Issues</a> ·
+          <a href="https://github.com/ogbozoyan/cmdly/blob/main/PRIVACY.md" target="_blank" rel="noopener" data-i18n="optPrivacy">Privacy</a>
+        </span>
+      </footer>
+    </main>
+  </div>
   <script src="options.js"></script>
 </body>
 </html>
