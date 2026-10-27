@@ -394,6 +394,23 @@ export class CommandBar {
     return true;
   }
 
+  private caretAtEnd(): boolean {
+    const { selectionStart, selectionEnd, value } = this.input;
+    return selectionStart === value.length && selectionEnd === value.length;
+  }
+
+  /** Tab / → on a search suggestion copies it into the input so it can be extended. */
+  private completeSuggestion(): boolean {
+    const row = this.items[this.active];
+    if (!row?.suggestion || row.title === this.input.value) return false;
+    this.input.value = row.title;
+    this.pasted = null;
+    this.input.setSelectionRange(row.title.length, row.title.length);
+    this.saveDraftSoon();
+    this.render();
+    return true;
+  }
+
   private updateHint(): void {
     this.root.querySelector(".preview-hint")!.innerHTML = keyHints(t(this.feature()?.presentation?.hint ?? "previewHint"));
   }
@@ -518,6 +535,8 @@ export class CommandBar {
       } else if (key === "Backspace") {
         const step = this.dispatch({ type: "backspace", input: this.input.value });
         if (step.handled) e.preventDefault();
+      } else if ((key === "Tab" && !e.shiftKey && this.completeSuggestion()) || (key === "ArrowRight" && this.caretAtEnd() && this.completeSuggestion())) {
+        e.preventDefault();
       } else if (key === "Tab" && !e.shiftKey) {
         e.preventDefault();
         this.dispatch({ type: "tab", input: this.input.value, row: this.rowInfo() });
