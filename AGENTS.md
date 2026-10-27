@@ -94,9 +94,12 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   format in the text and offers a row), an optional `Presentation` (palette, chip, hint, rows once
   entered: only the pasted text is shown) and `TabBehavior[]` (what Tab does; the first that applies
   runs: `enterOnTrigger`, `togglePanel`, `cycleVariant`). `bar-state.ts` is a pure reducer
-  (key event → state + effects); `CommandBar` only feeds it and runs the effects. Rows that don't
-  belong to a feature yet (JSON, JWT, UUID) use `FALLBACK_TAB` in `registry.ts`. Esc inside a feature
-  goes back to the ordinary bar and keeps the text.
+  (key event → state + effects); `CommandBar` only feeds it and runs the effects. Features: `markup/`
+  (HTML, Markdown, OpenAPI: own view and palette), `data-viewer/` (JSON, YAML, JWT: a code panel),
+  `uuid/` (Tab cycles the version). Rows produced by a feature carry its id (`ResultItem.feature`),
+  which is how Tab finds the owner; the calculator and encoders stay in `tools/local-results.ts`
+  and rows without a feature fall back to `FALLBACK_TAB`. Esc inside a feature goes back to the
+  ordinary bar and keeps the text.
 - A row with `preview` (see `Preview` in `model.ts`) gets an expand button; <kbd>Tab</kbd> opens the
   viewer panel under the results (`CommandBar.renderPreview`, highlighting in `src/ui/highlight.ts`).
 - **Keep window open**: `keep-open-plan.ts` is a pure planner (windows snapshot → actions), unit-tested;
