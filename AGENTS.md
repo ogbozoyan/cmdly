@@ -31,10 +31,12 @@ npm run release      # bump version (patch | -- minor | -- major), commit, tag v
 
 - `.github/workflows/ci.yml` — every push to main and every PR: `npm ci` + `npm run check`
   (typecheck, unit tests, build) + manifest/package version match. `dist/` is uploaded as an artifact.
-- `.github/workflows/release.yml` — **Run workflow** (patch/minor/major) or a pushed tag `vX.Y.Z`:
-  bumps the version via `scripts/version.mjs` (manual run), verifies tag = manifest = package version,
-  runs `npm run package`, commits/tags as github-actions[bot] and publishes a GitHub release with
-  `cmdly-X.Y.Z.zip` and generated notes.
+- `.github/workflows/release.yml` — **every push to main is a release**: bumps the minor version via
+  `scripts/version.mjs`, commits "Release vX.Y.Z" as github-actions[bot], tags, runs `npm run package` and
+  publishes a GitHub release with `cmdly-X.Y.Z.zip`; the notes start with a changelog (commit subjects since the
+  previous release), so write commit messages as release notes. **Run workflow** picks another bump; a pushed tag
+  `vX.Y.Z` (`npm run release`) verifies tag = manifest = package version and publishes it (its release commit on
+  main is skipped, no double release). Don't push to main you don't want released.
 - The version only goes up and is never edited by hand: `scripts/version.mjs` is the single place
   that changes it (manifest.json, package.json, package-lock.json).
 - E2E is not in CI (needs Chrome for Testing, real sites, macOS keys) — run `npm run e2e` locally.
