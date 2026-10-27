@@ -6,7 +6,7 @@
 import { t } from "../i18n/index.ts";
 import type { Preview, ResultItem } from "../shared/model.ts";
 import { formatSize } from "./data-formats.ts";
-import { looksLikeMarkdown, renderMarkdown } from "./markdown.ts";
+import { renderMarkdown } from "./markdown.ts";
 import { describeOpenApi, parseOpenApi, renderOpenApi } from "./openapi.ts";
 
 export type MarkupKind = "html" | "markdown" | "openapi";
@@ -14,43 +14,12 @@ export type MarkupKind = "html" | "markdown" | "openapi";
 /** Above this the iframe would be slow and the paste is probably not meant as a document. */
 export const MAX_MARKUP_BYTES = 512 * 1024;
 
-const PREFIXES: Record<string, MarkupKind> = {
-  html: "html",
-  htm: "html",
-  md: "markdown",
-  markdown: "markdown",
-  swagger: "openapi",
-  openapi: "openapi",
-  api: "openapi",
-};
-
-/** "html", "md", "swagger" alone (+ Tab) switch the bar into that mode. */
-export function markupModeFromPrefix(query: string): MarkupKind | null {
-  return PREFIXES[query.trim().toLowerCase()] ?? null;
-}
-
-/** "md # Title" → forced kind and the text after the prefix. */
-export function splitMarkupPrefix(query: string): { kind: MarkupKind; text: string } | null {
-  const m = /^(\S+)\s+([\s\S]+)$/.exec(query.trim());
-  const kind = m && PREFIXES[m[1].toLowerCase()];
-  return kind ? { kind, text: m[2] } : null;
-}
-
 const HTML_TAG =
   /<(?:!doctype|html|head|body|div|span|p|a|h[1-6]|ul|ol|li|table|tr|td|th|img|br|hr|pre|code|form|input|button|section|article|nav|header|footer|main|style|script|svg|b|i|em|strong|label|select|textarea)\b[^>]*>/i;
 
 export function looksLikeHtml(text: string): boolean {
   const s = text.trim();
   return s.startsWith("<") && HTML_TAG.test(s) && !/^<https?:\/\/[^>\s]*>$/i.test(s);
-}
-
-/** OpenAPI first (it's also JSON/YAML), then HTML, then Markdown. */
-export function detectMarkupKind(text: string): MarkupKind | null {
-  if (!text.trim()) return null;
-  if (parseOpenApi(text)) return "openapi";
-  if (looksLikeHtml(text)) return "html";
-  if (looksLikeMarkdown(text)) return "markdown";
-  return null;
 }
 
 const BASE_CSS = `

@@ -4,14 +4,11 @@ import type { Features } from "../shared/settings.ts";
 import { evaluate, formatNumber, plainNumber } from "./calculator.ts";
 import { describeData, formatSize, parseData, toMinifiedJson, toPrettyJson, toYaml } from "./data-formats.ts";
 import { base64Decode, base64Encode, decodeJwt, describeJwt, jwtTimeNotes, urlDecode } from "./dev-tools.ts";
-import { detectMarkupKind, markupResult, splitMarkupPrefix, type MarkupKind } from "./markup.ts";
 import { generateUuids, isUuidVersion, nextUuidVersion, UUID_DESCRIPTIONS, type UuidVersion } from "./uuid.ts";
 
 export interface LocalOptions {
   /** Saved UUID version (Settings.tools.uuidVersion). */
   uuidVersion?: string;
-  /** Scoped mode ("md" + Tab): the whole input is that format and other tools stay quiet. */
-  markupMode?: MarkupKind | null;
 }
 
 /**
@@ -23,26 +20,13 @@ export function localResults(query: string, features: Features, options: LocalOp
   const q = query.trim();
   if (!q) return [];
   const savedUuid = isUuidVersion(options.uuidVersion) ? options.uuidVersion : "v4";
-  const markup = features.markup ? markupRows(query, features, options.markupMode ?? null) : [];
-  if (options.markupMode && features.markup) return markup;
   return [
-    ...markup,
     ...(features.calculator ? calculatorResult(q) : []),
     ...(features.uuid ? uuidResult(q, savedUuid) : []),
     ...(features.encode ? encoderResult(q) : []),
     ...(features.jwt ? jwtResult(q) : []),
     ...(features.formats ? dataResult(q) : []),
   ];
-}
-
-/** Forced by mode or by a prefix ("md # Title"), otherwise detected from the pasted text. */
-function markupRows(query: string, features: Features, mode: MarkupKind | null): ResultItem[] {
-  const opts = { remote: features.markupRemote };
-  if (mode) return markupResult(mode, query.trim(), opts);
-  const prefixed = splitMarkupPrefix(query);
-  if (prefixed) return markupResult(prefixed.kind, prefixed.text, opts);
-  const kind = detectMarkupKind(query);
-  return kind ? markupResult(kind, query.trim(), opts) : [];
 }
 
 function copyRow(

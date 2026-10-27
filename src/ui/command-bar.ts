@@ -4,9 +4,11 @@ import { send } from "../shared/messages.ts";
 import { DEFAULT_SETTINGS, type Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { withSuggestions } from "../shared/suggestions.ts";
+import { reduce, type BarEvent, type Step } from "../features/bar-state.ts";
+import { createRegistry, type Registry } from "../features/registry.ts";
+import { COMMON, type BarState, type Feature, type FeatureContext, type RowInfo } from "../features/types.ts";
+import { PALETTE_VARS, type Palette } from "../shared/palette.ts";
 import { localResults } from "../tools/local-results.ts";
-import { MODE_THEMES, PALETTE_VARS, type Palette } from "../shared/modes.ts";
-import { markupLabel, markupModeFromPrefix, type MarkupKind } from "../tools/markup.ts";
 import { copyText } from "./clipboard.ts";
 import { escapeHtml, highlight } from "./highlight.ts";
 import { ARROW_ICON, EXPAND_ICON, GLYPHS, SEARCH_ICON } from "./icons.ts";
@@ -53,8 +55,9 @@ export class CommandBar {
   /** Drops responses of outdated searches when the user types fast. */
   private requestId = 0;
   private previewOpen = false;
-  /** "html" / "md" / "swagger" + Tab: everything typed or pasted is treated as that format. */
-  private markupMode: MarkupKind | null = null;
+  /** Common, or inside one feature ("html" / "md" / "swagger" + Tab): then everything typed or pasted belongs to it. */
+  private state: BarState = COMMON;
+  private registry: Registry = createRegistry(DEFAULT_SETTINGS.features);
   private replaying = false;
   private morphTimer: ReturnType<typeof setTimeout> | undefined;
   private draftTimer: ReturnType<typeof setTimeout> | undefined;
@@ -101,6 +104,7 @@ export class CommandBar {
     this.applyAppearance();
     Promise.all([settingsRepository.get(), send({ type: "draft-get" })]).then(([settings, draft]) => {
       this.settings = settings;
+      this.registry = createRegistry(settings.features);
       this.applyLanguage();
       this.applyAppearance();
       this.restoreDraft(draft);
@@ -112,7 +116,7 @@ export class CommandBar {
   /** Texts drawn before settings loaded used Chrome's language; redo them in the chosen one. */
   private applyLanguage(): void {
     setLanguage(this.settings.appearance.language);
-    this.input.placeholder = this.markupMode ? t("markupPlaceholder", markupLabel(this.markupMode)) : t("barPlaceholder");
+    this.input.placeholder = this.placeholder();
     this.updateHint();
   }
 
@@ -146,30 +150,37 @@ export class CommandBar {
     return this.pasted && this.input.value === this.pasted.shown ? this.pasted.raw : this.input.value;
   }
 
+  private featureContext(): FeatureContext {
+    return { features: this.settings.features };
+  }
+
+  /** The feature the bar is inside, if any. */
+  private feature(): Feature | null {
+    return this.state.kind === "feature" ? (this.registry.get(this.state.id) ?? null) : null;
+  }
+
   private async render(keepActive = false): Promise<void> {
     const id = ++this.requestId;
-    // Tool rows (calculator, JSON/YAML, JWT…) come first; web search, tabs and history always follow.
-    const query = this.input.value.trim();
-    const local = localResults(this.rawQuery(), this.settings.features, {
-      ...this.settings.tools,
-      markupMode: this.markupMode,
-    });
-    // In a mode only the pasted text is rendered: no tabs, history, web search or suggestions,
-    // and the pasted markup never leaves the bar.
-    if (this.markupMode) {
-      this.previewOpen = !!local[0]?.preview;
-      this.draw(local, 0);
+    const raw = this.rawQuery();
+    const inside = this.feature()?.presentation;
+    // Inside a feature only the pasted text is rendered: no tabs, history, web search or suggestions,
+    // and the pasted text never leaves the bar.
+    if (inside) {
+      const rows = inside.rows(raw, this.featureContext());
+      this.previewOpen = !!rows[0]?.preview;
+      this.draw(rows, 0);
       return;
     }
+    // Tool rows (calculator, JSON/YAML, JWT…) come first; web search, tabs and history always follow.
+    const query = this.input.value.trim();
+    const local = [...this.registry.recognize(raw, this.featureContext()), ...localResults(raw, this.settings.features, this.settings.tools)];
     // Text that a tool understood (JSON, JWT, math…) is never sent to the search engine.
     const suggestions = local.length ? null : this.suggest(query, id);
     const remote = (await send({ type: "search", query, overlay: this.options.overlay })) ?? [];
     if (id !== this.requestId) return;
 
     const previous = this.active;
-    // Text recognized as HTML / Markdown / OpenAPI is a document, not a query: no "Search" row for it.
-    const isMarkup = local.some((item) => item.preview?.language === "html");
-    const items = isMarkup ? [...local, ...remote.filter((item) => item.kind !== "search")] : withWebSearch([...local, ...remote], query);
+    const items = withWebSearch([...local, ...remote], query);
     this.draw(items, keepActive ? Math.min(previous, items.length - 1) : 0);
 
     // Suggestions arrive later (network); tabs and history are already on screen.
@@ -278,39 +289,47 @@ export class CommandBar {
     this.renderPreview();
   }
 
-  /** `keepInput`: leaving a mode with Esc keeps the text, which is then analyzed like any paste. */
-  private setMarkupMode(mode: MarkupKind | null, keepInput = false): void {
-    this.markupMode = mode;
+  private placeholder(): string {
+    const label = this.feature()?.presentation?.label();
+    return label ? t("markupPlaceholder", label) : t("barPlaceholder");
+  }
+
+  /** Moves into a feature (empty input) or back to the common bar; leaving keeps the text. */
+  private enter(next: BarState): void {
+    const inside = next.kind === "feature";
+    this.state = next;
+    const feature = this.feature();
     this.previewOpen = false;
-    if (!keepInput) {
+    if (inside) {
       this.input.value = "";
       this.pasted = null;
       this.clearDraft();
     }
-    this.chip.hidden = !mode;
-    this.chip.textContent = mode ? markupLabel(mode) : "";
-    this.input.placeholder = mode ? t("markupPlaceholder", markupLabel(mode)) : t("barPlaceholder");
-    this.applyModeTheme();
+    const label = feature?.presentation?.label();
+    this.chip.hidden = !feature;
+    this.chip.textContent = label ?? "";
+    this.input.placeholder = this.placeholder();
+    this.applyFeatureTheme(feature);
     this.updateHint();
     this.render();
   }
 
-  private modePalette(): Palette | null {
-    if (!this.markupMode) return null;
-    const theme = MODE_THEMES[this.markupMode];
+  private featurePalette(feature: Feature | null): Palette | null {
+    const theme = feature?.presentation?.theme;
+    if (!theme) return null;
     return this.root.classList.contains("light") ? theme.light : theme.dark;
   }
 
-  /** Recolors the bar for the mode and replays the transition: colors fade, the chip springs out, the bar breathes once. */
-  private applyModeTheme(): void {
-    const palette = this.modePalette();
+  /** Recolors the bar for the feature and replays the transition: colors fade, the chip springs out, the bar breathes once. */
+  private applyFeatureTheme(feature: Feature | null): void {
+    const palette = this.featurePalette(feature);
     for (const [key, name] of Object.entries(PALETTE_VARS) as [keyof Palette, string][]) {
       if (palette) this.root.style.setProperty(name, palette[key]);
       else this.root.style.removeProperty(name);
     }
-    // The accent is a user setting: keep it when leaving a mode.
+    // The accent is a user setting: keep it when leaving a feature.
     if (!palette) this.root.style.setProperty("--accent", this.settings.appearance.accent);
-    if (this.markupMode) this.root.dataset.mode = this.markupMode;
+    if (feature) this.root.dataset.mode = feature.id;
     else delete this.root.dataset.mode;
 
     this.root.classList.remove("morph");
@@ -318,6 +337,29 @@ export class CommandBar {
     this.root.classList.add("morph");
     clearTimeout(this.morphTimer);
     this.morphTimer = setTimeout(() => this.root.classList.remove("morph"), 900);
+  }
+
+  // ---------- keys: the reducer decides, this runs the outcome ----------
+
+  private rowInfo(): RowInfo | null {
+    const row = this.items[this.active];
+    return row ? { feature: row.feature, hasPreview: !!row.preview, hasVariant: !!row.variant } : null;
+  }
+
+  private dispatch(event: BarEvent): Step {
+    const step = reduce(this.state, event, this.registry);
+    const changed = step.state.kind !== this.state.kind || (step.state.kind === "feature" && this.state.kind === "feature" && step.state.id !== this.state.id);
+    if (changed) this.enter(step.state);
+    for (const effect of step.effects) {
+      if (effect.type === "toggle-preview") this.togglePreview();
+      else if (effect.type === "cycle-variant") this.cycleVariant();
+      else if (effect.type === "clear-input") {
+        this.input.value = "";
+        this.clearDraft();
+        this.render();
+      } else this.options.close();
+    }
+    return step;
   }
 
   /** Tab on a row with a variant (UUID version): switch, remember in settings, regenerate. */
@@ -353,7 +395,7 @@ export class CommandBar {
   }
 
   private updateHint(): void {
-    this.root.querySelector(".preview-hint")!.innerHTML = keyHints(t(this.markupMode ? "previewHintMode" : "previewHint"));
+    this.root.querySelector(".preview-hint")!.innerHTML = keyHints(t(this.feature()?.presentation?.hint ?? "previewHint"));
   }
 
   private togglePreview(): void {
@@ -438,7 +480,7 @@ export class CommandBar {
 
   private bindEvents(): void {
     this.chip.addEventListener("click", () => {
-      this.setMarkupMode(null, true);
+      this.enter(COMMON);
       this.input.focus();
     });
 
@@ -473,31 +515,15 @@ export class CommandBar {
       } else if (key === "Enter") {
         e.preventDefault();
         this.choose(this.items[this.active], e.metaKey);
-      } else if (key === "Backspace" && this.markupMode && !this.input.value) {
-        e.preventDefault();
-        this.setMarkupMode(null);
+      } else if (key === "Backspace") {
+        const step = this.dispatch({ type: "backspace", input: this.input.value });
+        if (step.handled) e.preventDefault();
       } else if (key === "Tab" && !e.shiftKey) {
         e.preventDefault();
-        const item = this.items[this.active];
-        const prefixMode = this.settings.features.markup && !this.markupMode ? markupModeFromPrefix(this.input.value) : null;
-        if (prefixMode) this.setMarkupMode(prefixMode);
-        else if (item?.preview) this.togglePreview();
-        else if (item?.variant) this.cycleVariant();
+        this.dispatch({ type: "tab", input: this.input.value, row: this.rowInfo() });
       } else if (key === "Escape") {
         e.preventDefault();
-        // In a mode Esc goes back to normal search and keeps the text. Otherwise it collapses the
-        // preview, then clears the input, then closes the bar.
-        if (this.markupMode) {
-          this.setMarkupMode(null, true);
-        } else if (this.previewOpen && this.items[this.active]?.preview) {
-          this.togglePreview();
-        } else if (this.input.value) {
-          this.input.value = "";
-          this.clearDraft();
-          this.render();
-        } else {
-          this.options.close();
-        }
+        this.dispatch({ type: "escape", input: this.input.value, row: this.rowInfo(), previewOpen: this.previewOpen });
       }
     });
 
