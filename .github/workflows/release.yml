@@ -106,6 +106,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           zip="cmdly-${TAG#v}.zip"
+          mv cmdly.zip "$zip"
           cp changelog.md notes.md
           cat >> notes.md <<EOF
 

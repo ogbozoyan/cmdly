@@ -23,7 +23,7 @@ npm run check        # typecheck + test + build — run before every commit
 npm run e2e          # real Chrome smoke test, needs CHROME_PATH (see scripts/e2e.mjs)
 npm run e2e -- --screenshots   # also refreshes docs/screenshots/
 npm run demo         # re-record docs/demo/*.gif (CHROME_PATH + ffmpeg)
-npm run package      # check + zip dist/ for the Chrome Web Store
+npm run package      # check + zip dist/ → cmdly.zip for the Chrome Web Store
 npm run release      # bump version (patch | -- minor | -- major), commit, tag vX.Y.Z, push
 ```
 
