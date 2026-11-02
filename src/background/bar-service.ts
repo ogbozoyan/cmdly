@@ -27,7 +27,8 @@ export async function nativeOpenBarShortcut(): Promise<string> {
 
 export async function showOverlay(tabId: number): Promise<void> {
   log.debug("bar", `inject overlay ${kv({ tab: tabId })}`);
-  await chrome.scripting.executeScript({ target: { tabId }, files: ["overlay.js"] });
+  // Without this Chrome waits until the page has finished parsing: a page stuck on a request never gets the bar.
+  await chrome.scripting.executeScript({ target: { tabId }, files: ["overlay.js"], injectImmediately: true });
 }
 
 /** True while the bar is drawn on the page (running overlay.js again would toggle it off). */

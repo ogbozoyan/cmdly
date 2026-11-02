@@ -41,10 +41,17 @@ const DEMO_PAGE = `<!doctype html><html><head><title>Cmdly demo page</title><sty
   </main></body></html>`;
 
 const server = createServer((req, res) => {
+  if (req.url === "/never.js") return; // the page waits for this script forever
   res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  if (req.url === "/loading") {
+    // The parser stops at the script in <head>: the tab keeps loading, like a slow page.
+    res.write('<!doctype html><html><head><script src="/never.js"></script></head>');
+    return;
+  }
   res.end(DEMO_PAGE);
 }).listen(0);
 const SITE = `http://localhost:${server.address().port}/`;
+const LOADING = `${SITE}loading`;
 
 // ---------- browser ----------
 
@@ -645,6 +652,25 @@ try {
     });
   });
 
+  await check("⌘T on a page that is still loading: the bar still opens on it", async () => {
+    const slow = await browser.newPage();
+    // The navigation never finishes on purpose.
+    slow.goto(LOADING).catch(() => {});
+    await sleep(1000);
+    await slow.bringToFront();
+    // No ⌘T assigned in this run: the fallback opens the new tab page, which shows the bar on the previous tab.
+    const newTabGone = await inWorker(async (url) => {
+      const prev = (await chrome.tabs.query({})).find((t) => t.url === url);
+      const created = await chrome.tabs.create({ url: chrome.runtime.getURL("newtab.html"), windowId: prev.windowId, active: true });
+      await new Promise((r) => setTimeout(r, 1500));
+      return !(await chrome.tabs.get(created.id).catch(() => null));
+    }, LOADING);
+    const opened = await slow.waitForSelector("#cmdly-overlay", { timeout: 3000 }).then(() => true, () => false);
+    expect(opened, "bar did not open on the page that is still loading");
+    expect(newTabGone, "⌘T tab left open");
+    await slow.close();
+  });
+
   await check("diagnostics log: the worker records itself and a page error reaches the buffer", async () => {
     const options = await openPage(`chrome-extension://${extensionId}/options.html#about`);
     await options.waitForSelector("#copy-log");
@@ -713,6 +739,7 @@ try {
   });
 } finally {
   await browser.close();
+  server.closeAllConnections();
   server.close();
 }
 
