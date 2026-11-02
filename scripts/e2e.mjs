@@ -98,10 +98,7 @@ async function openOverlay(page) {
     await chrome.tabs.update(id, { active: true });
     await chrome.scripting.executeScript({ target: { tabId: id }, files: ["overlay.js"] });
   }, tabId);
-  await page.waitForFunction(() => {
-    const host = document.getElementById("cmdly-overlay");
-    return host && host.style.visibility === "visible";
-  });
+  await page.waitForFunction(() => document.getElementById("cmdly-overlay")?.shadowRoot?.querySelector("input"));
 }
 
 async function typeInBar(page, text) {
@@ -377,7 +374,7 @@ try {
     expect(state?.value === "half typed query" && state.selected, `after reopen: ${JSON.stringify(state)}`);
 
     await page.reload();
-    await page.waitForFunction(() => document.getElementById("cmdly-overlay")?.style.visibility === "visible", { timeout: 5000 });
+    await page.waitForFunction(() => document.getElementById("cmdly-overlay")?.shadowRoot?.querySelector("input"), { timeout: 5000 });
     await sleep(300);
     state = await inputState();
     expect(state?.value === "half typed query", `after reload: ${JSON.stringify(state)}`);

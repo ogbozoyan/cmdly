@@ -79,6 +79,12 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 ```
 
 - **Overlay** = the bar injected into a web page inside a shadow root (`src/content/overlay.ts`).
+- **Fullscreen** (`src/ui/mount.ts`): Chrome draws a fullscreen element (video, player) above the whole page, so the
+  bar, switcher and toasts go through `showUi()` / `removeUi()`: inside a fullscreen player container, or in a modal
+  `<dialog>` over a fullscreen `<video>` / `<iframe>`. A new UI host that must show during fullscreen goes through it too.
+  While such UI is up, Esc is held (Keyboard Lock): the toasts, then the bar, close first; the next Esc leaves fullscreen.
+  The hold is released only after the Esc key-up (and that key-up is cancelled): Chrome checks an unhandled key-up
+  after the page answers, and a lock released earlier makes it leave fullscreen.
 - **Palette page** = the same bar as a standalone tab (`static/palette.html`), used where Chrome
   forbids scripts (chrome://, Web Store).
 - The UI never calls `chrome.tabs` etc. directly — it sends a typed message (`send()` in
@@ -218,3 +224,9 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
 - Ctrl+Tab can't be intercepted: Chrome switches first, Cmdly undoes it — the neighbour tab flashes.
   On chrome:// pages the switcher can't be shown (the command falls back to "previous tab").
 - Split View: the overlay appears only in the focused pane (each pane is a separate tab).
+- Fullscreen `<video>` / `<iframe>` (not a player container): the only thing Chrome draws above it is a modal dialog,
+  so while the bar, switcher or a toast is shown the page takes no clicks or keys (a toast for 2 s).
+- Pages with a service worker (YouTube, Google): Chrome logs `Unsafe attempt to load URL chrome-extension://…` for the
+  bar's favicon requests, with the stack pointing at `renderIcon`. Extension code can't catch these; the icons still load
+  for the visible rows. A failed icon that stays in the list is logged (`bar`, warn). The clean fix is to hand favicons over
+  as data URLs from the background.

@@ -5,8 +5,10 @@
  */
 import { send } from "../shared/messages.ts";
 import { CommandBar } from "../ui/command-bar.ts";
+import { removeUi, showUi } from "../ui/mount.ts";
 import { kv, log } from "../shared/log.ts";
 import { initLogging } from "../shared/log-runtime.ts";
+import css from "../../static/ui.css";
 
 const HOST_ID = "cmdly-overlay";
 
@@ -25,14 +27,13 @@ function toggleOverlay(): void {
   const previousFocus = document.activeElement as HTMLElement | null;
   const host: HostElement = document.createElement("div");
   host.id = HOST_ID;
-  // Hidden until the stylesheet loads — avoids a flash of unstyled content.
-  host.style.cssText = "all: initial; position: fixed; inset: 0; z-index: 2147483647; visibility: hidden;";
+  host.style.cssText = "all: initial; position: fixed; inset: 0; z-index: 2147483647;";
 
+  // Inlined, not a <link> to the extension: the page would request it, and pages with a service worker fail that request.
   const shadow = host.attachShadow({ mode: "open" });
-  const stylesheet = document.createElement("link");
-  stylesheet.rel = "stylesheet";
-  stylesheet.href = chrome.runtime.getURL("ui.css");
-  shadow.append(stylesheet);
+  const style = document.createElement("style");
+  style.textContent = css;
+  shadow.append(style);
 
   // Keystrokes in the bar must not reach the page's own shortcuts (YouTube "k", GitHub "/"…).
   for (const type of ["keydown", "keyup", "keypress", "input"]) {
@@ -44,7 +45,7 @@ function toggleOverlay(): void {
     if (closed) return;
     closed = true;
     log.debug("overlay", `closed ${kv({ reason, pageFullscreen: !!document.fullscreenElement, hidden: document.hidden })}`);
-    host.remove();
+    removeUi(host);
     clearInterval(focusTimer);
     window.removeEventListener("blur", onBlur);
     document.removeEventListener("visibilitychange", onVisibility);
@@ -78,8 +79,8 @@ function toggleOverlay(): void {
   const focusTimer = setInterval(checkFocus, 150);
   window.addEventListener("blur", onBlur);
 
-  document.documentElement.appendChild(host);
-  const bar = new CommandBar(shadow, { overlay: true, close: () => close() });
+  showUi(host);
+  new CommandBar(shadow, { overlay: true, close: () => close() });
   log.debug("overlay", `opened ${kv({
     pageFullscreen: !!document.fullscreenElement,
     // Window fullscreen can't be read from a page; a viewport as tall as the screen is a hint.
@@ -88,11 +89,6 @@ function toggleOverlay(): void {
     focused: document.hasFocus(),
   })}`);
   send({ type: "overlay-state", open: true });
-
-  stylesheet.onload = () => {
-    host.style.visibility = "visible";
-    bar.input.focus(); // some pages grab focus while loading
-  };
 }
 
 toggleOverlay();

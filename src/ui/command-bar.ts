@@ -87,7 +87,6 @@ export class CommandBar {
             <span class="preview-hint">${keyHints(t("previewHint"))}</span>
           </div>
           <pre class="code"></pre>
-          <iframe class="frame" sandbox="" referrerpolicy="no-referrer" hidden></iframe>
           <div class="preview-notes"></div>
         </div>
       </div>`;
@@ -262,7 +261,10 @@ export class CommandBar {
     } else if (item.icon) {
       const img = document.createElement("img");
       img.src = item.icon;
-      img.onerror = () => img.remove();
+      img.onerror = () => {
+        log.warn("bar", "result icon did not load");
+        img.remove();
+      };
       icon.append(img);
     }
     return icon;
@@ -432,13 +434,15 @@ export class CommandBar {
 
     this.previewPanel.querySelector(".preview-lang")!.textContent = preview.label ?? preview.language.toUpperCase();
     const code = this.previewPanel.querySelector("pre")!;
-    const frame = this.previewPanel.querySelector("iframe")!;
     code.hidden = preview.language === "html";
-    frame.hidden = preview.language !== "html";
+    const frame = this.previewPanel.querySelector("iframe");
     if (preview.language === "html") {
+      const shown = this.previewFrame();
+      shown.hidden = false;
       // sandbox="" = no scripts, forms, popups or same-origin; the document's own CSP blocks the network.
-      if (frame.srcdoc !== preview.content) frame.srcdoc = preview.content;
+      if (shown.srcdoc !== preview.content) shown.srcdoc = preview.content;
     } else {
+      if (frame) frame.hidden = true;
       code.innerHTML = highlight(preview.content, preview.language);
       code.scrollTop = 0;
     }
@@ -450,6 +454,19 @@ export class CommandBar {
         return note;
       })
     );
+  }
+
+  /** Made on the first HTML preview, not with the bar: an empty sandboxed frame on every open is needless work. */
+  private previewFrame(): HTMLIFrameElement {
+    let frame = this.previewPanel.querySelector("iframe");
+    if (!frame) {
+      frame = document.createElement("iframe");
+      frame.className = "frame";
+      frame.setAttribute("sandbox", "");
+      frame.referrerPolicy = "no-referrer";
+      this.previewPanel.querySelector(".preview-notes")!.before(frame);
+    }
+    return frame;
   }
 
   private applyAppearance(): void {

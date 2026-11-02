@@ -4,6 +4,8 @@
  * Several at once stack: a new one slides in on top and pushes the others down; a finished one collapses
  * and the rest slide back up.
  */
+import { removeUi, showUi } from "./mount.ts";
+
 const FADE_MS = 300;
 const HOST_ID = "cmdly-toasts";
 
@@ -33,20 +35,37 @@ const STYLE = `
   @media (prefers-reduced-motion: reduce) { .slot, .toast { transition: none; } }
 `;
 
-function stack(): HTMLElement {
+function stackHost(): HTMLElement {
   let host = document.getElementById(HOST_ID);
   if (!host) {
     host = document.createElement("div");
     host.id = HOST_ID;
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `<style>${STYLE}</style><div class="stack"></div>`;
-    document.documentElement.appendChild(host);
+    window.addEventListener("keydown", closeOnEscape, true);
+    showUi(host);
   }
-  return host.shadowRoot!.querySelector<HTMLElement>(".stack")!;
+  return host;
+}
+
+/** Over a fullscreen video Esc is held for Cmdly (ui/mount.ts): the toasts go first, then fullscreen. */
+function closeOnEscape(e: KeyboardEvent): void {
+  const host = document.getElementById(HOST_ID);
+  if (!host || e.key !== "Escape" || !document.fullscreenElement) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  dismiss(host);
+}
+
+/** A timer of an earlier toast may still run: it only removes the host it was shown in. */
+function dismiss(host: HTMLElement): void {
+  window.removeEventListener("keydown", closeOnEscape, true);
+  removeUi(host);
 }
 
 export function showPageToast(text: string, durationMs = 2000): void {
-  const list = stack();
+  const host = stackHost();
+  const list = host.shadowRoot!.querySelector<HTMLElement>(".stack")!;
   const slot = document.createElement("div");
   slot.className = "slot";
   const inner = document.createElement("div");
@@ -64,7 +83,7 @@ export function showPageToast(text: string, durationMs = 2000): void {
     slot.classList.remove("shown");
     setTimeout(() => {
       slot.remove();
-      if (!list.children.length) document.getElementById(HOST_ID)?.remove();
+      if (!list.children.length && host.isConnected) dismiss(host);
     }, FADE_MS);
   }, Math.max(durationMs - FADE_MS, 0));
 }

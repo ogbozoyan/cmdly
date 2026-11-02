@@ -12,6 +12,7 @@ import { send } from "../shared/messages.ts";
 import type { Settings } from "../shared/settings.ts";
 import { settingsRepository } from "../shared/settings-repository.ts";
 import { fitCount, initialIndex, step, type SwitcherMessage, type SwitcherTab } from "../shared/switcher.ts";
+import { removeUi, showUi } from "../ui/mount.ts";
 
 const HOST_ID = "cmdly-switcher";
 
@@ -117,7 +118,7 @@ function mount(backwards: boolean): OpenSwitcher {
     if (closed) return;
     closed = true;
     current = null;
-    host.remove();
+    removeUi(host);
     window.removeEventListener("keydown", onKeyDown, true);
     window.removeEventListener("keyup", onKeyUp, true);
     window.removeEventListener("blur", onBlur);
@@ -200,7 +201,7 @@ function mount(backwards: boolean): OpenSwitcher {
 
   // Hidden until the cards arrive: an empty panel would flash first.
   wrap.hidden = true;
-  document.documentElement.appendChild(host);
+  showUi(host);
   panel.focus();
   send({ type: "switcher-state", open: true });
 
