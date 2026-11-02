@@ -161,7 +161,7 @@ export async function switcherTabs(sender: chrome.tabs.Tab): Promise<SwitcherTab
       windowId: t.windowId,
       title: t.title || url,
       url,
-      icon: favicon(url, t.favIconUrl),
+      icon: favicon(url),
       thumbnail: switcher.thumbnails ? thumbs.get(t.id!) : undefined,
     };
   });

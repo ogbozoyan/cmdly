@@ -204,7 +204,7 @@ function tabRow(t: chrome.tabs.Tab, action: string): ResultItem {
     kind: "tab",
     title: t.title || shortUrl(t.url!),
     url: t.url,
-    icon: favicon(t.url!, t.favIconUrl),
+    icon: favicon(t.url!),
     tabId: t.id,
     windowId: t.windowId,
     action,
@@ -236,9 +236,11 @@ function pageRow(kind: "bookmark" | "history", title: string | undefined, url: s
   return { kind, title: title || shortUrl(url), url, meta: shortUrl(url), icon: favicon(url) };
 }
 
-/** Tab's own favicon if usable, otherwise Chrome's favicon cache (needs the "favicon" permission). */
-export function favicon(pageUrl: string, favIconUrl?: string): string {
-  if (favIconUrl && /^(https?|data):/.test(favIconUrl)) return favIconUrl;
+/**
+ * Chrome's favicon cache (needs the "favicon" permission). Never a page's own favIconUrl: the bar's <img>
+ * runs inside the open page, so a localhost or LAN address there triggers Chrome's Local Network Access prompt.
+ */
+export function favicon(pageUrl: string): string {
   const u = new URL(chrome.runtime.getURL("/_favicon/"));
   u.searchParams.set("pageUrl", pageUrl);
   u.searchParams.set("size", "32");

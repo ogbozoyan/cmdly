@@ -188,6 +188,8 @@ tab/window events ─▶ keep-open-service ─▶ planKeepOpen (pure) ─▶ add
   Not translated on purpose: command keywords (English search aliases), GitHub issue templates.
 - Anything inserted with `innerHTML` must go through `escapeHtml` (`src/ui/highlight.ts`): the bar
   runs inside other people's pages and renders pasted text.
+- Bar icons come only from `favicon()` (Chrome's `_favicon` cache), never from a tab's `favIconUrl`: the `<img>`
+  runs in the public page, so a localhost or LAN address makes Chrome ask for Local Network Access.
 - **Logging**: use `log.error/warn/info/debug(scope, message, error?)` from `src/shared/log.ts`, never bare
   `console.*`. Never put user text (queries, pasted data, URLs) in a log message: the log can end up in a public
   issue. Every entry point calls `initLogging(scope)` (`log-runtime.ts`; the background uses `startLogging()`), which

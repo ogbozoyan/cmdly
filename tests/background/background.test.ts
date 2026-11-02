@@ -19,9 +19,16 @@ let failStorage = false;
 
 const { matchCommands } = await import("../../src/background/command-service.ts");
 const { recordChoice } = await import("../../src/background/choice-service.ts");
+const { favicon } = await import("../../src/background/search-service.ts");
 
 test("classic ranking: 'settings' still finds Open Settings first", () => {
   assert.equal(matchCommands("settings", undefined)[0].commandId, "settings");
+});
+
+test("favicons come from Chrome's cache, never from a localhost or LAN address", () => {
+  const icon = new URL(favicon("http://192.168.0.1/admin"));
+  assert.ok(icon.href.startsWith("chrome-extension://x/_favicon/?"));
+  assert.equal(icon.searchParams.get("pageUrl"), "http://192.168.0.1/admin");
 });
 
 test("a storage failure while learning never breaks opening a row", async () => {
